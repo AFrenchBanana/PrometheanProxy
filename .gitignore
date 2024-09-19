@@ -1,0 +1,9 @@
+src/Server/Certificates/
+*cert.pem
+*key.pem
+*database.db
+*__pychace__*
+.vscode
+test.*
+/Client/Client_C/client.elf
+.vscode
