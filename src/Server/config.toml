@@ -1,0 +1,98 @@
+[server]
+listenaddress = "0.0.0.0"
+port = 1100
+TLSCertificateDir = "./Certificates/"
+TLSCertificate = "cert.pem"
+TLSkey = "key.pem"
+GUI = false 
+quiet_mode = true
+
+[authentication]
+#key length for the random auth string
+keylength = 111
+
+[packetsniffer]
+active = false
+listenaddress = "0.0.0.0"
+port = 11001
+TLSCertificate = "./Certificates/cert.pem"
+TLSkey = "./Certificates/key.pem"
+debugPrint = true
+
+[MultiHandlerCommands]
+help = """List of available commands: 
+-------------------------------------c
+list - show available sessions
+sessions - connect to a session
+close - close a client connections
+closeall - close all connections
+hashfiles - make a list of reference hashes
+exit - exits server
+config - shows current config variables
+Execute local system commands:
+    Availble commands: 
+        "ls", "cat", "pwd", "ping", "curl", "whoami", "clear"
+    If you need to use other commands, start with \\ 
+    e.g \\grep
+"""
+
+[SessionModules]
+help = """List of available commands: 
+-------------------------------------
+shell - interactive shell
+close - close session
+Download - Get a File from the target
+Upload - put a file on the target
+sysinfo - get a systeminfo snapshot from the target
+processes - get a list of running process on the target
+services - List running service (Linux only)
+checkfiles - Compare binaries against known hashes in the database
+diskusage - List space free on the disk
+listdir - list a directory without using binaries
+netstat - List netstat connections
+exit  -  exits session and returns to multi-handler
+Execute local system commands:
+    Availble commands: 
+        "ls", "cat", "pwd", "ping", "curl", "whoami", "clear"
+    If you need to use other commands, start with \\ 
+    e.g \\grep
+"""
+
+[database]
+# where the database file will be created/ used
+file = "./ServerDatabase/database.db"
+# add data True will insert data to the database, false will not
+addData = true
+
+# This is where you can add new tables to the database. 
+[[tables]]
+name = "Addresses"
+schema = "IP text, Port integer, Hostname text, Date text"
+
+[[tables]]
+name = "Shell"
+schema = "IP text, Date text, Command text, Response Text"
+
+[[tables]]
+name = "Processes"
+schema = "IP text , Processes text, Time text"
+
+[[tables]]
+name = "Services"
+schema = "IP text, Services text, Time text"
+
+[[tables]]
+name = "Netstat"
+schema = "IP text, Netstat text, Time text"
+
+[[tables]]
+name = "SystemInfo"
+schema = "IP Text, SystemInfo text, Time text"
+
+[[tables]]
+name = "Hashes"
+schema = "Filename text, Hash text"
+
+[[tables]]
+name = "Disk"
+schema = "IP text, Disk Usage, Time text"
