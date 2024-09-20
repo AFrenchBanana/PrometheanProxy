@@ -27,19 +27,20 @@ class TestGlobalObjects(unittest.TestCase):
         self.conn = MagicMock(spec=SSLSocket)
         self.r_address = ('127.0.0.1', 8080)
         self.host = 'localhost'
-        self.OS = 'Linux'
+        self.operatingSystems = 'Linux'
 
     def test_add_connection_list_and_remove(self):
-        add_connection_list(self.conn, self.r_address, self.host)
+        add_connection_list(self.conn, self.r_address, self.host,
+                            self.operatingSystems)
         self.assertIn(self.conn, connectiondetails)
         self.assertIn(self.r_address, connectionaddress)
         self.assertIn(self.host, hostname)
-        self.assertIn(self.host, operatingsystem)
+        self.assertIn(self.operatingSystems, operatingsystem)
         remove_connection_list(self.r_address)
         self.assertNotIn(self.conn, connectiondetails)
         self.assertNotIn(self.r_address, connectionaddress)
         self.assertNotIn(self.host, hostname)
-        self.assertNotIn(self.host, operatingsystem)
+        self.assertNotIn(self.operatingSystems, operatingsystem)
 
     def test_send_data(self):
         send_data(self.conn, sample_data)
