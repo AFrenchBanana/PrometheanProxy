@@ -2,7 +2,7 @@ src/Server/Certificates/
 *cert.pem
 *key.pem
 *database.db
-*__pychace__*
+*__pychche__*
 .vscode
 test.*
 /Client/Client_C/client.elf

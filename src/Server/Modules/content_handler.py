@@ -3,6 +3,7 @@ content handler for loading different types of files into
 """
 from tomlkit import parse, dumps
 
+
 class TomlFiles:
     """Loads a TOML file and provides methods for updating and saving."""
 
@@ -17,7 +18,11 @@ class TomlFiles:
     def __exit__(self, tipe, value, traceback):
         pass  # No need to close the file in this approach
 
-    def update_config(self, key: str, subkey: str, new_value: str | bool | int) -> None:
+    def update_config(
+            self,
+            key: str,
+            subkey: str,
+            new_value: str | bool | int) -> None:
         """Updates the value at the specified key and subkey."""
         self.data[key][subkey] = new_value
         self.save()

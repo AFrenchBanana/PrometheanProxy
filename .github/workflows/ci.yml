@@ -60,9 +60,9 @@ jobs:
           source venv/bin/activate
           pip list
 
-      # - name: Run python tests
-      #   env:
-      #     PYTHONPATH: ./src/Server/
-      #   run: |
-      #     source venv/bin/activate
-      #     pytest -s tests/*.py
+      - name: Run python tests
+        env:
+          PYTHONPATH: ./src/Server/
+        run: |
+          source venv/bin/activate
+          python -m pytest tests/*.py
