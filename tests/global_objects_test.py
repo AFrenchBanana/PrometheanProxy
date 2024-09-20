@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import call, patch, MagicMock, mock_open
+from unittest.mock import call, patch, MagicMock
 from ssl import SSLSocket
 import struct
 from src.Server.Modules.global_objects import (
