@@ -529,7 +529,7 @@ if __name__ == '__main__':
             client.socketinitilsation()  # starts socket
             client.connection()  # starts conneciton
             client.sendhostname()  # sends hostname
-            client.send_data(ssl_sock, "Python") 
+            client.send_data(ssl_sock, "Python")
             client.check_listener()  # checks listner
             client.serverhandler()  # starts server handler
     except KeyboardInterrupt:
