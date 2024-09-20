@@ -7,5 +7,5 @@ src/Server/Certificates/
 test.*
 /Client/Client_C/client.elf
 .vscode
-*.pyc
+*pyc
 .pytest_cache

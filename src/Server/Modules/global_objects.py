@@ -47,11 +47,11 @@ def remove_connection_list(r_address: Tuple[str, int]) -> None:
     for i, item in enumerate(
             connectionaddress):  # loops through connectionaddress list
         if item == r_address:  # if item matches the r_address fed in
-            # removes the index number of conneciton details
-            del connectiondetails[i]
-            # removes the index number of conneciton address
-            del connectionaddress[i]
-            del hostname[i]  # removes the index number of the hostname
+            # removes the index number of connection details
+            connectiondetails.pop(i)
+            # removes the index number of connection address
+            connectionaddress.pop(i)
+            hostname.pop(i)  # removes the index number of the hostname
     return
 
 
