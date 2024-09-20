@@ -7,7 +7,7 @@ Contains error handled send and recieve functions that
 can handle bytes and strings
 """
 
-from Modules.content_handler import TomlFiles
+from .content_handler import TomlFiles
 import struct
 from tqdm import tqdm
 from typing import Tuple
@@ -20,9 +20,12 @@ connectionaddress = []
 connectiondetails = []
 hostname = []
 
-
-with TomlFiles("config.toml") as f:
-    config = f
+try:
+    with TomlFiles("config.toml") as f:
+        config = f
+except FileNotFoundError:
+    with TomlFiles("src/Server/config.toml") as f:
+        config = f
 
 
 def add_connection_list(conn: ssl.SSLSocket,

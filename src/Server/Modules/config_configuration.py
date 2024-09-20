@@ -1,8 +1,10 @@
 import readline
 
-from Modules.content_handler import TomlFiles
-from Modules.global_objects import tab_compeletion
+from .content_handler import TomlFiles
+from .global_objects import tab_compeletion
 import ipaddress
+
+CONFIG_FILE_PATH = 'config.toml'
 
 
 def config_menu() -> None:
@@ -28,7 +30,7 @@ def config_menu() -> None:
 def show_config() -> None:
     """Shows the config TOML configuration"""
     config = ""
-    with open("config.toml", "r") as f:
+    with open(CONFIG_FILE_PATH, "r") as f:
         file = f.readlines()
     for line in file:
         if line.startswith("[MultiHandlerCommands]"):
@@ -55,7 +57,7 @@ def edit_config() -> bool:
         "TLSCertificate",
         "TLSKey",
         "debugPrint"]
-    toml_file = TomlFiles('config.toml')
+    toml_file = TomlFiles(CONFIG_FILE_PATH)
     with toml_file as config:
         while True:
             readline.parse_and_bind("tab: complete")
