@@ -131,12 +131,13 @@ class MultiHandler:
             if (self.Authentication.test_auth(
                     receive_data(conn), r_address[1])):
                 hostname = receive_data(conn)
+                OS = receive_data(conn)
                 # send if sniffer occurs
                 send_data(conn, str(config['packetsniffer']['active']))
                 if config['packetsniffer']['active']:
                     # send port number
                     send_data(conn, str(config['packetsniffer']['port']))
-                add_connection_list(conn, r_address, hostname)
+                add_connection_list(conn, r_address, hostname, OS)
                 threadDB.insert_entry(
                     "Addresses", f'"{
                         r_address[0]}", "{

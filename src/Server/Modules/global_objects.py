@@ -19,6 +19,7 @@ import ssl
 connectionaddress = []
 connectiondetails = []
 hostname = []
+operatingsystem = []
 
 try:
     with TomlFiles("config.toml") as f:
@@ -29,7 +30,9 @@ except FileNotFoundError:
 
 
 def add_connection_list(conn: ssl.SSLSocket,
-                        r_address: Tuple[str, int], host: str) -> None:
+                        r_address: Tuple[str, int],
+                        host: str,
+                        OS: str) -> None:
     """
     this function places the connection details into 3 lists, one for
     each variable upon succesful socket connection
@@ -37,7 +40,8 @@ def add_connection_list(conn: ssl.SSLSocket,
     """
     connectiondetails.append(conn)  # the socket connection details
     connectionaddress.append(r_address)  # the ip address and port
-    hostname.append(host)  # hostname or the socket
+    hostname.append(host)  # hostname or the socke
+    hostname.append(OS) #hostname or the socket
     return
 
 
@@ -52,6 +56,7 @@ def remove_connection_list(r_address: Tuple[str, int]) -> None:
             # removes the index number of connection address
             connectionaddress.pop(i)
             hostname.pop(i)  # removes the index number of the hostname
+            operatingsystem.pop(i)
     return
 
 
