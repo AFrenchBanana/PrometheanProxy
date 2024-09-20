@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "../Generic/send_receive.h"  
+#include "send_receive.h"  
 
 #define SEP "<sep>"
 #define INITIAL_BUFFER_SIZE 4096

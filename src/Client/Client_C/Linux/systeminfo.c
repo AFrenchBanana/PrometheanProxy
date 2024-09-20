@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <openssl/ssl.h>
-#include "../Generic/send_receive.h"
+#include "send_receive.h"
 
 void * systeminfo(SSL* ssl)
 {

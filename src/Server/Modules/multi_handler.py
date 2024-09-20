@@ -139,10 +139,9 @@ class MultiHandler:
                     send_data(conn, str(config['packetsniffer']['port']))
                 add_connection_list(conn, r_address, hostname, OS)
                 threadDB.insert_entry(
-                    "Addresses", f'"{
-                        r_address[0]}", "{
-                        r_address[1]}", "{hostname}", "{
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
+                    "Addresses", f'"{r_address[0]}", "{r_address[1]}", ',
+                    '"{hostname}", "{OS}",',
+                    f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
             else:
                 conn.close()
 
