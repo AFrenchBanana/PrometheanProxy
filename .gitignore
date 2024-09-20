@@ -7,3 +7,4 @@ src/Server/Certificates/
 test.*
 /Client/Client_C/client.elf
 .vscode
+*.pyc
