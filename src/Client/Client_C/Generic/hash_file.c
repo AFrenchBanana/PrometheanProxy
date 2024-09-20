@@ -2,12 +2,16 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>  // For directory handling
-#include <sys/stat.h>  // For stat function
+#include <dirent.h>  
+#include <sys/stat.h>  
 #include <openssl/ssl.h>
 
 #include "hashing.h"
-#include "send_receive.h"
+#ifdef _WIN64
+  #include "../Windows/send_receive.h"
+#else
+  #include "../Linux/send_receive.h"
+#endif
 
 #define MAX_FILENAME_LENGTH 1024 // Define a reasonable maximum filename length
 

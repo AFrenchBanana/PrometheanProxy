@@ -17,9 +17,7 @@
 #endif
 
 
-
-
-#include "../Generic/send_receive.h"
+#include "send_receive.h"
 
 // Function to convert permission bits to human-readable format
 char *get_permissions(mode_t mode) {
