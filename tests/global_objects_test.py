@@ -12,7 +12,7 @@ from src.Server.Modules.global_objects import (
     connectiondetails,
     connectionaddress,
     hostname,
-    OS
+    operatingsystem
 )
 
 # Sample data
@@ -34,12 +34,12 @@ class TestGlobalObjects(unittest.TestCase):
         self.assertIn(self.conn, connectiondetails)
         self.assertIn(self.r_address, connectionaddress)
         self.assertIn(self.host, hostname)
-        self.assertIn(self.host, OS)
+        self.assertIn(self.host, operatingsystem)
         remove_connection_list(self.r_address)
         self.assertNotIn(self.conn, connectiondetails)
         self.assertNotIn(self.r_address, connectionaddress)
         self.assertNotIn(self.host, hostname)
-        self.assertNotIn(self.host, OS)
+        self.assertNotIn(self.host, operatingsystem)
 
     def test_send_data(self):
         send_data(self.conn, sample_data)
