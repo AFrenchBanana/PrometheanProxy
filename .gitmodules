@@ -1,0 +1,3 @@
+[submodule "OpenSSL-1.1.1k-x64"]
+	path = OpenSSL-1.1.1k-x64
+	url = git@github.com:fochoao/OpenSSL-1.1.1k-x64.git
