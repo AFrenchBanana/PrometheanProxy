@@ -45,4 +45,5 @@ class Authentication:
     def test_auth(self, returnedkey, port):
         """tests the returned authentication key against the correct key """
         self.create_authentication_response(port)
+        print()
         return self.auth_key == returnedkey

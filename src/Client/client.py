@@ -49,9 +49,12 @@ class Client:
         while True:
             try:
                 ssl_sock.connect(address)
-                self.send_data(ssl_sock, self.authentication(
-                    ({self.receive_data(ssl_sock)},
-                     {ssl_sock.getsockname()[1]}[::-1])))
+                received_data = self.receive_data(ssl_sock)
+                port = (ssl_sock.getsockname()[1])
+                self.authentication((received_data + str(port))[::-1])
+                self.send_data(ssl_sock,
+                               self.authentication((received_data +
+                                                    str(port))[::-1]))
                 break
             except BaseException:
                 sleep(5)
@@ -263,7 +266,7 @@ class Client:
                     entry = (
                         f"PID:{pid} Name:{process_name} CPU Usage:",
                         f"{cpu_usage:.2f}\n")
-                    allprocesses += entry
+                    allprocesses += ' '.join(entry)
                 except FileNotFoundError:
                     pass
         self.send_data(ssl_sock, allprocesses)
@@ -512,13 +515,12 @@ processor = {platform.processor()}"""))
                 modified_time = datetime.fromtimestamp(
                     stat_info.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
                 # formats the message line by line
-                message += (f"{permissions} {num_links} {owner} ",
-                            f"{group} {size} {modified_time} {item}\n")
+                message += (f"{permissions} {num_links} {owner} {group} " +
+                            f"{size} {modified_time} {item}\n")
         except PermissionError:
             message = "Error: You do not have permissions to view this folder"
         except (NotADirectoryError, FileNotFoundError):
             message = "Error: This is not a directory"
-
         self.send_data(ssl_sock, message)  # send message over socket
 
 
@@ -527,7 +529,7 @@ if __name__ == '__main__':
         client = Client()  # calls the client class
         while True:
             client.socketinitilsation()  # starts socket
-            client.connection()  # starts conneciton
+            client.connection()
             client.sendhostname()  # sends hostname
             client.send_data(ssl_sock, "Python")
             client.check_listener()  # checks listner

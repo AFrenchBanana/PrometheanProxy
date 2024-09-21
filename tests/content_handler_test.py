@@ -19,7 +19,8 @@ class TestTomlFiles(unittest.TestCase):
     def test_init(self, mock_open):
         # Test initialization and reading from file
         toml_file = TomlFiles(self.filename)
-        mock_open.assert_called_once_with(self.filename, "rt", encoding="utf-8")
+        mock_open.assert_called_once_with(self.filename,
+                                          "rt", encoding="utf-8")
         self.assertIn("section", toml_file.data)
         self.assertEqual(toml_file.data["section"]["key"], "value")
 

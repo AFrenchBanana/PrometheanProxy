@@ -11,58 +11,70 @@ class DatabaseClass:
         self.initalise_database()
 
     def create_db_connection(self) -> None:
-        """attempts to creates a connection to a database and then
-        calls the initialise_database function
-        Function needs the path to the db file to use"""
+        """attempts to create a connection to a database and then
+        calls the initialise_database function.
+        Function needs the path to the db file to use."""
         try:
-            self.dbconnection = sqlite3.connect(
-                f"{config['database']['file']}")
+            self.dbconnection = (
+                sqlite3.connect(f"{config['database']['file']}"))
             self.cursor = self.dbconnection.cursor()
-
         except sqlite3.Error as err:
             print("Database connection failed")
             print(err)
+            self.cursor = None  # Ensure cursor is None if connection fails
         return
 
     def initalise_database(self) -> None:
         """
-        attempts to create the required database tables for the
+        Attempts to create the required database tables for the
         database to function properly.
         """
-        for tables in config['tables']:  # load tables as in config file
+        if not self.cursor:
+            print("Database cursor is not available.")
+            return
+
+        for table in config['tables']:  # load tables as in config file
             try:
                 table_query = (
-                    f"CREATE TABLE {tables['name']}({tables['schema']})"
-                )
+                    "CREATE TABLE IF NOT EXISTS " +
+                    f"{table['name']}({table['schema']})")
                 self.cursor.execute(table_query)
-                self.dbconnection.commit()  # commits the table
-            except sqlite3.Error:
+                self.dbconnection.commit()  # commits the table creation
+            except sqlite3.Error as err:
+                print(f"Error creating table {table['name']}: {err}")
                 continue
         return
 
     def insert_entry(self, table: str, values: tuple) -> None:
         """SQL Query to insert data into a table.
-        Example: insert_entry(Connections, "123")"""
+        Example: insert_entry('Connections', (123, 'data'))"""
+        if not self.cursor:
+            print("Database cursor is not available.")
+            return
+
         if config['database']['addData']:
             try:
                 # sql query to insert data
-                table_query = f"INSERT INTO {table} VALUES ({values})"
-                self.cursor.execute(table_query)  # executes the table query
+                table_query = (f"INSERT INTO {table} VALUES" +
+                               " ({', '.join(['?' for _ in values])})")
+                self.cursor.execute(table_query, values)
                 self.dbconnection.commit()  # commits the data
-            except BaseException:
+            except sqlite3.Error as err:
                 if not config["server"]["quiet_mode"]:
-                    print("Error inserting into database")
+                    print(f"Error inserting into table {table}: {err}")
         return
 
-    def search_query(
-            self,
-            selectval: str,
-            table: str,
-            column: str,
-            value: str) -> str:
-        """search query for database seaching """
-        search_value = (value, )  # sets the search value
-        self.cursor.execute(
-            f"SELECT {selectval} FROM {table} WHERE {column} = ?",
-            (search_value))  # execute the search query
-        return self.cursor.fetchone()  # return the answer
+    def search_query(self, selectval: str, table: str,
+                     column: str, value: str) -> str:
+        """Search query for database searching"""
+        if not self.cursor:
+            print("Database cursor is not available.")
+            return None
+
+        try:
+            self.cursor.execute(f"SELECT {selectval} FROM {table}" +
+                                " WHERE {column} = ?", (value,))
+            return self.cursor.fetchone()  # return the first matched result
+        except sqlite3.Error as err:
+            print(f"Error executing search query: {err}")
+            return None
