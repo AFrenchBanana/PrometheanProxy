@@ -9,3 +9,4 @@ test.*
 .vscode
 *pyc
 .pytest_cache
+venv*

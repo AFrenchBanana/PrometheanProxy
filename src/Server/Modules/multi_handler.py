@@ -15,11 +15,11 @@ import colorama
 import readline
 
 from datetime import datetime
-from Modules.authentication import Authentication
-from Modules.multi_handler_commands import MultiHandlerCommands
+from .authentication import Authentication
+from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
 from ServerDatabase.database import DatabaseClass
-from Modules.global_objects import (
+from .global_objects import (
     send_data,
     receive_data,
     add_connection_list,
@@ -50,38 +50,28 @@ class MultiHandler:
 
     def create_certificate(self) -> None:
         """
-        checks if TLS certificates are created
-        in the location defined in config.toml.
-        If these don't exist, a self signed key and certificate is made.
+        Checks if TLS certificates are created in the location
+        defined in config.
+        If these don't exist, a self-signed key and certificate is made.
         """
-        if not os.path.isfile(
-            os.path.join(
-                config['server']['TLSCertificateDir'],
-                config['server']['TLSkey'])) and not os.path.isfile(
-            os.path.join(
-                config['server']['TLSCertificateDir'],
-                config['server']['TLSCertificate'])):
-            if os.path.isdir(config['server']['TLSCertificateDir']) is False:
-                os.mkdir(config['server']['TLSCertificateDir'])
+        cert_dir = config['server']['TLSCertificateDir']
+        tls_key = config['server']['TLSkey']
+        tls_cert = config['server']['TLSCertificate']
+
+        key_path = os.path.join(cert_dir, tls_key)
+        cert_path = os.path.join(cert_dir, tls_cert)
+
+        if not os.path.isfile(key_path) and not os.path.isfile(cert_path):
+            if not os.path.isdir(cert_dir):
+                os.mkdir(cert_dir)
             os.system(
                 "openssl req -x509 -newkey rsa:2048 -nodes -keyout " +
-                os.path.join(
-                    config['server']['TLSCertificateDir'],
-                    config['server']['TLSkey']) + " -days 365 -out " +
-                os.path.join(
-                    config['server']['TLSCertificateDir'],
-                    config['server']['TLSCertificate']) +
-                "-subj '/CN=localhost'")
-            print(
-                colorama.Fore.GREEN +
-                "TLS certificates created:" +
-                os.path.join(
-                    config['server']['TLSCertificateDir'],
-                    config['server']['TLSkey']) and
-                os.path.join(
-                    config['server']['TLSCertificateDir'],
-                    config['server']['TLSCertificate']))
-        return
+                f"{key_path} -days 365 -out {cert_path} -subj " +
+                "'/CN=localhost'"
+            )
+            print(colorama.Fore.GREEN +
+                  "TLS certificates created: " +
+                  f"{cert_dir}{tls_key} and {cert_dir}{tls_cert}")
 
     def startsocket(self) -> None:
         """
@@ -92,13 +82,12 @@ class MultiHandler:
         self.address = (config['server']['listenaddress'],
                         config['server']['port'])
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        cert_dir = config['server']['TLSCertificateDir']
+        tls_key = config['server']['TLSkey']
+        tls_cert = config['server']['TLSCertificate']
         context.load_cert_chain(
-            certfile=os.path.join(
-                config['server']['TLSCertificateDir'],
-                config['server']['TLSCertificate']),
-            keyfile=os.path.join(
-                config['server']['TLSCertificateDir'],
-                config['server']['TLSkey']))
+            certfile=os.path.join(cert_dir, tls_cert),
+            keyfile=os.path.join(cert_dir, tls_key))
         socket_clear = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         SSL_Socket = context.wrap_socket(socket_clear, server_side=True)
         # tries to bind the socket to an address
@@ -139,9 +128,10 @@ class MultiHandler:
                     send_data(conn, str(config['packetsniffer']['port']))
                 add_connection_list(conn, r_address, hostname, OS)
                 threadDB.insert_entry(
-                    "Addresses", f'"{r_address[0]}", "{r_address[1]}", ',
-                    '"{hostname}", "{OS}",',
-                    f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
+                    "Addresses",
+                    f'"{r_address[0]}", "{r_address[1]}", "{hostname}", ' +
+                    f'"{OS}", ' +
+                    f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
             else:
                 conn.close()
 

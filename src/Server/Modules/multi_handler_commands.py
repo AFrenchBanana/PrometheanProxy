@@ -5,9 +5,9 @@ connection and address variables fed in from the specified socket.
 this allows for multiple connections to be interacted with.
 """
 
-from Modules.sessions_commands import SessionCommandsClass
+from .sessions_commands import SessionCommandsClass
 from ServerDatabase.database import DatabaseClass
-from Modules.global_objects import (
+from .global_objects import (
     remove_connection_list,
     connectionaddress,
     connectiondetails,
@@ -74,8 +74,8 @@ class MultiHandlerCommands:
                                                            "listdir"]))
             # asks uses for command
             command = (input(colorama.Fore.YELLOW +
-                             f"{r_address[0]}:{r_address[1]}",
-                             "Command: ").lower())
+                             f"{r_address[0]}:{r_address[1]} Command: ")
+                       .lower())
             if command == "exit":  # exits back to multihandler menu
                 break
             try:  # calls command
