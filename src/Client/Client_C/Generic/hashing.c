@@ -20,6 +20,8 @@ void sha512(const char *input, char *output) {
     output[hash_len * 2] = '\0';
 }
 
+
+
 void sha256(const char *input, char *output, int output_size) {
   EVP_MD_CTX *mdctx; 
   const EVP_MD *md; 
