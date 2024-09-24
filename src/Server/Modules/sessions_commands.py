@@ -35,7 +35,7 @@ class SessionCommandsClass:
                 colorama.Back.YELLOW +
                 colorama.Fore.BLACK +
                 "Closing " +
-                {r_address[0]} + ":" + {r_address[1]})
+                {r_address[0]} + ":" + {str(r_address[1])})
 
             try:
                 send_data(conn, "shutdown")  # sends shutdown mesage to client
