@@ -23,11 +23,10 @@ from .global_objects import (
     send_data,
     receive_data,
     add_connection_list,
-    connectionaddress,
-    connectiondetails,
-    execute_local_comands,
+    connections,
+    execute_local_commands,
     config,
-    tab_compeletion
+    tab_completion
 )
 from Modules.config_configuration import config_menu
 
@@ -146,7 +145,7 @@ class MultiHandler:
         while True:
             readline.parse_and_bind("tab: complete")
             readline.set_completer(lambda text,
-                                   state: tab_compeletion(text,
+                                   state: tab_completion(text,
                                                           state,
                                                           ["list",
                                                            "sessions",
@@ -164,21 +163,21 @@ class MultiHandler:
             try:
                 if command == "list":
                     self.multihandlercommands.listconnections(
-                        connectionaddress)
+                        connections.address)
                 elif command == "sessions":
                     self.multihandlercommands.sessionconnect(
-                        connectiondetails, connectionaddress)
+                        connections.details, connections.address)
                 elif command == "close":
                     self.multihandlercommands.close_from_multihandler(
-                        connectiondetails, connectionaddress)
+                        connections.details, connections.address)
                 elif command == "closeall":
                     self.multihandlercommands.close_all_connections(
-                        connectiondetails, connectionaddress)
+                        connections.details, connections.address)
                 elif command == "hashfiles":
                     self.multihandlercommands.localDatabaseHash()
                 elif command == "config":
                     config_menu()
-                elif not execute_local_comands(command):
+                elif not execute_local_commands(command):
                     # if this fails print the help menu text in the config
                     print(config['MultiHandlerCommands']['help'])
             except (KeyError, SyntaxError, AttributeError):

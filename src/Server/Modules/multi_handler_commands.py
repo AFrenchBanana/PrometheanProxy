@@ -9,14 +9,11 @@ from .sessions_commands import SessionCommandsClass
 from ServerDatabase.database import DatabaseClass
 from .global_objects import (
     remove_connection_list,
-    connectionaddress,
-    connectiondetails,
-    hostname,
-    execute_local_comands,
+    connections,
     send_data,
     receive_data,
     config,
-    tab_compeletion
+    tab_completion
 )
 
 from typing import Tuple
@@ -122,7 +119,7 @@ class MultiHandlerCommands:
                 # i is the index in enumerate, address[0] is the IP and [1] is
                 # the port
                 print(colorama.Fore.GREEN +
-                      f"{i}: {address[0]}:{address[1]} - {hostname[i]}")
+                      f"{i}: {address[0]}:{address[1]} - {connections.hostname[i]}")
         return
 
     def sessionconnect(self, connection_details: list,
@@ -168,9 +165,7 @@ class MultiHandlerCommands:
                     print(colorama.Back.RED + str(e))
                 error = True
                 pass
-        connectionaddress.clear()
-        connectiondetails.clear()
-        hostname.clear()
+        connections.clear()
         if not error:
             print(
                 colorama.Back.GREEN +
@@ -188,8 +183,8 @@ class MultiHandlerCommands:
             # socker to close
             data = int(input("What client do you want to close? "))
             self.sessioncommands.close_connection(
-                connection_details[data],
-                connection_address[data])  # closes connection
+                connections.connection_details[data],
+                connections.connection_address[data]) 
             remove_connection_list(
                 connection_address[data])  # removes data from lists
             print(colorama.Back.GREEN + "Connection Closed")  # success message

