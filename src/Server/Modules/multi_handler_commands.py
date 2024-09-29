@@ -28,6 +28,7 @@ import socket
 import readline
 import ssl
 import time
+import uuid
 
 
 class MultiHandlerCommands:
@@ -173,12 +174,11 @@ class MultiHandlerCommands:
                 "Not a Valid Beacon")
         print(colorama.Fore.GREEN + f"Using beacon {beacons['uuid'][data]}")
         commandToRun = input("Command: ")
-
-        # Append the values
-        beacon_commands["uuid"].append(beacons["uuid"][data])
+        beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
+        beacon_commands["command_uuid"].append(str(uuid.uuid4()))
         beacon_commands["command"].append(commandToRun)
-
-        
+        beacon_commands["executed"].append(False)
+  
     def close_all_connections(
             self,
             connection_details: list,

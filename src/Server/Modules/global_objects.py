@@ -36,10 +36,12 @@ beacons = {
 }
 
 beacon_commands = {
-    "uuid": [],
+    "beacon_uuid": [],
+    "command_uuid": [],
     "command": [],
+    "command_output": [],
+    "executed": [],
 }
-
 
 try:
     with TomlFiles("config.toml") as f:

