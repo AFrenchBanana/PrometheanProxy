@@ -38,7 +38,7 @@ def add_connection_list(conn: ssl.SSLSocket,
                         host: str,
                         operating_system: str,
                         user_id: str,
-                        mode: str) -> None
+                        mode: str) -> None:
     """
     Adds connection details to the global connections dictionary.
     """
@@ -46,6 +46,9 @@ def add_connection_list(conn: ssl.SSLSocket,
     connections["address"].append(r_address)  # the IP address and port
     connections["hostname"].append(host)  # hostname or the socket
     connections["operating_system"].append(operating_system)
+    connections["user_ids"].append(user_id)
+    connections["mode"].append(mode)
+    print(f"Connection from {r_address[0]}:{r_address[1]} with hostname {host} and OS {operating_system} added.")
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:

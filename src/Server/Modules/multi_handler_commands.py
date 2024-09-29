@@ -55,7 +55,7 @@ class MultiHandlerCommands:
             colorama.init(autoreset=True)
             readline.parse_and_bind("tab: complete")
             readline.set_completer(lambda text,
-                                   state: tab_compeletion(text,
+                                   state: tab_completion(text,
                                                           state,
                                                           ["shell",
                                                            "close",
@@ -99,7 +99,7 @@ class MultiHandlerCommands:
                     self.sessioncommands.diskusage(conn, r_address)
                 elif command == "listdir":
                     self.sessioncommands.list_dir(conn, r_address)
-                elif not execute_local_comands(command):
+                elif not exec(command):
                     print((colorama.Fore.GREEN +
                            config['SessionModules']['help']))
             except (KeyError, SyntaxError, AttributeError):
@@ -107,19 +107,23 @@ class MultiHandlerCommands:
                 print((colorama.Fore.GREEN + config['SessionModules']['help']))
         return
 
-    def listconnections(self, connectionaddress: list) -> None:
+    def listconnections(self, connections: list) -> None:
         """
         List all active connections stored in the global objects variables
         """
-        if len(connectionaddress) == 0:  # no connections
+        if len(connections) == 0:  # no connections
             print(colorama.Fore.RED + "No Active Sessions")
         else:
             print("Sessions:")
-            for i, address in enumerate(connectionaddress):  # loops through
-                # i is the index in enumerate, address[0] is the IP and [1] is
-                # the port
-                print(colorama.Fore.GREEN +
-                      f"{i}: {address[0]}:{address[1]} - {connections.hostname[i]}")
+            for i, connection in enumerate(connections):
+                address_str = f"{i}: {connection[0]} - {str(connection[1])}"
+                if len(connection) > 2:
+                    address_str += f" - {connection[2]}"
+                if len(connection) > 3:
+                    address_str += f" - {connection[3]}"
+                if len(connection) > 4:
+                    address_str += f" - {connection[4]}"
+                print(colorama.Fore.GREEN + address_str)
         return
 
     def sessionconnect(self, connection_details: list,

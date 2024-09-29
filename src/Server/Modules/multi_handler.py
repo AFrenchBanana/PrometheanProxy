@@ -144,26 +144,19 @@ class MultiHandler:
                   config['packetsniffer']['port'])
         while True:
             readline.parse_and_bind("tab: complete")
-            readline.set_completer(lambda text,
-                                   state: tab_completion(text,
-                                                          state,
-                                                          ["list",
-                                                           "sessions",
-                                                           "close",
-                                                           "closeall",
-                                                           "hashfiles",
-                                                           "config",
-                                                           "help",
-                                                           "exit",
-                                                           "config"]))
+            readline.set_completer(
+                lambda text, state:
+                    tab_completion(text, state, ["list", "sessions",
+                                                 "close", "closeall",
+                                                 "hashfiles", "config",
+                                                 "help", "exit",]))
             command = input("MultiHandler: ").lower()
             if command == "exit":  # closes the server down
                 print(colorama.Fore.RED + "Closing connections")
                 break  # exits the multihandler
             try:
                 if command == "list":
-                    self.multihandlercommands.listconnections(
-                        connections.address)
+                    self.multihandlercommands.listconnections(connections["address"])
                 elif command == "sessions":
                     self.multihandlercommands.sessionconnect(
                         connections.details, connections.address)
