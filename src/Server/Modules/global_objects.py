@@ -16,19 +16,28 @@ import os
 
 # global socket details to allow multiple connections and the ability
 # to interact with them individually.
-connections = {
+sessions = {
     "address": [],
     "details": [],
     "hostname": [],
     "operating_system": [],
-    "user_ids": [],
-    "mode": []
+    "uuid": [],
 }
 
-beacon_config = {
+beacons = {
     "uuid": [],
+    "address": [],
+    "hostname": [],
+    "operating_system": [],
     "last_beacon": [],
-    "next_beacon": []
+    "next_beacon": [],
+    "timer": [],
+    "jitter": [],
+}
+
+beacon_commands = {
+    "uuid": [],
+    "command": [],
 }
 
 
@@ -49,25 +58,37 @@ def add_connection_list(conn: ssl.SSLSocket,
     """
     Adds connection details to the global connections dictionary.
     """
-    connections["details"].append(conn)  # the socket connection details
-    connections["address"].append(r_address)  # the IP address and port
-    connections["hostname"].append(host)  # hostname or the socket
-    connections["operating_system"].append(operating_system)
-    connections["user_ids"].append(user_id)
-    connections["mode"].append(mode)
-    print(f"Connection from {r_address[0]}:{r_address[1]} with hostname {host} and OS {operating_system} added.")
+    sessions["details"].append(conn)  # the socket connection details
+    sessions["address"].append(r_address)  # the IP address and port
+    sessions["hostname"].append(host)  # hostname or the socket
+    sessions["operating_system"].append(operating_system)
+    sessions["uuid"].append(user_id)
+    sessions["mode"].append(mode)
+
+
+def add_beacon_list(uuid: str, r_address: str, hostname: str,
+                    operating_system: str, last_beacon, timer,
+                    jitter) -> None:
+    beacons["uuid"].append(uuid)
+    beacons["address"].append(r_address)
+    beacons["hostname"].append(hostname)
+    beacons["operating_system"].append(operating_system)
+    beacons["last_beacon"].append(last_beacon)
+    beacons["next_beacon"].append(str(last_beacon) + str(timer))
+    beacons["timer"].append(timer)
+    beacons["jitter"].append(jitter)
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:
     """
     Removes connection from the global connections dictionary.
     """
-    for i, item in enumerate(connections["address"]):
+    for i, item in enumerate(sessions["address"]):
         if item == r_address:
-            connections["details"].pop(i)
-            connections["address"].pop(i)
-            connections["hostname"].pop(i)
-            connections["operating_system"].pop(i)
+            sessions["details"].pop(i)
+            sessions["address"].pop(i)
+            sessions["hostname"].pop(i)
+            sessions["operating_system"].pop(i)
             break
 
 

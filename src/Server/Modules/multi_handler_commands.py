@@ -9,11 +9,13 @@ from .sessions_commands import SessionCommandsClass
 from ServerDatabase.database import DatabaseClass
 from .global_objects import (
     remove_connection_list,
-    connections,
+    sessions,
     send_data,
     receive_data,
     config,
-    tab_completion
+    tab_completion,
+    beacons,
+    beacon_commands
 )
 
 from typing import Tuple
@@ -25,6 +27,7 @@ import colorama
 import socket
 import readline
 import ssl
+import time
 
 
 class MultiHandlerCommands:
@@ -102,17 +105,17 @@ class MultiHandlerCommands:
         """
         List all active connections stored in the global objects variables
         """
-        if len(connections["address"]) == 0:  # no connections
+        if len(sessions["address"]) == 0:  # no connections
             print(colorama.Fore.RED + "No Active Sessions")
         else:
             print("Sessions:")
-            for i in range(len(connections["address"])):
+            for i in range(len(sessions["address"])):
                 print(
                     colorama.Fore.GREEN +
-                    f"{i} - {connections['hostname'][i]} - " +
-                    f"{connections['operating_system'][i]} - " +
-                    f"{connections['address'][0][i]} - " +
-                    f"{connections['user_ids'][i]} - {connections['mode'][i]}")
+                    f"{i} - {sessions['hostname'][i]} - " +
+                    f"{sessions['operating_system'][i]} - " +
+                    f"{sessions['address'][0][i]} - " +
+                    f"{sessions['user_ids'][i]} - {sessions['mode'][i]}")
 
     def sessionconnect(self, connection_details: list,
                        connection_address: list) -> None:
@@ -129,19 +132,53 @@ class MultiHandlerCommands:
                 colorama.Back.RED +
                 "Not a Valid Client")
         return
-    
+
     def beaconconnections(self) -> None:
         """
         list all beacon connections in the global objects
         """
-        if len(connections["address"]) == 0:
+        if len(beacons["address"]) == 0:
             print(colorama.Fore.RED + "No Active Beacons")
         else:
             print("Beacons:")
-            for i in range(len(connections["address"])):
-                if connections["mode"][i] == "beacon":
+            for i in range(len(beacons["address"])):  # print beacons
+                print(
+                    colorama.Fore.GREEN +
+                    f"{i+1} Host: {beacons['hostname'][i]} " +
+                    f"OS: {beacons['operating_system'][i]} " +
+                    f"IP: {beacons['address'][i]} " +
+                    f"ID: {beacons['uuid'][i]} " +
+                    f"Last Callback: {beacons['last_beacon'][i]} ")
 
+                next_beacon_time = time.strptime(beacons["next_beacon"][i])
+                current_time = time.strptime(time.asctime())
 
+                if time.mktime(current_time) > time.mktime(next_beacon_time):
+                    time_diff = time.mktime(current_time) - time.mktime(next_beacon_time)
+                    print(colorama.Fore.RED + f"Expected Callback was {beacons['next_beacon'][i]}. It is {time_diff} seconds late.")
+                else:
+                    print(colorama.Fore.GREEN + f"Next Callback {beacons['next_beacon'][i]}")             
+    
+    def use_beacon(self) -> None:
+        """
+        allows the user to interact with a beacon
+        """
+        
+        try:
+            data = int(input("What beacon do you want to use? "))
+        except (IndexError, ValueError):
+            print(
+                colorama.Fore.WHITE +
+                colorama.Back.RED +
+                "Not a Valid Beacon")
+        print(colorama.Fore.GREEN + f"Using beacon {beacons['uuid'][data]}")
+        commandToRun = input("Command: ")
+
+        # Append the values
+        beacon_commands["uuid"].append(beacons["uuid"][data])
+        beacon_commands["command"].append(commandToRun)
+
+        
     def close_all_connections(
             self,
             connection_details: list,
@@ -169,7 +206,7 @@ class MultiHandlerCommands:
                     print(colorama.Back.RED + str(e))
                 error = True
                 pass
-        connections.clear()
+        sessions.clear()
         if not error:
             print(
                 colorama.Back.GREEN +
@@ -187,8 +224,8 @@ class MultiHandlerCommands:
             # socker to close
             data = int(input("What client do you want to close? "))
             self.sessioncommands.close_connection(
-                connections.connection_details[data],
-                connections.connection_address[data])
+                sessions.connection_details[data],
+                sessions.connection_address[data])
             remove_connection_list(
                 connection_address[data])  # removes data from lists
             print(colorama.Back.GREEN + "Connection Closed")  # success message

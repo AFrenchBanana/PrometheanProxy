@@ -23,7 +23,7 @@ from .global_objects import (
     send_data,
     receive_data,
     add_connection_list,
-    connections,
+    sessions,
     execute_local_commands,
     config,
     tab_completion
@@ -147,7 +147,7 @@ class MultiHandler:
             readline.set_completer(
                 lambda text, state:
                     tab_completion(text, state, ["list", "sessions", "beacons",
-                                                 "close", "closeall",
+                                                 "close", "closeall", "command",
                                                  "hashfiles", "config",
                                                  "help", "exit",]))
             command = input("MultiHandler: ").lower()
@@ -159,15 +159,17 @@ class MultiHandler:
                     self.multihandlercommands.listconnections()
                 elif command == "sessions":
                     self.multihandlercommands.sessionconnect(
-                        connections.details, connections.address)
+                        sessions.details, sessions.address)
                 elif command == "beacons":
                     self.multihandlercommands.beaconconnections()
+                elif command == "command":
+                    self.multihandlercommands.use_beacon()
                 elif command == "close":
                     self.multihandlercommands.close_from_multihandler(
-                        connections.details, connections.address)
+                        sessions.details, sessions.address)
                 elif command == "closeall":
                     self.multihandlercommands.close_all_connections(
-                        connections.details, connections.address)
+                        sessions.details, sessions.address)
                 elif command == "hashfiles":
                     self.multihandlercommands.localDatabaseHash()
                 elif command == "config":

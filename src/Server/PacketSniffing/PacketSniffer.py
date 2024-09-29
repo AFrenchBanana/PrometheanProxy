@@ -7,7 +7,7 @@ import socket
 import struct
 import threading
 import ssl
-from Modules.global_objects import config, connections
+from Modules.global_objects import config, sessions
 import sys
 
 
@@ -57,7 +57,7 @@ class PacketSniffer:
         i = 0
         while True:
             conn, r_address = SSL_Socket.accept()  # accepts the connection
-            for connection in connections.address:
+            for connection in sessions.address:
                 # checks if the IP is in the main socket
                 if connection == r_address[0]:
                     snifferdetails.append(conn)  # adds to the list
