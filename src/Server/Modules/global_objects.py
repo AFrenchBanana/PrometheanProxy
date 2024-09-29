@@ -25,6 +25,13 @@ connections = {
     "mode": []
 }
 
+beacon_config = {
+    "uuid": [],
+    "last_beacon": [],
+    "next_beacon": []
+}
+
+
 try:
     with TomlFiles("config.toml") as f:
         config = f

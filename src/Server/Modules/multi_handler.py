@@ -146,7 +146,7 @@ class MultiHandler:
             readline.parse_and_bind("tab: complete")
             readline.set_completer(
                 lambda text, state:
-                    tab_completion(text, state, ["list", "sessions",
+                    tab_completion(text, state, ["list", "sessions", "beacons",
                                                  "close", "closeall",
                                                  "hashfiles", "config",
                                                  "help", "exit",]))
@@ -156,10 +156,12 @@ class MultiHandler:
                 break  # exits the multihandler
             try:
                 if command == "list":
-                    self.multihandlercommands.listconnections(connections["address"])
+                    self.multihandlercommands.listconnections()
                 elif command == "sessions":
                     self.multihandlercommands.sessionconnect(
                         connections.details, connections.address)
+                elif command == "beacons":
+                    self.multihandlercommands.beaconconnections()
                 elif command == "close":
                     self.multihandlercommands.close_from_multihandler(
                         connections.details, connections.address)

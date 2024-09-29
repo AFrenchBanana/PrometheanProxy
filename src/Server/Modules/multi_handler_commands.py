@@ -54,22 +54,13 @@ class MultiHandlerCommands:
             # resets colorama after each statement
             colorama.init(autoreset=True)
             readline.parse_and_bind("tab: complete")
-            readline.set_completer(lambda text,
-                                   state: tab_completion(text,
-                                                          state,
-                                                          ["shell",
-                                                           "close",
-                                                           "processes",
-                                                           "sysinfo",
-                                                           "close",
-                                                           "checkfiles",
-                                                           "download",
-                                                           "upload",
-                                                           "services",
-                                                           "netstat",
-                                                           "diskusage",
-                                                           "listdir"]))
-            # asks uses for command
+            readline.set_completer(
+                lambda text, state:
+                    tab_completion(text, state, [
+                        "shell", "close", "processes", "sysinfo", "checkfiles",
+                        "download", "upload", "services", "netstat",
+                        "diskusage", "listdir"
+                    ]))
             command = (input(colorama.Fore.YELLOW +
                              f"{r_address[0]}:{r_address[1]} Command: ")
                        .lower())
@@ -107,24 +98,21 @@ class MultiHandlerCommands:
                 print((colorama.Fore.GREEN + config['SessionModules']['help']))
         return
 
-    def listconnections(self, connections: list) -> None:
+    def listconnections(self) -> None:
         """
         List all active connections stored in the global objects variables
         """
-        if len(connections) == 0:  # no connections
+        if len(connections["address"]) == 0:  # no connections
             print(colorama.Fore.RED + "No Active Sessions")
         else:
             print("Sessions:")
-            for i, connection in enumerate(connections):
-                address_str = f"{i}: {connection[0]} - {str(connection[1])}"
-                if len(connection) > 2:
-                    address_str += f" - {connection[2]}"
-                if len(connection) > 3:
-                    address_str += f" - {connection[3]}"
-                if len(connection) > 4:
-                    address_str += f" - {connection[4]}"
-                print(colorama.Fore.GREEN + address_str)
-        return
+            for i in range(len(connections["address"])):
+                print(
+                    colorama.Fore.GREEN +
+                    f"{i} - {connections['hostname'][i]} - " +
+                    f"{connections['operating_system'][i]} - " +
+                    f"{connections['address'][0][i]} - " +
+                    f"{connections['user_ids'][i]} - {connections['mode'][i]}")
 
     def sessionconnect(self, connection_details: list,
                        connection_address: list) -> None:
@@ -141,6 +129,18 @@ class MultiHandlerCommands:
                 colorama.Back.RED +
                 "Not a Valid Client")
         return
+    
+    def beaconconnections(self) -> None:
+        """
+        list all beacon connections in the global objects
+        """
+        if len(connections["address"]) == 0:
+            print(colorama.Fore.RED + "No Active Beacons")
+        else:
+            print("Beacons:")
+            for i in range(len(connections["address"])):
+                if connections["mode"][i] == "beacon":
+
 
     def close_all_connections(
             self,
@@ -188,7 +188,7 @@ class MultiHandlerCommands:
             data = int(input("What client do you want to close? "))
             self.sessioncommands.close_connection(
                 connections.connection_details[data],
-                connections.connection_address[data]) 
+                connections.connection_address[data])
             remove_connection_list(
                 connection_address[data])  # removes data from lists
             print(colorama.Back.GREEN + "Connection Closed")  # success message
