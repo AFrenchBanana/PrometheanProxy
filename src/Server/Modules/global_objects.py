@@ -22,6 +22,7 @@ sessions = {
     "hostname": [],
     "operating_system": [],
     "uuid": [],
+    "mode": [],
 }
 
 beacons = {

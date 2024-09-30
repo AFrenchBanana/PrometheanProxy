@@ -125,7 +125,7 @@ class MultiHandler:
                 if config['packetsniffer']['active']:
                     # send port number
                     send_data(conn, str(config['packetsniffer']['port']))
-                add_connection_list(conn, r_address, hostname, OS)
+                add_connection_list(conn, r_address, hostname, OS, "0", "session")
                 threadDB.insert_entry(
                     "Addresses",
                     f'"{r_address[0]}", "{r_address[1]}", "{hostname}", ' +
@@ -161,7 +161,7 @@ class MultiHandler:
                     self.multihandlercommands.sessionconnect(
                         sessions.details, sessions.address)
                 elif command == "beacons":
-                    self.multihandlercommands.beaconconnections()
+                    self.multihandlercommands.listbeacons()
                 elif command == "command":
                     self.multihandlercommands.use_beacon()
                 elif command == "close":

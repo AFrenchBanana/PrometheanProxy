@@ -42,7 +42,7 @@ class MultiHandlerCommands:
         colorama.init(autoreset=True)
         return
 
-    def current_client(self, conn: ssl.SSLSocket,
+    def current_client_session(self, conn: ssl.SSLSocket,
                        r_address: Tuple[str, int]) -> None:
         """
         function that interacts with an individual session, from here
@@ -124,7 +124,7 @@ class MultiHandlerCommands:
             passes connection details through to the current_client function"""
         try:
             data = int(input("What client? "))
-            self.current_client(
+            self.current_client_session(
                 connection_details[data],
                 connection_address[data])
         except (IndexError, ValueError):
@@ -134,7 +134,7 @@ class MultiHandlerCommands:
                 "Not a Valid Client")
         return
 
-    def beaconconnections(self) -> None:
+    def listbeacons(self) -> None:
         """
         list all beacon connections in the global objects
         """
@@ -155,16 +155,16 @@ class MultiHandlerCommands:
                 current_time = time.strptime(time.asctime())
 
                 if time.mktime(current_time) > time.mktime(next_beacon_time):
-                    time_diff = time.mktime(current_time) - time.mktime(next_beacon_time)
-                    print(colorama.Fore.RED + f"Expected Callback was {beacons['next_beacon'][i]}. It is {time_diff} seconds late.")
+                    time_diff = time.mktime(current_time) - time.mktime(
+                        next_beacon_time)
+                    print(colorama.Fore.RED + f"Expected Callback was {beacons['next_beacon'][i]}. It is {int(time_diff)} seconds late.")
                 else:
-                    print(colorama.Fore.GREEN + f"Next Callback {beacons['next_beacon'][i]}")             
+                    print(colorama.Fore.GREEN + f"Next Callback expected {beacons['next_beacon'][i]} in {time.mktime(next_beacon_time) - time.mktime(current_time)} seconds")             
     
     def use_beacon(self) -> None:
         """
         allows the user to interact with a beacon
         """
-        
         try:
             data = int(input("What beacon do you want to use? "))
         except (IndexError, ValueError):
@@ -174,6 +174,13 @@ class MultiHandlerCommands:
                 "Not a Valid Beacon")
         print(colorama.Fore.GREEN + f"Using beacon {beacons['uuid'][data]}")
         commandToRun = input("Command: ")
+        if commandToRun == "session":
+            beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
+            beacon_commands["command"].append(commandToRun)
+            beacon_commands["command_uuid"].append(str(uuid.uuid4()))
+            beacon_commands["executed"].append(False)
+
+
         beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
         beacon_commands["command_uuid"].append(str(uuid.uuid4()))
         beacon_commands["command"].append(commandToRun)

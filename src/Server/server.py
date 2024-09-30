@@ -18,11 +18,11 @@ if __name__ == '__main__':
     try:
         multi_handler = MultiHandler()
         multi_handler.create_certificate()
-        threading.Thread(target=app.run, kwargs={'port': 80},
+        threading.Thread(target=app.run, kwargs={'port': 8080},
                          daemon=True).start()
         multi_handler.startsocket()
         if not config['server']['quiet_mode']:
-            print(colorama.Fore.CYAN + """
+            print(colorama.Fore.CYAN + r"""
    ___                          _   _                        ___                     
   / _ \_ __ ___  _ __ ___   ___| |_| |__   ___  __ _ _ __   / _ \_ __ _____  ___   _ 
  / /_)/ '__/ _ \| '_ ` _ \ / _ \ __| '_ \ / _ \/ _` | '_ \ / /_)/ '__/ _ \ \/ / | | |
@@ -34,6 +34,7 @@ if __name__ == '__main__':
             print(colorama.Back.RED + "Quiet Mode On")
         print(colorama.Back.GREEN + "Type Help for available commands")
         multi_handler.multi_handler(config)  # starst the milti handler
-    except ValueError:  # handles keyboard interpt
+    except Exception as e:  # handles keyboard interrupt
+        print(colorama.Fore.RED + f"Error: {e}")
         print("\n use exit next time")
         sys.exit()
