@@ -280,9 +280,6 @@ class SessionCommandsClass:
     def change_beacon(self, conn: ssl.SSLSocket,
                       r_address: Tuple[str, int], uuid) -> None:
         send_data(conn, "switch_beacon")
-        print("Switching Back to Beacon Mode")
-        for i, item in enumerate(sessions["uuid"]):
-            if item == uuid:
-                add_beacon_list(uuid, r_address, sessions["hostname"][i], sessions["operating_system"][i], time.asctime(), 0, 0)
+        print(colorama.Fore.GREEN + f"{uuid} will be switched to beacon mode")
         remove_connection_list(r_address)
         return

@@ -15,7 +15,8 @@ from .global_objects import (
     config,
     tab_completion,
     beacons,
-    beacon_commands
+    beacon_commands,
+    remove_beacon_list
 )
 
 from typing import Tuple
@@ -98,16 +99,15 @@ class MultiHandlerCommands:
                     for i, details in enumerate(sessions["details"]):
                         if details == conn:
                             if sessions["uuid"][i] == uuid:
-                                print(sessions["uuid"][i])
                                 self.sessioncommands.change_beacon(
                                     conn, r_address, sessions["uuid"][i])
                         return
                 elif not exec(command):
                     print((colorama.Fore.GREEN +
                            config['SessionModules']['help']))
-            except (KeyError, SyntaxError, AttributeError):
+            except (KeyError, SyntaxError, AttributeError) as e:
                 # if the command is not matched then it prints help menu
-                print((colorama.Fore.GREEN + config['SessionModules']['help']))
+                print((colorama.Fore.GREEN + config['SessionModules']['help']) + str(e) + "Error HERE")
         return
 
     def listconnections(self) -> None:
@@ -154,46 +154,57 @@ class MultiHandlerCommands:
                     f"IP: {beacons['address'][i]} " +
                     f"ID: {beacons['uuid'][i]} " +
                     f"Last Callback: {beacons['last_beacon'][i]} ")
+                try:
+                    next_beacon_time = time.strptime(beacons["next_beacon"][i])
+                    current_time = time.strptime(time.asctime())
 
-                next_beacon_time = time.strptime(beacons["next_beacon"][i])
-                current_time = time.strptime(time.asctime())
-
-                if time.mktime(current_time) > time.mktime(next_beacon_time):
-                    time_diff = time.mktime(current_time) - time.mktime(
-                        next_beacon_time)
-                    print(colorama.Fore.RED + f"Expected Callback was {beacons['next_beacon'][i]}. It is {int(time_diff)} seconds late.")
-                else:
-                    print(colorama.Fore.GREEN + f"Next Callback expected {beacons['next_beacon'][i]} in {time.mktime(next_beacon_time) - time.mktime(current_time)} seconds")        
-
+                    if time.mktime(current_time) > time.mktime(next_beacon_time):
+                        time_diff = time.mktime(current_time) - time.mktime(next_beacon_time)
+                        print(colorama.Fore.RED + f"Expected Callback was {beacons['next_beacon'][i]}. It is {int(time_diff)} seconds late.")
+                    else:   
+                        print(colorama.Fore.GREEN + f"Next Callback expected {beacons['next_beacon'][i]} in {time.mktime(next_beacon_time) - time.mktime(current_time)} seconds")
+                except ValueError:
+                    print(colorama.Fore.YELLOW + "Awaiting first call")
+                
     def use_beacon(self) -> None:
         """
         allows the user to interact with a beacon
         """
-        try:
-            data = int(input("What beacon do you want to use? "))
-        except (IndexError, ValueError):
-            print(
-                colorama.Fore.WHITE +
-                colorama.Back.RED +
-                "Not a Valid Beacon")
+        while True:
+            if len(beacons["address"]) == 0:
+                print(colorama.Fore.RED + "No Active Beacons")
+                return
+            try:
+                data = int(input("What beacon do you want to use? "))
+                break
+            except (IndexError, ValueError):
+                print(
+                    colorama.Fore.WHITE +
+                    colorama.Back.RED +
+                    "Not a Valid Beacon")
         print(colorama.Fore.GREEN + f"Using beacon {beacons['uuid'][data]}")
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(
+                lambda text, state:
+                tab_completion(text, state, [
+                        "session"
+                    ]))
         commandToRun = input("Command: ")
         if commandToRun == "session":
+            print(colorama.Fore.GREEN +
+                  "Beacon will change to session mode after the next callback")
             # send session command to beacon
             beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
             beacon_commands["command"].append(commandToRun)
             beacon_commands["command_uuid"].append(str(uuid.uuid4()))
             beacon_commands["executed"].append(False)
             # remove the beacon from the list
-            beacons["beacon_uuid"].pop(data)
-            beacons["command"].pop(data)
-            beacons["command_uuid"].pop(data)
-            beacons["executed"].pop(data)
-
-        beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
-        beacon_commands["command_uuid"].append(str(uuid.uuid4()))
-        beacon_commands["command"].append(commandToRun)
-        beacon_commands["executed"].append(False)
+            remove_beacon_list(beacons["uuid"][data])
+        else:
+            beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
+            beacon_commands["command_uuid"].append(str(uuid.uuid4()))
+            beacon_commands["command"].append(commandToRun)
+            beacon_commands["executed"].append(False)
 
     def close_all_connections(
             self,

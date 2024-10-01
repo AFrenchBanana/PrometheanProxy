@@ -65,6 +65,7 @@ def add_connection_list(conn: ssl.SSLSocket,
     sessions["address"].append(r_address)  # the IP address and port
     sessions["hostname"].append(host)  # hostname or the socket
     sessions["operating_system"].append(operating_system)
+    print(f"User {user_id} connected")
     sessions["uuid"].append(user_id)
     sessions["mode"].append(mode)
 
@@ -92,7 +93,26 @@ def remove_connection_list(r_address: Tuple[str, int]) -> None:
             sessions["address"].pop(i)
             sessions["hostname"].pop(i)
             sessions["operating_system"].pop(i)
+            sessions["uuid"].pop(i)
+            sessions["mode"].pop(i)
+        else:
+            print("Address not found")
             break
+
+
+def remove_beacon_list(uuid: str) -> None:
+    if uuid in beacons["uuid"]:
+        index = beacons["uuid"].index(uuid)
+        beacons["uuid"].pop(index)
+        beacons["address"].pop(index)
+        beacons["hostname"].pop(index)
+        beacons["operating_system"].pop(index)
+        beacons["last_beacon"].pop(index)
+        beacons["next_beacon"].pop(index)
+        beacons["timer"].pop(index)
+        beacons["jitter"].pop(index)
+    else:
+        print(f"UUID {uuid} not found in beacons list")
 
 
 def send_data(conn: ssl.SSLSocket, data: any) -> None:
