@@ -13,6 +13,7 @@ from tqdm import tqdm
 from typing import Tuple
 import ssl
 import os
+import uuid
 
 # global socket details to allow multiple connections and the ability
 # to interact with them individually.
@@ -81,6 +82,18 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
     beacons["next_beacon"].append(str(last_beacon) + str(timer))
     beacons["timer"].append(timer)
     beacons["jitter"].append(jitter)
+    
+
+def add_beacon_command_list(beacon_uuid: str,
+                            command: str) -> None:
+    command_uuid = str(uuid.uuid4())
+    beacon_commands["beacon_uuid"].append(beacon_uuid)
+    beacon_commands["command_uuid"].append(command_uuid)
+    beacon_commands["command"].append(command)
+    beacon_commands["command_output"].append("")
+    beacon_commands["executed"].append(False)
+    print(f"Command {command_uuid} added to beacon {beacon_uuid}")
+
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:

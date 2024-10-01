@@ -26,7 +26,8 @@ from .global_objects import (
     sessions,
     execute_local_commands,
     config,
-    tab_completion
+    tab_completion,
+    beacons,
 )
 from Modules.config_configuration import config_menu
 
@@ -165,9 +166,8 @@ class MultiHandler:
             elif command == "sessions":
                 self.multihandlercommands.sessionconnect()
             elif command == "beacons":
-                self.multihandlercommands.listbeacons()
-            elif command == "command":
-                self.multihandlercommands.use_beacon()
+                index = int(input("Enter the index of the beacon: "))
+                self.multihandlercommands.use_beacon(beacons["uuid"][index], beacons["address"][index])
             elif command == "close":
                 self.multihandlercommands.close_from_multihandler(
                     sessions.details, sessions.address)

