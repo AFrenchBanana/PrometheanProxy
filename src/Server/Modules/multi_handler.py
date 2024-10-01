@@ -119,17 +119,22 @@ class MultiHandler:
             if (self.Authentication.test_auth(
                     receive_data(conn), r_address[1])):
                 hostname = receive_data(conn)
-                OS = receive_data(conn)
-                # send if sniffer occurs
+                data = receive_data(conn)  # OS and User ID
+                try:
+                    OS, id = data.split(",")
+                except ValueError:
+                    OS = data
+                    id = None
                 send_data(conn, str(config['packetsniffer']['active']))
                 if config['packetsniffer']['active']:
                     # send port number
                     send_data(conn, str(config['packetsniffer']['port']))
-                add_connection_list(conn, r_address, hostname, OS, "0", "session")
+                add_connection_list(conn, r_address, hostname,
+                                    OS, id, "session")
                 threadDB.insert_entry(
                     "Addresses",
                     f'"{r_address[0]}", "{r_address[1]}", "{hostname}", ' +
-                    f'"{OS}", ' +
+                    f'"{data[0]}", ' +
                     f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
             else:
                 conn.close()
@@ -147,9 +152,9 @@ class MultiHandler:
             readline.set_completer(
                 lambda text, state:
                     tab_completion(text, state, ["list", "sessions", "beacons",
-                                                 "close", "closeall", "command",
-                                                 "hashfiles", "config",
-                                                 "help", "exit",]))
+                                                 "close", "closeall",
+                                                 "command", "hashfiles",
+                                                 "config", "help", "exit",]))
             command = input("MultiHandler: ").lower()
             if command == "exit":  # closes the server down
                 print(colorama.Fore.RED + "Closing connections")
@@ -158,8 +163,7 @@ class MultiHandler:
                 if command == "list":
                     self.multihandlercommands.listconnections()
                 elif command == "sessions":
-                    self.multihandlercommands.sessionconnect(
-                        sessions.details, sessions.address)
+                    self.multihandlercommands.sessionconnect()
                 elif command == "beacons":
                     self.multihandlercommands.listbeacons()
                 elif command == "command":
@@ -175,9 +179,7 @@ class MultiHandler:
                 elif command == "config":
                     config_menu()
                 elif not execute_local_commands(command):
-                    # if this fails print the help menu text in the config
                     print(config['MultiHandlerCommands']['help'])
-            except (KeyError, SyntaxError, AttributeError):
-                # if this fails print the help menu text in the config
-                print(config['MultiHandlerCommands']['help'])
+            except (KeyError, SyntaxError, AttributeError) as e:
+                print(e)
         return

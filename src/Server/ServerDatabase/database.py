@@ -54,10 +54,8 @@ class DatabaseClass:
 
         if config['database']['addData']:
             try:
-                # sql query to insert data
-                table_query = (f"INSERT INTO {table} VALUES" +
-                               " ({', '.join(['?' for _ in values])})")
-                self.cursor.execute(table_query, values)
+                table_query = f"INSERT INTO {table} VALUES ({values})"
+                self.cursor.execute(table_query)
                 self.dbconnection.commit()  # commits the data
             except sqlite3.Error as err:
                 if not config["server"]["quiet_mode"]:

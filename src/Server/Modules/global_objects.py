@@ -17,11 +17,11 @@ import os
 # global socket details to allow multiple connections and the ability
 # to interact with them individually.
 sessions = {
+    "uuid": [],
     "address": [],
     "details": [],
     "hostname": [],
     "operating_system": [],
-    "uuid": [],
     "mode": [],
 }
 

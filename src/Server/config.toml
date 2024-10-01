@@ -67,7 +67,7 @@ addData = true
 # This is where you can add new tables to the database. 
 [[tables]]
 name = "Addresses"
-schema = "IP text, Port integer, Hostname text, Date text"
+schema = "IP text, Port integer, Hostname text, OS text, Date text"
 
 [[tables]]
 name = "Shell"
