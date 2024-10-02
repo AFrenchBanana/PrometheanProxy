@@ -164,10 +164,19 @@ class MultiHandler:
             if command == "list":
                 self.multihandlercommands.listconnections()
             elif command == "sessions":
-                self.multihandlercommands.sessionconnect()
+                if len(sessions["uuid"]) == 0:
+                    print(colorama.Fore.RED + "No sessions connected")
+                else:
+                    self.multihandlercommands.sessionconnect()             
             elif command == "beacons":
-                index = int(input("Enter the index of the beacon: "))
-                self.multihandlercommands.use_beacon(beacons["uuid"][index], beacons["address"][index])
+                if len(beacons["uuid"]) == 0:
+                    print(colorama.Fore.RED + "No beacons connected")
+                elif len(beacons["uuid"]) > 1:
+                    index = int(input("Enter the index of the beacon: "))
+                    self.multihandlercommands.use_beacon(beacons["uuid"][index], beacons["address"][index])
+                else:
+                    index = 0
+                    self.multihandlercommands.use_beacon(beacons["uuid"][0], beacons["address"][0])
             elif command == "close":
                 self.multihandlercommands.close_from_multihandler(
                     sessions.details, sessions.address)

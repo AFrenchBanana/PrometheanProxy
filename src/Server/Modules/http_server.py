@@ -70,15 +70,15 @@ def beacon():
 def response():
     cid = request.args.get('cid')
     output = request.get_json().get('output', '')
-
     found = False
     for i, command_uuid in enumerate(beacon_commands["command_uuid"]):
         if cid == command_uuid:
             found = True
             if i < len(beacon_commands["executed"]):
                 beacon_commands["command_output"].append(output)
-                print(f"Command {beacon_commands['beacon_uuid'][i]} responded with:")
-                print(f"Command: {beacon_commands['command_output'][i]}")
+                print(
+                    f"Command {beacon_commands['beacon_uuid'][i]} responded with:")
+                print(output)
             else:
                 print(f"Index {i} out of range for {beacon_commands['executed']}")
     if not found:

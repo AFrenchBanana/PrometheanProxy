@@ -212,11 +212,17 @@ class MultiHandlerCommands:
         """allows interaction with individual session,
             passes connection details through to the current_client function"""
         try:
-            data = int(input("What client? "))
-            self.current_client_session(
-                sessions["details"][data],
-                sessions["address"][data],
-                sessions["uuid"][data])
+            if len(sessions["uuid"]) == 1:
+                self.current_client_session(
+                    sessions["details"][0],
+                    sessions["address"][0],
+                    sessions["uuid"][0])
+            else:               
+                data = int(input("What client? "))
+                self.current_client_session(
+                    sessions["details"][data],
+                    sessions["address"][data],
+                    sessions["uuid"][data])
         except (IndexError, ValueError):
             print(
                 colorama.Fore.WHITE +
