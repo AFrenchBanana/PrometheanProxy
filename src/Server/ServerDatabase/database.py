@@ -70,8 +70,8 @@ class DatabaseClass:
             return None
 
         try:
-            self.cursor.execute(f"SELECT {selectval} FROM {table}" +
-                                " WHERE {column} = ?", (value,))
+            query = f"SELECT {selectval} FROM {table} WHERE {column} = ?"
+            self.cursor.execute(query, (value,))
             return self.cursor.fetchone()  # return the first matched result
         except sqlite3.Error as err:
             print(f"Error executing search query: {err}")

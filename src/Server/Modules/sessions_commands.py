@@ -4,8 +4,6 @@ from .global_objects import (
     receive_data,
     remove_connection_list,
     send_data_loadingbar,
-    add_beacon_list,
-    sessions
 )
 from datetime import datetime
 from tqdm import tqdm
@@ -14,7 +12,6 @@ from typing import Tuple
 import os
 import colorama
 import ssl
-import time
 
 
 class SessionCommandsClass:
@@ -72,7 +69,7 @@ class SessionCommandsClass:
             results, _, cwd = output.rpartition("<sep>")
             self.database.insert_entry("Shell", f"'{r_address[0]}'," +
                                        f"'{datetime.now()}', " +
-                                       f"{command}', '{results}'")
+                                       f"'{command}', '{results}'")
             print(results)
         return
 
@@ -241,8 +238,8 @@ class SessionCommandsClass:
         print(colorama.Fore.YELLOW + netstat)  # prints netstat
         self.database.insert_entry(
             "Netstat",
-            f'"{r_address[0]}","{netstat}",',
-            f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
+            f'"{r_address[0]}","{netstat}","{datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S")}"')
         return
 
     def diskusage(self, conn: ssl.SSLSocket,
@@ -254,9 +251,9 @@ class SessionCommandsClass:
         results = receive_data(conn)
         self.database.insert_entry(
             "Disk",
-            f'"{r_address[0]}","{results}",',
-            f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
-        print(colorama.Fore.YELLOW + results)  # prints results
+            f'"{r_address[0]}","{results}","{datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S")}"')
+        print(colorama.Fore.YELLOW + results)
 
     def list_dir(self, conn: ssl.SSLSocket,
                  r_address: Tuple[str, int]) -> None:

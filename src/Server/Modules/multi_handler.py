@@ -160,35 +160,37 @@ class MultiHandler:
             if command == "exit":  # closes the server down
                 print(colorama.Fore.RED + "Closing connections")
                 break  # exits the multihandler
-           # try:
-            if command == "list":
-                self.multihandlercommands.listconnections()
-            elif command == "sessions":
-                if len(sessions["uuid"]) == 0:
-                    print(colorama.Fore.RED + "No sessions connected")
-                else:
-                    self.multihandlercommands.sessionconnect()             
-            elif command == "beacons":
-                if len(beacons["uuid"]) == 0:
-                    print(colorama.Fore.RED + "No beacons connected")
-                elif len(beacons["uuid"]) > 1:
-                    index = int(input("Enter the index of the beacon: "))
-                    self.multihandlercommands.use_beacon(beacons["uuid"][index], beacons["address"][index])
-                else:
-                    index = 0
-                    self.multihandlercommands.use_beacon(beacons["uuid"][0], beacons["address"][0])
-            elif command == "close":
-                self.multihandlercommands.close_from_multihandler(
-                    sessions.details, sessions.address)
-            elif command == "closeall":
-                self.multihandlercommands.close_all_connections(
-                    sessions.details, sessions.address)
-            elif command == "hashfiles":
-                self.multihandlercommands.localDatabaseHash()
-            elif command == "config":
-                config_menu()
-            elif not execute_local_commands(command):
-                print(config['MultiHandlerCommands']['help'])
-            #except (KeyError, SyntaxError, AttributeError) as e:
-               # print(e)
+            try:
+                if command == "list":
+                    self.multihandlercommands.listconnections()
+                elif command == "sessions":
+                    if len(sessions["uuid"]) == 0:
+                        print(colorama.Fore.RED + "No sessions connected")
+                    else:
+                        self.multihandlercommands.sessionconnect()
+                elif command == "beacons":
+                    if len(beacons["uuid"]) == 0:
+                        print(colorama.Fore.RED + "No beacons connected")
+                    elif len(beacons["uuid"]) > 1:
+                        index = int(input("Enter the index of the beacon: "))
+                        self.multihandlercommands.use_beacon(
+                            beacons["uuid"][index], beacons["address"][index])
+                    else:
+                        index = 0
+                        self.multihandlercommands.use_beacon(
+                            beacons["uuid"][0], beacons["address"][0])
+                elif command == "close":
+                    self.multihandlercommands.close_from_multihandler(
+                        sessions.details, sessions.address)
+                elif command == "closeall":
+                    self.multihandlercommands.close_all_connections(
+                        sessions.details, sessions.address)
+                elif command == "hashfiles":
+                    self.multihandlercommands.localDatabaseHash()
+                elif command == "config":
+                    config_menu()
+                elif not execute_local_commands(command):
+                    print(config['MultiHandlerCommands']['help'])
+            except (KeyError, SyntaxError, AttributeError) as e:
+                print(e)
         return
