@@ -7,6 +7,7 @@ import readline
 import colorama
 import sys
 import threading
+import random
 
 from Modules.multi_handler import MultiHandler
 from Modules.global_objects import config
@@ -22,7 +23,11 @@ if __name__ == '__main__':
                          daemon=True).start()
         multi_handler.startsocket()
         if not config['server']['quiet_mode']:
-            print(colorama.Fore.CYAN + config['ascii']['art'])
+            colors = [colorama.Fore.CYAN, colorama.Fore.RED,
+                      colorama.Fore.GREEN, colorama.Fore.YELLOW,
+                      colorama.Fore.BLUE]
+            art_key = f'art{random.randint(1, 5)}'
+            print(random.choice(colors) + config['ASCII'][art_key])
         else:
             print(colorama.Back.RED + "Quiet Mode On")
         print(colorama.Back.GREEN + "Type Help for available commands")
