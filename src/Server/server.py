@@ -6,9 +6,12 @@ initial file that starts the socket and multi handler
 import readline
 import colorama
 import sys
+import threading
+import random
 
 from Modules.multi_handler import MultiHandler
 from Modules.global_objects import config
+from Modules.http_server import app
 
 readline.parse_and_bind('tab: complete')
 
@@ -16,30 +19,20 @@ if __name__ == '__main__':
     try:
         multi_handler = MultiHandler()
         multi_handler.create_certificate()
+        threading.Thread(target=app.run, kwargs={'port': 8080},
+                         daemon=True).start()
         multi_handler.startsocket()
         if not config['server']['quiet_mode']:
-            print(colorama.Fore.CYAN + """
-        CCCCCCCCCCCCC 222222222222222
-      CCC::::::::::::C2:::::::::::::::22
-    CC:::::::::::::::C2::::::222222:::::2
-  C:::::CCCCCCCC::::C2222222     2:::::2
-  C:::::C       CCCCCC            2:::::2
-  C:::::C                          2:::::2
-  C:::::C                       2222::::2
-  C:::::C                  22222::::::22
-  C:::::C                22::::::::222
-  C:::::C               2:::::22222
-  C:::::C              2:::::2
-  C:::::C       CCCCCC2:::::2
-  C:::::CCCCCCCC::::C2:::::2       222222
-    CC:::::::::::::::C2::::::2222222:::::2
-      CCC::::::::::::C2::::::::::::::::::2
-        CCCCCCCCCCCCC22222222222222222222
-  """)
+            colors = [colorama.Fore.CYAN, colorama.Fore.RED,
+                      colorama.Fore.GREEN, colorama.Fore.YELLOW,
+                      colorama.Fore.BLUE]
+            art_key = f'art{random.randint(1, 5)}'
+            print(random.choice(colors) + config['ASCII'][art_key])
         else:
             print(colorama.Back.RED + "Quiet Mode On")
         print(colorama.Back.GREEN + "Type Help for available commands")
         multi_handler.multi_handler(config)  # starst the milti handler
-    except ValueError:  # handles keyboard interpt
+    except Exception as e:  # handles keyboard interrupt
+        print(colorama.Fore.RED + f"Error: {e}")
         print("\n use exit next time")
         sys.exit()

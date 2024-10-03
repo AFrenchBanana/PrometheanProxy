@@ -1,7 +1,7 @@
 import readline
 
 from .content_handler import TomlFiles
-from .global_objects import tab_compeletion
+from .global_objects import tab_completion
 import ipaddress
 
 CONFIG_FILE_PATH = 'config.toml'
@@ -15,7 +15,7 @@ def config_menu() -> None:
         print("3. Exit")
         readline.parse_and_bind("tab: complete")
         readline.set_completer(
-            lambda text, state: tab_compeletion(
+            lambda text, state: tab_completion(
                 text, state, [
                     "1", "2", "3"]))
         inp = input("Enter Option: ")
@@ -62,7 +62,7 @@ def edit_config() -> bool:
         while True:
             readline.parse_and_bind("tab: complete")
             readline.set_completer(
-                lambda text, state: tab_compeletion(
+                lambda text, state: tab_completion(
                     text, state, main_keys))
             key = input("Enter key: ")
             if key == "exit":
@@ -73,17 +73,17 @@ def edit_config() -> bool:
             if key == "server":
                 readline.parse_and_bind("tab: cowmplete")
                 readline.set_completer(
-                    lambda text, state: tab_compeletion(
+                    lambda text, state: tab_completion(
                         text, state, server_keys))
             elif key == "authentication":
                 readline.parse_and_bind("tab: complete")
                 readline.set_completer(
-                    lambda text, state: tab_compeletion(
+                    lambda text, state: tab_completion(
                         text, state, authentication_keys))
             elif key == "packetsniffer":
                 readline.parse_and_bind("tab: complete")
                 readline.set_completer(
-                    lambda text, state: tab_compeletion(
+                    lambda text, state: tab_completion(
                         text, state, packetsniffer_keys))
             subkey = input("Enter sub-key to change: ")
             if subkey not in config[key]:
