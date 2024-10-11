@@ -1,0 +1,4 @@
+[submodule "src/Client/Client_C++/dep/JSONCPP/src/Client/Client_C++/dep/jsoncpp"]
+	path = src/Client/Client_C++/dep/JSONCPP/src/Client/Client_C++/dep/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git
+	ignore = all
