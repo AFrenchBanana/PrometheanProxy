@@ -1,43 +1,49 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(MyProject LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 20)  # Change to C++20
+
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Prefer static libraries
 set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
 set(BUILD_SHARED_LIBS OFF)
 
-# Link statically
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(CMAKE_CXX_COMPILER g++)
     set(VCPKG_TARGET_TRIPLET "x64-linux")
-    message(STATUS "Configuring for Linux with g++")
+    set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/dep/vcpkg/installed/${VCPKG_TARGET_TRIPLET}")
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
     set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
-    message(STATUS "Cross-compiling for Windows with MinGW")
+    set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/dep/vcpkg/installed/${VCPKG_TARGET_TRIPLET}")
+else()
+    message(FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-# Toolchain file for vcpkg
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/src/Client/Client_C++/dep/vcpkg/scripts/buildsystems/vcpkg.cmake"
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/dep/vcpkg/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "Vcpkg toolchain file")
 
-# Directly specify the main source file
 set(SOURCES "${CMAKE_SOURCE_DIR}/main.cpp")
 
-# Debug message to check found source files
 message(STATUS "Found source files: ${SOURCES}")
 
-# Add executable target
+find_package(CURL REQUIRED)
+
+if(NOT CURL_FOUND)
+    message(FATAL_ERROR "CURL not found. Ensure it is installed via vcpkg.")
+endif()
+
 add_executable(MyExecutable ${SOURCES})
 
-# Set the output directory for the executable to the 'bin' folder in the root of the project
+target_link_libraries(MyExecutable PRIVATE ${CURL_LIBRARIES})
+
 set_target_properties(MyExecutable PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "../bin"
-    LIBRARY_OUTPUT_DIRECTORY "../bin"
-    ARCHIVE_OUTPUT_DIRECTORY "../bin"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
+
+

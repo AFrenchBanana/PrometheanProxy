@@ -23,19 +23,19 @@ lint:
 test:
 	. venv/bin/activate && PYTHONPATH=src/Server python3 -m unittest tests/*.py
 
-linux:
+linux: vcpkg-dep-linux
 	mkdir -p $(BUILD_DIR_LIN) && mkdir -p $(OUTPUT_DIR) && cd $(BUILD_DIR_LIN) && \
 	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ \
 		-DCMAKE_PREFIX_PATH="$(LINUX_PREFIX)" \
-		-DOUTPUT_BINARY=$(OUTPUT_LINUX) \
 		../$(SOURCE_DIR) && make
 	rm -rf $(BUILD_DIR_LIN)
 
-windows:
-	mkdir -p $(BUILD_DIR_WIN) && mkdir -p $(OUTPUT_DIR) && cd $(BUILD_DIR_WIN) && \
-	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=$(WIN_CC) -DCMAKE_SYSTEM_NAME=Windows \
+windows: vcpkg-dep-windows
+	mkdir -p build-windows && mkdir -p bin && cd build-windows && \
+	cmake -DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+		-DCMAKE_SYSTEM_NAME=Windows \
 		-DCMAKE_PREFIX_PATH="$(WINDOWS_PREFIX)" \
-		-DOUTPUT_BINARY=$(OUTPUT_WINDOWS) \
 		../$(SOURCE_DIR) && make
 	rm -rf $(BUILD_DIR_WIN)
 
@@ -45,3 +45,14 @@ clean:
 	find . -name "CMakeFiles" -exec rm -rf {} +   # Clean up CMakeFiles
 	find . -name "CMakeCache.txt" -exec rm -f {} +  # Clean up CMakeCache
 	rm -rf $(BUILD_DIR) $(BUILD_DIR_WIN) $(BUILD_DIR_LIN) $(OUTPUT_DIR)
+
+vcpkg-dep: vcpkg-dep-windows vcpkg-dep-linux
+
+vcpkg-dep-windows:
+	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-mingw-static
+
+vcpkg-dep-linux:
+	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-linux
+
+
+.PHONY: venv lint test linux windows all clean vcpkg-dep vcpkg-dep-windows vcpkg-dep-linux
