@@ -42,17 +42,17 @@ windows: vcpkg-dep-windows
 all: linux windows
 
 clean:
-	find . -name "CMakeFiles" -exec rm -rf {} +   # Clean up CMakeFiles
-	find . -name "CMakeCache.txt" -exec rm -f {} +  # Clean up CMakeCache
+	find . -name "CMakeFiles" -exec rm -rf {} +  
+	find . -name "CMakeCache.txt" -exec rm -f {} +
 	rm -rf $(BUILD_DIR) $(BUILD_DIR_WIN) $(BUILD_DIR_LIN) $(OUTPUT_DIR)
 
 vcpkg-dep: vcpkg-dep-windows vcpkg-dep-linux
 
 vcpkg-dep-windows:
-	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-mingw-static glibc:x64-mingw-static
+	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-mingw-static jsoncpp:x64-mingw-static 
 
 vcpkg-dep-linux:
-	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-linux glibc:x64-linux
+	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-linux jsoncpp:x64-linux
 
 
 .PHONY: venv lint test linux windows all clean vcpkg-dep vcpkg-dep-windows vcpkg-dep-linux

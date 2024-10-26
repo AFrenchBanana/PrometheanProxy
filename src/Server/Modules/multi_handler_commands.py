@@ -218,9 +218,7 @@ class MultiHandlerCommands:
                         print(colorama.Fore.GREEN +
                               "Next Callback expected"
                               f"{beacons['next_beacon'][i]} "
-                              f"in {(time.mktime(next_beacon_time) -
-                                     time.mktime(current_time))} "
-                              "seconds")
+                              f"in {time.mktime(next_beacon_time) - time.mktime(current_time)} seconds") # noqa
                 except ValueError:
                     print(colorama.Fore.YELLOW + "Awaiting first call")
 

