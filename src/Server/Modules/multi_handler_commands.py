@@ -210,9 +210,8 @@ class MultiHandlerCommands:
                         time_diff = time.mktime(current_time) - time.mktime(
                             next_beacon_time)
                         print(colorama.Fore.RED +
-                              ("Expected Callback was"
+                              ("Expected Callback was "
                                f"{beacons['next_beacon'][i]}. "
-                               f"It is {int(time_diff)} seconds late. "
                                f"It is {int(time_diff)} seconds late."))
                     else:
                         print(colorama.Fore.GREEN +

@@ -27,6 +27,7 @@
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* s);
 std::tuple<int, std::string, std::string> getRequest(const std::string& url);
 std::tuple<int, std::string, int> httpConnection(const std::string& address);
-void beacon(const std::string& address, const std::string& ID, int jitter, int timer);
+std::tuple<int, std::string, int> httpReconnect(const std::string& address, const std::string& user_id, int jitter, int timer);
+int beacon(const std::string& address, const std::string& ID, int jitter, int timer);
 
 #endif

