@@ -20,6 +20,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         "${CMAKE_SOURCE_DIR}/main.cpp"
         "${CMAKE_SOURCE_DIR}/Linux/*.cpp"
         "${CMAKE_SOURCE_DIR}/Linux/*.h"
+        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.h"
         "${CMAKE_SOURCE_DIR}/Generic/*.cpp"
         "${CMAKE_SOURCE_DIR}/Generic/*.h"
     )
@@ -51,7 +53,7 @@ message(STATUS "Found source files: ${SOURCES}")
 
 find_package(CURL REQUIRED)
 if(NOT CURL_FOUND)
-    message(FATAL_ERROR "CURL not found. Ensure it is installed via vcpkg.")
+    message(FATAL_ERROR "CURL not found.")
 endif()
 
 find_package(Threads REQUIRED)
@@ -66,7 +68,7 @@ add_executable(MyExecutable ${SOURCES})
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} ${WINDOWS_LIBS} JsonCpp::JsonCpp)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} JsonCpp::JsonCpp)
+    target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} JsonCpp::JsonCpp )
 endif()
 
 set_target_properties(MyExecutable PROPERTIES

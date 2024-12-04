@@ -29,5 +29,11 @@ std::tuple<int, std::string, std::string> getRequest(const std::string& url);
 std::tuple<int, std::string, int> httpConnection(const std::string& address);
 std::tuple<int, std::string, int> httpReconnect(const std::string& address, const std::string& user_id, int jitter, int timer);
 int beacon(const std::string& address, const std::string& ID, int jitter, int timer);
+std::string constructUrl(const std::string& address, const std::string& ID);
+int calculateSleepTime(int timer, int jitter);
+void sleepFor(int seconds);
+std::tuple<int, std::string, std::string> getRequest(const std::string& url);
+bool handleResponse(const std::string& response_body, int& timer, const std::string& ID);
+int retryRequest(const std::string& url, int attempts, int sleepTime);
 
 #endif

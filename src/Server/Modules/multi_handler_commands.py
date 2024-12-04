@@ -132,7 +132,8 @@ class MultiHandlerCommands:
                 lambda text, state:
                     tab_completion(text, state, [
                         "shell", "processes", "sysinfo", "close",
-                        "listdir", "diskusage", "netstat", "session"
+                        "listdir", "diskusage", "netstat", "session",
+                        "commands"
                     ]))
             command = (input(colorama.Fore.YELLOW +
                              f"{UserID} Command: ")
@@ -165,6 +166,8 @@ class MultiHandlerCommands:
                                 # remove the beacon from the list
                                 remove_beacon_list(beacons["uuid"][i])
                         return
+                elif command == "commands":
+                    self.beaconCommands.list_db_commands(UserID)
                 elif not exec(command):
                     print((colorama.Fore.GREEN +
                            "NEED TO ADD HELP MENU"))

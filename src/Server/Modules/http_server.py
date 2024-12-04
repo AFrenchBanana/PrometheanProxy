@@ -77,16 +77,15 @@ def response():
     for i, command_uuid in enumerate(beacon_commands["command_uuid"]):
         if cid == command_uuid:
             found = True
-            if i < len(beacon_commands["executed"]):
-                beacon_commands["command_output"].append(output)
+            if i < len(beacon_commands["command_output"]):
+                beacon_commands["command_output"][i] = output
                 print(
-                    f"Command {beacon_commands['beacon_uuid'][i]}"
-                    " responded with:"
+                    f"Command {beacon_commands['beacon_uuid'][i]} responded with:"
                 )
                 print(output)
             else:
                 print(
-                    f"Index {i} out of range for {beacon_commands['executed']}"
+                    f"Index {i} out of range for {beacon_commands['command_output']}"
                 )
     if not found:
         return '', 500
