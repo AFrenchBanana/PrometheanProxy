@@ -1,0 +1,9 @@
+
+# ...existing code...
+add_executable(MyExecutable
+    src/Generic/httpRequests.cpp
+    src/Generic/commandHandler.cpp
+    Linux/beacon/commandHandler.cpp
+    # ...other source files...
+)
+# ...existing code...

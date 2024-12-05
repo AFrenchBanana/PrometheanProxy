@@ -27,7 +27,7 @@ Fully working client + socket server with the ability to handle multiple clients
 
 The server has full database support, storing returned data from the client as well as a list of known safe hashes to compare against.
 
-Partially working client written in C.
+Partially working client written in C++.
 
 ### Client Features
 Each client is able to provide a number of useful features:
@@ -103,6 +103,10 @@ Once connected to a session, the commands are executed from within the session_c
 The global objects contain functions and variables that need to be accessed anywhere to prevent circular importing issues.
 
 There is also a dedicated file to handle the database, authentication, and packet sniffer.
+
+### C2 Beaconing System
+
+The client uses a beaconing system to maintain communication with the server. The client will attempt to connect to the server at regular intervals. If the connection is lost, the client will wait for a specified period before attempting to reconnect. This ensures that the client can re-establish communication with the server even if the connection is temporarily disrupted.
 
 ### Database
 The database runs on sqlite3.
@@ -186,11 +190,11 @@ TLS keys should be the same as the server (these currently do not autogenerate).
 8. All data the client receives is sent to the server.
 9. The server will either write to the file or print to the screen (config dependent).
 
-## C Client
+## CPP Client
 
-This is still in early stages of development and is not recommended for use.
+The CPP client is a new addition to the PrometheanProxy C2 framework. It is designed to provide the same functionality as the original Python client but with improved performance and stability. The CPP client is still under active development, and new features are being added regularly.
 
-Current working features include:
+### Current Features
 1. Full integration with the original Python server.
 2. Can be used at the same time as the Python client.
 3. Sysinfo working.

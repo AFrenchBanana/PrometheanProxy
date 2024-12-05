@@ -238,8 +238,7 @@ class SessionCommandsClass:
         print(colorama.Fore.YELLOW + netstat)  # prints netstat
         self.database.insert_entry(
             "Netstat",
-            f'"{r_address[0]}","{netstat}","{datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S")}"')
+            f'"{r_address[0]}","{netstat}","{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"') # noqa
         return
 
     def diskusage(self, conn: ssl.SSLSocket,
@@ -251,8 +250,7 @@ class SessionCommandsClass:
         results = receive_data(conn)
         self.database.insert_entry(
             "Disk",
-            f'"{r_address[0]}","{results}","{datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S")}"')
+            f'"{r_address[0]}","{results}","{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"') # noqa
         print(colorama.Fore.YELLOW + results)
 
     def list_dir(self, conn: ssl.SSLSocket,

@@ -90,7 +90,7 @@ def add_beacon_command_list(beacon_uuid: str,
     beacon_commands["beacon_uuid"].append(beacon_uuid)
     beacon_commands["command_uuid"].append(command_uuid)
     beacon_commands["command"].append(command)
-    beacon_commands["command_output"].append("")
+    beacon_commands["command_output"].append("Awaiting Response")
     beacon_commands["executed"].append(False)
     print(f"Command {command_uuid} added to beacon {beacon_uuid}")
 

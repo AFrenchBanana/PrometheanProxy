@@ -10,3 +10,5 @@ test.*
 *pyc
 .pytest_cache
 venv*
+build*/
+bin/

