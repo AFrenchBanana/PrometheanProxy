@@ -52,6 +52,14 @@ class BeaconCommandsClass:
         command = input("Command: ")
         add_beacon_command_list(userID, f"shell {command}")
 
+    def list_dir(self, userID, IPAddress) -> None:
+        """runs a shell between the sessions client and server"""
+        print(
+            f"ListDir {IPAddress}: Type exit to quit session, "
+            "Please use absolute paths")
+        command = input("Directory: ")
+        add_beacon_command_list(userID, f"list_dir {command}")
+
     def list_processes(self, userID) -> None:
         add_beacon_command_list(userID, "list_processes")
         return

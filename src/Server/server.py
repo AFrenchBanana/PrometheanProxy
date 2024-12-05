@@ -8,6 +8,7 @@ import colorama
 import sys
 import threading
 import random
+import os
 
 from Modules.multi_handler import MultiHandler
 from Modules.global_objects import config
@@ -15,12 +16,15 @@ from Modules.http_server import app
 
 readline.parse_and_bind('tab: complete')
 
+os.environ['FLASK_ENV'] = 'production'
+
 if __name__ == '__main__':
     try:
         multi_handler = MultiHandler()
         multi_handler.create_certificate()
-        threading.Thread(target=app.run, kwargs={'port': 8080},
-                         daemon=True).start()
+        threading.Thread(
+            target=app.run, kwargs={'port': config["server"]["webPort"],
+                                    'debug': False}, daemon=True).start()
         multi_handler.startsocket()
         if not config['server']['quiet_mode']:
             colors = [colorama.Fore.CYAN, colorama.Fore.RED,

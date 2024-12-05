@@ -1,5 +1,6 @@
 [server]
 listenaddress = "0.0.0.0"
+webPort = 8080
 port = 2000
 TLSCertificateDir = "./Certificates/"
 TLSCertificate = "cert.pem"

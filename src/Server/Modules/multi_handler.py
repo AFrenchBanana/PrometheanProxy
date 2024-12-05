@@ -163,43 +163,50 @@ class MultiHandler:
                 if command == "exit":  # closes the server down
                     print(colorama.Fore.RED + "Closing connections")
                     break  # exits the multihandler
-                try:
-                    if command == "list":
-                        self.multihandlercommands.listconnections()
-                    elif command == "sessions":
-                        if len(sessions["uuid"]) == 0:
-                            print(colorama.Fore.RED + "No sessions connected")
-                        else:
-                            self.multihandlercommands.sessionconnect()
-                    elif command == "beacons":
-                        if len(beacons["uuid"]) == 0:
-                            print(colorama.Fore.RED + "No beacons connected")
-                        elif len(beacons["uuid"]) > 1:
-                            index = int(
-                                input("Enter the index of the beacon: "))
-                            try:
-                                self.multihandlercommands.use_beacon(
-                                    beacons["uuid"][index],
-                                    beacons["address"][index])
-                            except IndexError:
-                                print(colorama.Fore.RED +
-                                      "Index out of range")
-                        else:
-                            index = 0
+
+                def handle_sessions():
+                    if len(sessions["uuid"]) == 0:
+                        print(colorama.Fore.RED + "No sessions connected")
+                    else:
+                        self.multihandlercommands.sessionconnect()
+
+                def handle_beacons():
+                    if len(beacons["uuid"]) == 0:
+                        print(colorama.Fore.RED + "No beacons connected")
+                    elif len(beacons["uuid"]) > 1:
+                        index = int(input("Enter the index of the beacon: "))
+                        try:
                             self.multihandlercommands.use_beacon(
-                                beacons["uuid"][0], beacons["address"][0])
-                    elif command == "close":
+                                beacons["uuid"][index],
+                                beacons["address"][index])
+                        except IndexError:
+                            print(colorama.Fore.RED + "Index out of range")
+                    else:
+                        index = 0
+                        self.multihandlercommands.use_beacon(
+                            beacons["uuid"][0], beacons["address"][0])
+
+                command_handlers = {
+                    "list": self.multihandlercommands.listconnections,
+                    "sessions": handle_sessions,
+                    "beacons": handle_beacons,
+                    "close": lambda:
                         self.multihandlercommands.close_from_multihandler(
-                            sessions.details, sessions.address)
-                    elif command == "closeall":
+                            sessions.details, sessions.address),
+                    "closeall": lambda:
                         self.multihandlercommands.close_all_connections(
-                            sessions.details, sessions.address)
-                    elif command == "hashfiles":
-                        self.multihandlercommands.localDatabaseHash()
-                    elif command == "config":
-                        config_menu()
-                    elif not execute_local_commands(command):
-                        print(config['MultiHandlerCommands']['help'])
+                            sessions.details, sessions.address),
+                    "hashfiles": self.multihandlercommands.localDatabaseHash,
+                    "config": config_menu
+                }
+
+                try:
+                    handler = command_handlers.get(command)
+                    if handler:
+                        handler()
+                    else:
+                        if not execute_local_commands(command):
+                            print(config['MultiHandlerCommands']['help'])
                 except (KeyError, SyntaxError, AttributeError) as e:
                     print(e)
         except KeyboardInterrupt:

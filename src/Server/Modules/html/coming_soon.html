@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: #f3f3f3;
+            font-family: sans-serif;
+        }
+        #container {
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #ccc;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2em;
+            color: #333;
+        }
+        #countdown {
+            font-size: 1.5em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Our Shop is Coming Soon!</h1>
+        <div id="countdown">Launching in <span id="time">10d 00:00:00</span></div>
+    </div>
+    <script>
+        const countDownDate = new Date().getTime() + 10*24*60*60*1000;
+        const x = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = countDownDate - now;
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            document.getElementById('time').innerHTML = `${days}d ${hours}:${minutes}:${seconds}`;
+            if (distance < 0) {
+                clearInterval(x);
+                document.getElementById('time').innerHTML = 'We have launched!';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
