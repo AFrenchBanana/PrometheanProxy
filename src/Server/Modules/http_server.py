@@ -9,14 +9,16 @@ log = logging.getLogger('werkzeug')
 app.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
 
+
 @app.route('/')
 def index():
     return send_file("html/coming_soon.html")
 
-    
+
 @app.route('/<path:unknown_path>')
 def catch_all(unknown_path):
     return redirect('https://www.google.com')
+
 
 @app.route('/connection', methods=['GET'])
 def connection():
@@ -101,5 +103,3 @@ def response():
     if not found:
         return '', 500
     return '', 200
-
-
