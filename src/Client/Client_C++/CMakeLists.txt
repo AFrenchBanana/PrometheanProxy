@@ -34,10 +34,12 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     # Specify sources for Windows
     file(GLOB SOURCES 
         "${CMAKE_SOURCE_DIR}/main.cpp"
-        "${CMAKE_SOURCE_DIR}/Windows/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Windows/*.h"
         "${CMAKE_SOURCE_DIR}/Generic/*.cpp"
         "${CMAKE_SOURCE_DIR}/Generic/*.h"
+        "${CMAKE_SOURCE_DIR}/Windows/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Windows/*.h"
+        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.h"
     )
 
     # Link Windows-specific libraries for networking

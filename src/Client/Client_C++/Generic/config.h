@@ -6,4 +6,8 @@
 
 extern const std::string URL;
 
+extern std::string ID;
+extern int JITTER;
+extern int TIMER;
+
 #endif 

