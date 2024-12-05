@@ -99,7 +99,7 @@ name = "Disk"
 schema = "IP text, Disk Usage, Time text"
 
 [urlObfuscation]
-connect = "^h.*_2.*$"
+connect = "^a.*_2.*$"
 
 
 

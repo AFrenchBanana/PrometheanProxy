@@ -16,7 +16,11 @@ log.setLevel(logging.ERROR)
 class RegexConverter(BaseConverter):
     def __init__(self, map, *items):
         super().__init__(map)
-        self.regex = items[0]
+        if items:
+            self.regex = items[0]
+        else:
+            raise ValueError("Regex pattern must be provided")
+
 
 app.url_map.converters['regex'] = RegexConverter
 @app.route('/')
@@ -29,7 +33,7 @@ def catch_all(unknown_path):
     return redirect('https://www.google.com')
 
 
-@app.route(f'/<regex({config["urlObfuscation"]["connect"]}):custom_param>', methods=['GET'])
+@app.route(f'/<regex("{config["urlObfuscation"]["connect"]}"):custom_param>', methods=['GET'])
 def connection(custom_param):
     if 5 <= len(custom_param) <= 10:
         if request.args.get('name') and request.args.get('os') and request.args.get('address'):
