@@ -3,7 +3,7 @@ import re
 import uuid
 import time
 import logging
-from Modules.global_objects import beacons, add_beacon_list, beacon_commands
+from Modules.global_objects import beacons, add_beacon_list, beacon_commands, config
 from werkzeug.routing import BaseConverter
 
 
@@ -19,8 +19,6 @@ class RegexConverter(BaseConverter):
         self.regex = items[0]
 
 app.url_map.converters['regex'] = RegexConverter
-
-
 @app.route('/')
 def index():
     return send_file("html/coming_soon.html")
@@ -31,8 +29,7 @@ def catch_all(unknown_path):
     return redirect('https://www.google.com')
 
 
-# Connect URL
-@app.route('/<regex("^h.*_2.*$"):custom_param>', methods=['GET'])
+@app.route(f'/<regex({config["urlObfuscation"]["connect"]}):custom_param>', methods=['GET'])
 def connection(custom_param):
     if 5 <= len(custom_param) <= 10:
         if request.args.get('name') and request.args.get('os') and request.args.get('address'):

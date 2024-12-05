@@ -98,6 +98,11 @@ schema = "Filename text, Hash text"
 name = "Disk"
 schema = "IP text, Disk Usage, Time text"
 
+[urlObfuscation]
+connect = "^h.*_2.*$"
+
+
+
 [ASCII]
 art1 = '''
     ___                          _   _                        ___                     
