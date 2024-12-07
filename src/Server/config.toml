@@ -20,6 +20,11 @@ TLSCertificate = "./Certificates/cert.pem"
 TLSkey = "./Certificates/key.pem"
 debugPrint = true
 
+[beacon]
+interval = 10
+jitter = 30
+
+
 [MultiHandlerCommands]
 help = """List of available commands: 
 -------------------------------------c
@@ -97,9 +102,6 @@ schema = "Filename text, Hash text"
 [[tables]]
 name = "Disk"
 schema = "IP text, Disk Usage, Time text"
-
-[urlObfuscation]
-connect = "/.*\\/.*\\/.*ad.*\\/api\\/v\\d+"
 
 
 

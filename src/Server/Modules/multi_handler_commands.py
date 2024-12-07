@@ -21,7 +21,7 @@ from .global_objects import (
 )
 
 from typing import Tuple
-
+from tabulate import tabulate
 import hashlib
 import os
 import tqdm
@@ -191,49 +191,67 @@ class MultiHandlerCommands:
         """
         List all active connections stored in the global objects variables
         """
+        # Sessions table
         if len(sessions["address"]) == 0:  # no connections
             print(colorama.Fore.RED + "No Active Sessions")
         else:
             print("Sessions:")
+            table = []
             for i in range(len(sessions["address"])):
-                print(
-                    colorama.Fore.GREEN + (
-                        f"{sessions['uuid'][i]} {sessions['hostname'][i]} "
-                        f"{sessions['address'][i]}"
-                        f"{sessions['operating_system'][i]}"
-                    ))
+                table.append([
+                    sessions['uuid'][i],
+                    sessions['hostname'][i],
+                    sessions['address'][i],
+                    sessions['operating_system'][i]
+                ])
+            print(colorama.Fore.WHITE + tabulate(
+                table, headers=["UUID", "Hostname", "Address", "OS"],
+                tablefmt="grid"))
 
+        # Beacons table
         if len(beacons["address"]) == 0:
             print(colorama.Fore.RED + "No Active Beacons")
         else:
             print("Beacons:")
+            table = []
             for i in range(len(beacons["address"])):  # print beacons
-                print(
-                    colorama.Fore.GREEN +
-                    f"{i+1} Host: {beacons['hostname'][i]} " +
-                    f"OS: {beacons['operating_system'][i]} " +
-                    f"IP: {beacons['address'][i]} " +
-                    f"ID: {beacons['uuid'][i]} " +
-                    f"Last Callback: {beacons['last_beacon'][i]} ")
+                row = [
+                    beacons['hostname'][i],
+                    beacons['operating_system'][i],
+                    beacons['address'][i],
+                    beacons['uuid'][i],
+                    beacons['last_beacon'][i]
+                ]
                 try:
-                    next_beacon_time = time.strptime(beacons["next_beacon"][i])
-                    current_time = time.strptime(time.asctime())
+                    next_beacon_time = time.strptime(
+                        beacons["next_beacon"][i], "%a %b %d %H:%M:%S %Y")
+                    current_time = time.strptime(
+                        time.asctime(), "%a %b %d %H:%M:%S %Y")
 
-                    if (time.mktime(current_time) >
-                            time.mktime(next_beacon_time)):
+                    if time.mktime(current_time) > time.mktime(
+                            next_beacon_time):
                         time_diff = time.mktime(current_time) - time.mktime(
                             next_beacon_time)
-                        print(colorama.Fore.RED +
-                              ("Expected Callback was "
-                               f"{beacons['next_beacon'][i]}. "
-                               f"It is {int(time_diff)} seconds late."))
+                        if time_diff < beacons["jitter"][i]:
+                            row.append(f"Expected Callback was {beacons['next_beacon'][i]}. It is {int(time_diff)} seconds late. (Within Jitter)") # noqa
+                            row_color = colorama.Fore.YELLOW
+                        else:
+                            row.append(f"Expected Callback was {beacons['next_beacon'][i]}. It is {int(time_diff)} seconds late") # noqa
+                            row_color = colorama.Fore.RED
                     else:
-                        print(colorama.Fore.GREEN +
-                              "Next Callback expected"
-                              f"{beacons['next_beacon'][i]} "
-                              f"in {time.mktime(next_beacon_time) - time.mktime(current_time)} seconds") # noqa
+                        row.append(f"Next Callback expected {beacons['next_beacon'][i]} in {int(time.mktime(next_beacon_time) - time.mktime(current_time))} seconds") # noqa
+                        row_color = colorama.Fore.WHITE
                 except ValueError:
-                    print(colorama.Fore.YELLOW + "Awaiting first call")
+                    row.append("Awaiting first call")
+                    row_color = colorama.Fore.WHITE
+                table.append((row, row_color))
+
+            # Print the table with color
+            for row, row_color in table:
+                print(row_color +
+                      tabulate([row], headers=["Host", "OS", "IP", "ID",
+                                               "Last Callback", "Status"],
+                               tablefmt="grid"))
 
     def sessionconnect(self) -> None:
         """allows interaction with individual session,
