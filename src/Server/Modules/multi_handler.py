@@ -29,7 +29,7 @@ from .global_objects import (
     tab_completion,
     beacons,
 )
-from Modules.config_configuration import config_menu
+from Modules.config_configuration import config_menu, beacon_config_menu
 
 
 class MultiHandler:
@@ -155,8 +155,9 @@ class MultiHandler:
                 readline.set_completer(
                     lambda text, state:
                         tab_completion(text,
-                                       state, ["list", "sessions", "beacons",
+                                       state, ["list", "sessions", "beacon",
                                                "close", "closeall",
+                                               "beacon config",
                                                "command", "hashfiles",
                                                "config", "help", "exit",]))
                 command = input("MultiHandler: ").lower()
@@ -197,7 +198,8 @@ class MultiHandler:
                         self.multihandlercommands.close_all_connections(
                             sessions.details, sessions.address),
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
-                    "config": config_menu
+                    "config": config_menu,
+                    "beacon config": beacon_config_menu
                 }
 
                 try:

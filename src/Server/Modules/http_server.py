@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify, redirect
 import uuid
 import time
 import logging
-from Modules.global_objects import beacons, add_beacon_list, beacon_commands
+from Modules.global_objects import (
+    beacons, add_beacon_list, beacon_commands, config)
 
 
 app = Flask(__name__)
@@ -32,8 +33,12 @@ def connectionRequest(part1, part2, ad_param, version):
         os = data['os']
         address = data['address']
         userID = str(uuid.uuid4())
-        add_beacon_list(userID, address, name, os, time.asctime(), 5, 10)
-        return {"timer": 5, "uuid": userID, "jitter": 10}, 200
+        add_beacon_list(userID, address, name,
+                        os, time.asctime(),
+                        config['beacon']["interval"],
+                        config['beacon']['jitter'])
+        return {"timer": config['beacon']["interval"],
+                "uuid": userID, "jitter": config['beacon']['jitter']}, 200
     else:
         return redirect("https://www.google.com", code=302)
 
@@ -66,7 +71,10 @@ def reconect(part1, ad_param):
     if name and os and address and ID and timer and jitter:
         add_beacon_list(ID, address, name, os, time.asctime(),
                         float(timer), float(jitter))
-        return {"timer": 5, "uuid": ID, "jitter": 10}, 200
+        return {"timer":
+                config["beacons"]["interval"],
+                "uuid": ID,
+                "jitter": config["beacon"]["jitter"]}, 200
     else:
         return '', 404
 

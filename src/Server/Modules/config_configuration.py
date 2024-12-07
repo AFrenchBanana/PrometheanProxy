@@ -1,8 +1,11 @@
 import readline
+from tabulate import tabulate
 
 from .content_handler import TomlFiles
 from .global_objects import tab_completion
 import ipaddress
+
+from .global_objects import config as loadedConfig
 
 CONFIG_FILE_PATH = 'config.toml'
 
@@ -20,23 +23,22 @@ def config_menu() -> None:
                     "1", "2", "3"]))
         inp = input("Enter Option: ")
         if inp == "1":
-            show_config()
+            list(map(lambda x: show_config(x), ["server", "authentication",
+                                                "packetsniffer", "beacon"]))
         if inp == "2":
             edit_config()
         if inp == "3":
             return
 
 
-def show_config() -> None:
-    """Shows the config TOML configuration"""
-    config = ""
-    with open(CONFIG_FILE_PATH, "r") as f:
-        file = f.readlines()
-    for line in file:
-        if line.startswith("[MultiHandlerCommands]"):
-            break
-        config += line
-    print(config)
+def show_config(indexKey) -> None:
+    print(f"Configuration for {indexKey}")
+    config = loadedConfig.get(indexKey, {})
+    if not config:
+        print("No configuration found.")
+        return
+    table = [[key, value] for key, value in config.items()]
+    print(tabulate(table, headers=["Key", "Value"], tablefmt='grid'))
 
 
 def edit_config() -> bool:
@@ -71,7 +73,7 @@ def edit_config() -> bool:
                 print("Not a valid key")
                 pass
             if key == "server":
-                readline.parse_and_bind("tab: cowmplete")
+                readline.parse_and_bind("tab: complete")
                 readline.set_completer(
                     lambda text, state: tab_completion(
                         text, state, server_keys))
@@ -119,3 +121,56 @@ def edit_config() -> bool:
                 print("Changes saved successfully!")
                 print("Restart the server to apply changes.")
                 return True
+
+
+def edit_beacon_config() -> None:
+    beacon_keys = [
+        "interval",
+        "jitter",
+    ]
+    readline.set_completer(
+        lambda text, state: tab_completion(
+            text, state, beacon_keys))
+    key = input("Enter key: ").lower()
+    if key not in beacon_keys:
+        print("Not a valid key")
+        return
+    print("""
+          Times are in seconds, this will not update live beacons
+          only new beacons.
+          You can edit live beacons in the beacon menu.
+          """)
+    print("Current value: ", loadedConfig["beacon"][key])
+    readline.set_completer(lambda text, state: tab_completion(
+        text, state, ""))
+    new_value = input("Enter new value: ")
+    if isinstance(loadedConfig["beacon"][key], int):
+        try:
+            new_value = int(new_value)
+        except ValueError:
+            print("Invalid value. Please enter a number")
+            return
+    loadedConfig["beacon"][key] = new_value
+    toml_file = TomlFiles(CONFIG_FILE_PATH)
+    toml_file.update_config("beacon", key, new_value)
+    print("Changes saved successfully!")
+
+
+def beacon_config_menu() -> None:
+    while True:
+        print("Beacon Config Menu")
+        print("1. Show Beacon Config")
+        print("2. Edit Beacon Config")
+        print("3. Exit")
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(
+            lambda text, state: tab_completion(
+                text, state, [
+                    "1", "2", "3"]))
+        inp = input("Enter Option: ")
+        if inp == "1":
+            show_config("beacon")
+        if inp == "2":
+            edit_beacon_config()
+        if inp == "3":
+            return
