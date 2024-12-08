@@ -87,3 +87,22 @@ class BeaconCommandsClass:
                 print(f"""Command ID: {beacon_commands["command_uuid"][j]}
                     Command: {beacon_commands["command"][j]}
                     Response: {beacon_commands["command_output"][j]}""")
+    
+    def beacon_configueration(self, userID) -> None:
+        data = {}
+        additional_data = "y"
+        while additional_data != "n":
+            command = input("Enter Configuration command: ")
+            value = input("Enter configuration value: ")
+            if value.isinstance(int):
+                value = int(value)
+            else:
+                print("Value must be an integer")
+            data += {command: value}
+            if (input("Add another confiugration option? (y/N)"
+                      ).lower() == "y"):
+                continue
+            else:
+                break
+        add_beacon_command_list(userID, "beacon_configueration", data)
+        return
