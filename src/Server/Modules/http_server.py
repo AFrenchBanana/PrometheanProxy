@@ -6,9 +6,9 @@ from Modules.global_objects import (
     beacons, add_beacon_list, beacon_commands, config)
 
 
-app = Flask(__name__)
+beaconControl = Flask(__name__)
 log = logging.getLogger('werkzeug')
-app.logger.setLevel(logging.ERROR)
+beaconControl.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
 
 
@@ -23,7 +23,7 @@ it will return a 404
 """
 
 
-@app.route('/<part1>/<part2>/<ad_param>/api/v<int:version>', methods=['POST'])
+@beaconControl.route('/<part1>/<part2>/<ad_param>/api/v<int:version>', methods=['POST'])
 def connectionRequest(part1, part2, ad_param, version):
     if "ad" not in ad_param or version not in range(1, 11):
         return '', 404
@@ -55,7 +55,7 @@ it will return a 404
 """
 
 
-@app.route('/<part1>/<ad_param>/getLatest', methods=['POST'])
+@beaconControl.route('/<part1>/<ad_param>/getLatest', methods=['POST'])
 def reconect(part1, ad_param):
     if "ad" not in ad_param:
         return '', 404
@@ -79,7 +79,7 @@ def reconect(part1, ad_param):
         return '', 404
 
 
-@app.route('/checkUpdates/<part1>/<part2>', methods=['GET'])
+@beaconControl.route('/checkUpdates/<part1>/<part2>', methods=['GET'])
 def beacon(part1, part2):
     data = {}
     id = request.args.get('session')
@@ -108,7 +108,7 @@ def beacon(part1, part2):
     return jsonify(data), 200
 
 
-@app.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
+@beaconControl.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
 def response(path1, version):
     if version not in range(1, 11):
         return '', 404
