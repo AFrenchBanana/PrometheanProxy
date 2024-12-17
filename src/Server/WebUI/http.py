@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, redirect
 from Modules.global_objects import beacons, beacon_commands
 import logging
 
@@ -31,3 +31,13 @@ def api_beacons():
 def index():
     return render_template('index.html', beacons=beacons, commands=beacon_commands)
 
+
+@app.route('/beacons')
+def beacon():
+    if request.args.get('uuid'):
+        uuid = request.args.get('uuid')
+        for i in range(len(beacons["uuid"])):
+            if beacons["uuid"][i] == uuid:
+                return render_template('beacon.html', beacon=beacons, uuid=uuid)    
+    else:
+        redirect('/')   

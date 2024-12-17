@@ -3,26 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Promethean Proxy</title>
+    <title>Beacon Details - Promethean Proxy</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center my-4">Promethean Proxy</h1>
-
-        <!-- Spinner for loading -->
-        <div id="loading-spinner" class="spinner d-none">
-            <div class="spinner-border text-primary" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-            <div id="loading-message" class="loading-message d-none">Waiting for beacons...</div>
-        </div>
-
         <!-- Table for Beacons -->
-        <div class="table-responsive d-none" id="beacon-table-container">
-            <h2 class="text-center">Beacons</h2>
+        <div class="table-responsive" id="beacon-table-container">
+            <h2 class="text-center">{{ beacon["uuid"] }}</h2>
             <table class="table table-bordered table-hover" id="beacon-table">
                 <thead class="thead-dark">
                     <tr>
@@ -36,11 +26,10 @@
                     </tr>
                 </thead>
                 <tbody id="beacon-table-body">
-                    <!-- Table rows will be dynamically inserted here -->
                 </tbody>
             </table>
         </div>
-    </div>
+
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
