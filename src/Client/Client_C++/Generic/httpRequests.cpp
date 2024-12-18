@@ -14,7 +14,7 @@
 #ifdef __unix__
 #define OS "Linux"
 #include "../Linux/Beacon/beacon_commands.h"
-#include "../Linux/generic.h""
+#include "../Linux/generic.h"
 #include <thread>
 #include <chrono>
 #endif
