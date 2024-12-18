@@ -32,82 +32,211 @@ function stopLoadingDots() {
     clearInterval(loadingDotsInterval);
 }
 
+// Function to format date without milliseconds
+function formatDateWithoutMilliseconds(date) {
+    return date.toISOString().split('.')[0] + 'Z';
+}
+
 // Function to update beacon data dynamically
-function updateLastBeacon() {
-    fetch('/api/beacons')
-        .then(response => response.json())
-        .then(data => {
-            const beaconTableBody = document.getElementById('beacon-table-body');
-            beaconTableBody.innerHTML = ''; // Clear existing rows
+function updateLastBeacon(data) {
+    const beaconTableBody = document.getElementById('beacon-table-body');
 
-            if (Object.keys(data.beacons).length === 0) {
-                toggleLoadingSpinner(true);
-                return;
-            }
+    Object.keys(data.beacons).forEach((uuid) => {
+        const beacon = data.beacons[uuid];
+        const lastBeaconDate = new Date(beacon.last_beacon);
+        const nextBeaconDate = new Date(lastBeaconDate.getTime() + Number(beacon.timer) * 1000);
 
-            toggleLoadingSpinner(false);
+        // Check if the row already exists
+        let row = document.getElementById(`beacon-${uuid}`);
+        if (!row) {
+            row = document.createElement('tr');
+            row.id = `beacon-${uuid}`;
+            row.innerHTML = `
+                <td>${uuid}</td>
+                <td>${beacon.address}</td>
+                <td>${beacon.hostname}</td>
+                <td>${beacon.operating_system}</td>
+                <td><span class="last-beacon">${formatDateWithoutMilliseconds(lastBeaconDate)}</span></td>
+                <td><span class="next-beacon" id="next-beacon-${uuid}">${formatDateWithoutMilliseconds(nextBeaconDate)}</span></td>
+                <td><span class="countdown" id="countdown-${uuid}"></span></td>
+            `;
+            row.onclick = () => window.location.href = `/beacons?uuid=${uuid}`;
+            beaconTableBody.appendChild(row);
+        } else {
+            // Update existing row
+            row.querySelector('.last-beacon').textContent = formatDateWithoutMilliseconds(lastBeaconDate);
+            row.querySelector('.next-beacon').textContent = formatDateWithoutMilliseconds(nextBeaconDate);
+            row.classList.add('highlight');
+            setTimeout(() => row.classList.remove('highlight'), 2000);
+        }
 
-            Object.keys(data.beacons).forEach((uuid, index) => {
-                const beacon = data.beacons[uuid];
-                const row = `
-                    <tr id="beacon-${index}" onclick="window.location.href='/beacons?uuid=${uuid}'">
-                        <td>${uuid}</td>
-                        <td>${beacon.address}</td>
-                        <td>${beacon.hostname}</td>
-                        <td>${beacon.operating_system}</td>
-                        <td><span class="last-beacon">${beacon.last_beacon}</span></td>
-                        <td><span class="next-beacon" id="next-beacon-${index}">${beacon.next_beacon}</span></td>
-                        <td><span class="countdown" id="countdown-${index}"></span></td>
-                    </tr>
-                `;
-                beaconTableBody.insertAdjacentHTML('beforeend', row);
-                beaconTimers[uuid] = {
-                    lastBeacon: new Date(beacon.last_beacon),
-                    timer: beacon.timer,
-                    jitter: beacon.jitter
-                };
-            });
-            console.log('Beacons updated:', data.beacons);
-        })
-        .catch(error => {
-            console.error('Error fetching beacons:', error);
-            toggleLoadingSpinner(true);
-        });
+        beaconTimers[uuid] = {
+            lastBeacon: lastBeaconDate,
+            timer: beacon.timer,
+            jitter: beacon.jitter
+        };
+    });
+
+    console.log('Beacons updated:', data.beacons);
 }
 
 // Function to update the countdown and color based on time difference
-function updateNextBeacon(uuid, index) {
-    const countdownElement = document.querySelector(`#countdown-${index}`);
+function updateNextBeacon(uuid) {
+    const countdownElement = document.querySelector(`#countdown-${uuid}`);
+    if (!countdownElement) {
+        console.error(`Countdown element not found for uuid: ${uuid}`);
+        return;
+    }
 
     const { lastBeacon, timer, jitter } = beaconTimers[uuid];
-    const nextBeaconDate = new Date(lastBeacon.getTime() + timer * 1000);
-    const expectedNextBeaconDate = new Date(nextBeaconDate.getTime() + jitter * 1000);
+    const nextBeaconDate = new Date(lastBeacon.getTime() + Number(timer) * 1000);
+    const expectedNextBeaconDate = new Date(nextBeaconDate.getTime() + Number(jitter) * 1000);
 
     const currentTime = new Date();
-    const timeDiff = expectedNextBeaconDate - currentTime;
-    const expectedTime = expectedNextBeaconDate - nextBeaconDate;
+    const timeDiff = nextBeaconDate - currentTime;
+    const jitterDiff = expectedNextBeaconDate - currentTime;
 
+    // Update the countdown text and style based on the time difference
     if (timeDiff >= 0) {
         countdownElement.textContent = `Next Callback expected in ${Math.floor(timeDiff / 1000)} seconds`;
         countdownElement.style.color = 'green';
-    } else if (Math.abs(timeDiff) <= expectedTime) {
-        countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(timeDiff / 1000))} seconds late. (Within Jitter)`;
+    } else if (jitterDiff >= 0) {
+        countdownElement.textContent = `Expected Callback was ${nextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(timeDiff / 1000))} seconds late. (Within Jitter)`;
         countdownElement.style.color = 'orange';
     } else {
-        countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(timeDiff / 1000))} seconds late`;
+        countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(jitterDiff / 1000))} seconds late`;
         countdownElement.style.color = 'red';
     }
 }
 
 function updateCountdowns() {
-    Object.keys(beaconTimers).forEach((uuid, index) => {
-        updateNextBeacon(uuid, index);
+    Object.keys(beaconTimers).forEach((uuid) => {
+        updateNextBeacon(uuid);
     });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Document loaded');
-    updateLastBeacon();
+
+    // Initialize WebSocket connection
+    const socket = io('http://127.0.0.1:8080');
+
+    // Log WebSocket connection details
+    socket.on('connect', () => {
+        console.log('WebSocket connected');
+    });
+
+    socket.on('disconnect', () => {
+        console.log('WebSocket disconnected');
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('WebSocket connection error:', error);
+    });
+
+    // Log WebSocket requests
+    socket.onAny((event, ...args) => {
+        console.log(`WebSocket request: Event=${event}, Args=${JSON.stringify(args)}`);
+    });
+
+    // Listen for new connection events
+    socket.on('new_connection', (data) => {
+        console.log(`New connection: UUID=${data.uuid}, Name=${data.name}, OS=${data.os}, Address=${data.address}`);
+
+        // Add the new connection data to the beacons object
+        const beacons = {};
+        beacons[data.uuid] = {
+            last_beacon: new Date().toISOString(),
+            address: data.address,
+            hostname: data.name,
+            operating_system: data.os,
+            timer: data.interval,
+            jitter: data.jitter
+        };
+
+        // Update the table with the new connection data
+        updateLastBeacon({ beacons });
+        updateCountdowns();
+        toggleLoadingSpinner(false);
+    });
+
+    // Listen for beacon updates
+    socket.on('beacon_update', (data) => {
+        updateLastBeacon(data);
+        updateCountdowns();
+        toggleLoadingSpinner(false);
+    });
+
+    // Listen for countdown updates
+    socket.on('countdown_update', (data) => {
+        if (data.uuid && data.timer !== undefined && data.jitter !== undefined) {
+            const countdownElement = document.querySelector(`#countdown-${data.uuid}`);
+            if (countdownElement) {
+                const { timer, jitter } = data;
+    
+                // Get the last beacon time and calculate the next expected time
+                const lastBeacon = beaconTimers[data.uuid].lastBeacon;
+                const nextBeaconDate = new Date(lastBeacon.getTime() + (timer * 1000));
+                const expectedNextBeaconDate = new Date(nextBeaconDate.getTime() + (jitter * 1000));
+    
+                const currentTime = new Date();
+                const timeDiff = nextBeaconDate - currentTime;
+                const jitterDiff = expectedNextBeaconDate - currentTime;
+    
+                // Update the countdown text and color based on the time difference
+                if (timeDiff >= 0) {
+                    countdownElement.textContent = `Next Callback expected in ${Math.floor(timeDiff / 1000)} seconds`;
+                    countdownElement.style.color = 'green';
+                } else if (jitterDiff >= 0) {
+                    countdownElement.textContent = `Expected Callback was ${nextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(timeDiff / 1000))} seconds late. (Within Jitter)`;
+                    countdownElement.style.color = 'orange';
+                } else {
+                    countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(jitterDiff / 1000))} seconds late`;
+                    countdownElement.style.color = 'red';
+                }
+    
+                // Update beaconTimers to reflect the latest countdown update
+                beaconTimers[data.uuid].lastBeacon = new Date(expectedNextBeaconDate.getTime() - jitterDiff);
+    
+                // Highlight the row green (no fade-out effect)
+                const row = document.getElementById(`beacon-${data.uuid}`);
+                if (row) {
+                    // Add Bootstrap class for green background
+                    row.classList.add('bg-success', 'text-white');
+    
+                    // Set a timeout to remove the highlight after 1 second
+                    setTimeout(() => {
+                        row.classList.remove('bg-success', 'text-white');
+                    }, 1000); // 1 second for the highlight effect
+                }
+            } else {
+                console.error(`Countdown element not found for uuid: ${data.uuid}`);
+            }
+        }
+    });
+    
+
+    // Set intervals for updating countdowns
     setInterval(updateCountdowns, 1000);
-    setInterval(updateLastBeacon, 5000);
+
+    fetch('/api/v1/beacons')
+        .then(response => response.json())
+        .then(data => {
+            if (Object.keys(data.beacons).length === 0) {
+                toggleLoadingSpinner(true);
+            } else {
+                updateLastBeacon(data);
+                toggleLoadingSpinner(false);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching beacons:', error);
+            toggleLoadingSpinner(true);
+        });
 });
+
+// Expose necessary functions and variables to the global scope
+window.beaconTimers = {};
+window.formatDateWithoutMilliseconds = formatDateWithoutMilliseconds;
+window.updateNextBeacon = updateNextBeacon;
+window.toggleLoadingSpinner = toggleLoadingSpinner;

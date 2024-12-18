@@ -12,14 +12,31 @@ h1 {
     font-weight: 700;
     font-size: 2.5rem;
     margin-bottom: 1rem;
+    text-align: center;
 }
 
 /* Table Styles */
+.table-container { /* New container for better control */
+    width: 100%;
+    /* Removed overflow-x: auto; */
+}
+
 .table {
+    width: 100%;
     background-color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    border-collapse: collapse; /* Important for consistent cell widths */
+}
+
+th,
+td {
+    padding: 1rem;
+    text-align: left; /* Align text to the left */
+    border-bottom: 1px solid #dee2e6; /* Add bottom border to all cells */
+    word-break: break-word; /* Allow long words to break */
+    white-space: normal; /* Allow text to wrap */
+    /* Removed min-width properties */
 }
 
 th {
@@ -27,17 +44,19 @@ th {
     color: #ffffff;
     font-weight: 600;
     text-transform: uppercase;
-    padding: 1rem;
-}
-
-td {
-    color: #495057;
-    padding: 1rem;
-    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap; /* Prevent header text from wrapping */
 }
 
 tr:last-child td {
-    border-bottom: none;
+    border-bottom: none; /* Remove border from last row's cells */
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    th,
+    td {
+        /* Removed min-width properties */
+    }
 }
 
 /* Countdown Styles */
@@ -74,25 +93,18 @@ tr:last-child td {
     margin-bottom: 1.5rem;
 }
 
-.table-responsive {
-    margin-top: 2rem;
-}
-
-thead {
-    border-bottom: 2px solid #dee2e6;
-}
-
-tbody tr {
-    cursor: pointer;
-}
-
-tbody tr:hover {
-    background-color: #e9ecef;
-}
-
 .loading-message {
     text-align: center;
     font-size: 1.2rem;
     color: #007bff;
     margin-top: 1rem;
+}
+
+/* Highlight effect */
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.text-white {
+    color: #ffffff !important;
 }

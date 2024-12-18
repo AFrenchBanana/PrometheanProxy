@@ -1,12 +1,14 @@
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, send_from_directory
 import uuid
 import time
 import logging
+from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacons, add_beacon_list, beacon_commands, config)
 
 
 beaconControl = Flask(__name__)
+socketio = SocketIO(beaconControl, cors_allowed_origins="*")
 log = logging.getLogger('werkzeug')
 beaconControl.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
@@ -37,6 +39,7 @@ def connectionRequest(part1, part2, ad_param, version):
                         os, time.asctime(),
                         config['beacon']["interval"],
                         config['beacon']['jitter'])
+        socketio.emit('new_connection', {'uuid': userID, 'name': name, 'os': os, 'address': address, "interval": config['beacon']["interval"], "jitter": config['beacon']['jitter']})
         return {"timer": config['beacon']["interval"],
                 "uuid": userID, "jitter": config['beacon']['jitter']}, 200
     else:
@@ -91,9 +94,17 @@ def beacon(part1, part2):
         if beacon_id == id:
             beacons["last_beacon"][i] = time.asctime()
             timer = beacons["timer"][i]
+            jitter = beacons["jitter"][i]
             next_beacon_time = time.time() + timer
             beacons["next_beacon"][i] = time.asctime(
                 time.localtime(next_beacon_time))
+
+            # Emit countdown update via SocketIO
+            socketio.emit('countdown_update', {
+                'uuid': id,
+                'timer': timer,
+                'jitter': jitter,
+            })
 
     for j in range(len(beacon_commands["beacon_uuid"])):
         if beacon_commands["executed"][j]:

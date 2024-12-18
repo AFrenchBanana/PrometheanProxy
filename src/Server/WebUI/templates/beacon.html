@@ -7,11 +7,82 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="../static/styles.css">
+    <script src="../static/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const beaconUUID = '{{ beacon["uuid"] }}';
+            const beaconTableBody = document.getElementById('beacon-table-body');
+
+            // Initialize the table row for the beacon
+            const row = document.createElement('tr');
+            row.id = `beacon-${beaconUUID}`;
+            row.innerHTML = `
+                <td>${beaconUUID}</td>
+                <td id="address-${beaconUUID}"></td>
+                <td id="hostname-${beaconUUID}"></td>
+                <td id="os-${beaconUUID}"></td>
+                <td><span class="last-beacon" id="last-beacon-${beaconUUID}"></span></td>
+                <td><span class="next-beacon" id="next-beacon-${beaconUUID}"></span></td>
+                <td><span class="countdown" id="countdown-${beaconUUID}"></span></td>
+            `;
+            beaconTableBody.appendChild(row);
+
+            // Function to fetch and update the beacon data
+            function fetchAndUpdateBeacon() {
+                fetch(`/api/v1/beacons/${beaconUUID}`)
+                    .then(response => response.json())
+                    .then(beacon => {
+                        if (beacon) {
+                            updateBeaconRow(beacon);
+                            toggleLoadingSpinner(false);
+                        } else {
+                            toggleLoadingSpinner(true);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching beacon:', error);
+                        toggleLoadingSpinner(true);
+                    });
+            }
+
+            // Update the beacon row with new data
+            function updateBeaconRow(beacon) {
+                const lastBeaconDate = new Date(beacon.last_beacon);
+                const nextBeaconDate = new Date(lastBeaconDate.getTime() + Number(beacon.timer) * 1000);
+
+                document.getElementById(`address-${beaconUUID}`).textContent = beacon.address;
+                document.getElementById(`hostname-${beaconUUID}`).textContent = beacon.hostname;
+                document.getElementById(`os-${beaconUUID}`).textContent = beacon.operating_system;
+                document.getElementById(`last-beacon-${beaconUUID}`).textContent = formatDateWithoutMilliseconds(lastBeaconDate);
+                document.getElementById(`next-beacon-${beaconUUID}`).textContent = formatDateWithoutMilliseconds(nextBeaconDate);
+
+                // Update beaconTimers for countdown
+                beaconTimers[beaconUUID] = {
+                    lastBeacon: lastBeaconDate,
+                    timer: beacon.timer,
+                    jitter: beacon.jitter
+                };
+            }
+
+            // Fetch and update beacon data immediately
+            fetchAndUpdateBeacon();
+
+            // Set interval to fetch and update beacon data periodically
+            setInterval(fetchAndUpdateBeacon, 5000);
+
+            // Update countdown every second
+            setInterval(() => {
+                updateNextBeacon(beaconUUID);
+            }, 1000);
+        });
+    </script>
 </head>
 <body>
     <div class="container">
-        <!-- Table for Beacons -->
-        <div class="table-responsive" id="beacon-table-container">
+        <h1 class="text-center my-4">Beacon Details</h1>
+        <!-- Spinner for loading -->
+        <!-- Table for Beacon -->
+        <div class="table-responsive d-none" id="beacon-table-container">
             <h2 class="text-center">{{ beacon["uuid"] }}</h2>
             <table class="table table-bordered table-hover" id="beacon-table">
                 <thead class="thead-dark">
@@ -26,14 +97,13 @@
                     </tr>
                 </thead>
                 <tbody id="beacon-table-body">
+                    <!-- Table row will be dynamically inserted here -->
                 </tbody>
             </table>
         </div>
-
-
+    </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="../static/script.js"></script>
 </body>
 </html>

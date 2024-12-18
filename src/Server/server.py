@@ -12,8 +12,8 @@ import os
 
 from Modules.multi_handler import MultiHandler
 from Modules.global_objects import config
-from Modules.http_server import beaconControl
-from WebUI.http import app
+from Modules.http_server import beaconControl, socketio as beaconSocketIO
+from WebUI.http import app, socketio as webSocketIO
 
 readline.parse_and_bind('tab: complete')
 
@@ -24,10 +24,10 @@ if __name__ == '__main__':
         multi_handler = MultiHandler()
         multi_handler.create_certificate()
         threading.Thread(
-            target=beaconControl.run, kwargs={'port': config["server"]["webPort"],
+            target=beaconSocketIO.run, args=(beaconControl,), kwargs={'port': config["server"]["webPort"],
                                     'debug': False}, daemon=True).start()
         threading.Thread(
-            target=app.run, kwargs={'port': 9000,
+            target=webSocketIO.run, args=(app,), kwargs={'port': 9000,
                                     'debug': False}, daemon=True).start()
         multi_handler.startsocket()
         if not config['server']['quiet_mode']:

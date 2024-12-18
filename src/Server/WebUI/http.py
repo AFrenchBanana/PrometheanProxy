@@ -1,15 +1,20 @@
 from flask import Flask, render_template, jsonify, request, redirect
+from flask_socketio import SocketIO
 from Modules.global_objects import beacons, beacon_commands
 import logging
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 log = logging.getLogger('werkzeug')
 app.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
 
 
-@app.route('/api/beacons')
+@app.route('/api/v1/beacons')
 def api_beacons():
+    if request.remote_addr != '127.0.0.1':
+        return jsonify({"error": "Access denied"}), 403
+
     beacons_grouped = {}
 
     # Loop through the beacons and group them by UUID
@@ -40,4 +45,9 @@ def beacon():
             if beacons["uuid"][i] == uuid:
                 return render_template('beacon.html', beacon=beacons, uuid=uuid)    
     else:
-        redirect('/')   
+        redirect('/')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return "", 204
