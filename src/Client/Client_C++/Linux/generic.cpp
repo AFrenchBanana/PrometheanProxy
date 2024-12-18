@@ -4,6 +4,7 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 
 // Get the IP addresses of the local machine and return them as a vector of strings
@@ -26,4 +27,13 @@ std::vector<std::string> getIPAddresses() {
     }
     freeifaddrs(interfaces);
     return ipAddresses;
+}
+
+std::string getHostname() {
+    char hostname[1024];
+    hostname[1023] = '\0';
+    if (gethostname(hostname, 1023) == -1) {
+        throw std::runtime_error("Failed to get hostname");
+    }
+    return std::string(hostname);
 }

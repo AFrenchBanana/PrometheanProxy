@@ -14,7 +14,7 @@
 #ifdef __unix__
 #define OS "Linux"
 #include "../Linux/Beacon/beacon_commands.h"
-#include "../Linux/generic.h"
+#include "../Linux/generic.h""
 #include <thread>
 #include <chrono>
 #endif
@@ -119,7 +119,7 @@ std::tuple<int, std::string> postRequest(const std::string& url, const std::stri
 
 
 std::tuple<int, std::string, int> httpConnection(const std::string& address) {
-    std::string hostname = "client";
+    std::string hostname = getHostname();
     std::vector<std::string> ipAddresses = getIPAddresses();
     std::string connectURL = generateConnectionURL();
     Json::Value requestData;
@@ -163,7 +163,7 @@ std::tuple<int, std::string, int> httpConnection(const std::string& address) {
 }
 
 std::tuple<int, std::string, int> httpReconnect(const std::string& address, const std::string& user_id, int jitter, int timer) {
-    std::string hostname = "client";
+    std::string hostname = getHostname();
     std::vector<std::string> ipAddresses = getIPAddresses();
 
     std::string reconnectURL = generateReconnectURL();
