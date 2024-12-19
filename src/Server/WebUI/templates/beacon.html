@@ -50,7 +50,7 @@
                     <label for="task-select">Task:</label>
                     <select id="task-select" class="form-control">
                         <option value="">-- Select an Option --</option>
-                        <option value="sysinfo">System Info</option>
+                        <option value="systeminfo">System Info</option>
                         <option value="list_dir">List Directory</option>
                         <!-- Add more options as needed -->
                     </select>
@@ -72,6 +72,14 @@
                 <div class="text-center mt-3">
                     <button id="submit-task-btn" class="btn btn-success mt-2" disabled>Enter</button>
                 </div>
+
+                <!-- Confirmation Alert -->
+                <div id="confirmation-alert" class="alert alert-success alert-dismissible fade show d-none mt-3" role="alert">
+                    Task has been successfully sent to the API.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
             </div>
             <div id="results-info" class="info-content d-none">Results Information</div>
             <div id="directory-info" class="info-content d-none">Directory Listing Information</div>
@@ -79,7 +87,7 @@
     </div>
     <!-- Include the UUID in a script block -->
     <script>
-        const uuid = "{{ uuid }}";
+        window.uuid = "{{ uuid }}"; // Changed from 'const uuid' to 'window.uuid' for global access
     </script>
     <script src="../static/beaconControl.js"></script>
 </body>

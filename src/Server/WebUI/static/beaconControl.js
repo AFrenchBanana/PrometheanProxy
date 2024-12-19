@@ -1,4 +1,98 @@
 let beaconTimers = {};
+const socket = io();
+
+// Listen for the 'command_response' event
+socket.on('command_response', function(data) {
+    const resultsInfo = document.getElementById('results-info');
+
+    // Create or find the table
+    let table = resultsInfo.querySelector('table');
+    if (!table) {
+        table = document.createElement('table');
+        table.classList.add('table');
+        
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th>Command ID</th>
+                <th>Command</th>
+                <th>Response</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+        resultsInfo.appendChild(table);
+    }
+
+    const tbody = table.querySelector('tbody');
+
+    // Append the new command response
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${data.command_id}</td>
+        <td>${data.command}</td>
+        <td>${data.response}</td>
+    `;
+    tbody.appendChild(tr);
+
+    // Show the results-info div
+    resultsInfo.classList.remove('d-none');
+    // Optionally hide other info-content divs
+    document.getElementById('task-info').classList.add('d-none');
+    document.getElementById('directory-info').classList.add('d-none');
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetch(`/api/v1/beacons?history=${window.uuid}`)
+        .then(response => response.json())
+        .then(data => {
+            const resultsInfo = document.getElementById('results-info');
+            resultsInfo.innerHTML = ''; // Clear existing content
+
+            if (data.history && data.history.length > 0) {
+                const table = document.createElement('table');
+                table.classList.add('table');
+
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th>Command ID</th>
+                        <th>Command</th>
+                        <th>Response</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+
+                data.history.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.command_id}</td>
+                        <td>${item.command}</td>
+                        <td>${item.response}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                resultsInfo.appendChild(table);
+            } else {
+                resultsInfo.innerHTML = '<p>No history available.</p>';
+            }
+
+            // Show the results-info div
+            resultsInfo.classList.remove('d-none');
+            // Optionally hide other info-content divs
+            document.getElementById('task-info').classList.add('d-none');
+            document.getElementById('directory-info').classList.add('d-none');
+        })
+        .catch(error => {
+            console.error('Error fetching history:', error);
+        });
+});
 let loadingDotsInterval;
 
 // Function to show/hide loading spinner
@@ -382,19 +476,23 @@ function submitTask() {
         const taskSelect = document.getElementById('task-select').value;
         const taskInput = document.getElementById('task-textbox').value.trim();
 
-        if (!taskSelect || !taskInput) {
+        // Define tasks that require input
+        const tasksRequiringInput = ['list_dir']; // Add other tasks as needed
+        const requiresInput = tasksRequiringInput.includes(taskSelect);
+
+        if (!taskSelect || (requiresInput && !taskInput)) {
             alert('Please select a task and enter the input.');
             return;
         }
 
-        const uuid = generateUUID();
+        const command_uuid = generateUUID(); // Renamed from 'uuid' to 'command_uuid'
         const payload = {
-            command: uuid,
+            command_uuid: command_uuid,
             task: taskSelect,
-            input: taskInput
+            data: taskInput
         };
 
-        fetch(`/api/v1/beacons?command=${uuid}`, {
+        fetch(`/api/v1/beacons?command=${uuid}`, { // Uses global 'uuid' for beacon UUID
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -405,7 +503,15 @@ function submitTask() {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            alert('Task submitted successfully.');
+            // Show confirmation alert
+            const confirmationAlert = document.getElementById('confirmation-alert');
+            confirmationAlert.classList.remove('d-none');
+            // Automatically hide the alert after 5 seconds
+            setTimeout(() => {
+                confirmationAlert.classList.add('d-none');
+            }, 5000);
+
+            // Reset the form
             submitBtn.disabled = true; // Reset the button state
             document.getElementById('task-select').value = '';
             document.getElementById('task-input').value = '';

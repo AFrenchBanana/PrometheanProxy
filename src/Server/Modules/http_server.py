@@ -107,7 +107,7 @@ def beacon(part1, part2):
             })
 
     for j in range(len(beacon_commands["beacon_uuid"])):
-        if beacon_commands["executed"][j]:
+        if j < len(beacon_commands["executed"]) and beacon_commands["executed"][j]:
             continue
         if beacon_commands["beacon_uuid"][j] == id:
             data["command_uuid"] = beacon_commands["command_uuid"][j]
@@ -150,3 +150,5 @@ def response(path1, version):
     if not found:
         return '', 500
     return '', 200
+
+    return "", 204
