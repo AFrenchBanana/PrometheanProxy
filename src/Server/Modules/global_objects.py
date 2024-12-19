@@ -7,6 +7,7 @@ Contains error-handled send and receive functions that
 can handle bytes and strings.
 """
 
+import json
 from .content_handler import TomlFiles
 import struct
 from tqdm import tqdm
@@ -85,11 +86,12 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
 
 
 def add_beacon_command_list(beacon_uuid: str,
-                            command: str) -> None:
+                            command: str, command_data: json = {}) -> None:
     command_uuid = str(uuid.uuid4())
     beacon_commands["beacon_uuid"].append(beacon_uuid)
     beacon_commands["command_uuid"].append(command_uuid)
     beacon_commands["command"].append(command)
+    beacon_commands["command_data"].append(command_data)
     beacon_commands["command_output"].append("Awaiting Response")
     beacon_commands["executed"].append(False)
     print(f"Command {command_uuid} added to beacon {beacon_uuid}")
