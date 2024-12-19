@@ -273,6 +273,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    socket.on('command_response', function(data) {
+        const resultsInfo = document.getElementById('results-info');
+        const banner = document.getElementById('command-response-banner');
+    
+        // Show the banner
+        banner.classList.remove('d-none');
+        setTimeout(() => {
+            banner.classList.add('d-none');
+        }, 5000); // Hide after 5 seconds
+    
+        // Create or find the table
+        let table = resultsInfo.querySelector('table');
+        if (!table) {
+            table = document.createElement('table');
+            table.classList.add('table');
+            
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th>Command ID</th>
+                    <th>Command</th>
+                    <th>Response</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+    
+            const tbody = document.createElement('tbody');
+            table.appendChild(tbody);
+            resultsInfo.appendChild(table);
+        }
+    
+        const tbody = table.querySelector('tbody');
+    
+        // Append the new command response
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${data.uuid}</td>
+            <td>${data.command}</td>
+            <td><pre>${data.response}</pre></td>
+        `;
+        tbody.appendChild(tr);
+    
+        // Show the results-info div
+        resultsInfo.classList.remove('d-none');
+    });
+
     // Handle countdown updates
     socket.on('countdown_update', (data) => {
         if (data.uuid && data.timer !== undefined && data.jitter !== undefined) {

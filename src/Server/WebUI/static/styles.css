@@ -332,7 +332,6 @@ tr:last-child td {
     }
 }
 
-/* Animation Classes */
 .slide-in-left {
     animation: slideInLeft 0.5s forwards;
 }
@@ -347,4 +346,22 @@ tr:last-child td {
 
 .slide-out-left {
     animation: slideOutLeft 0.5s forwards;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-color: #bee5eb;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Code Formatting */
+pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    white-space: pre-wrap; /* Allow wrapping */
+    word-wrap: break-word; /* Break long words */
 }

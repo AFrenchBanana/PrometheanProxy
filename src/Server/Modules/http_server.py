@@ -142,6 +142,11 @@ def response(path1, version):
                         "responded with:"
                     )
                     print(output)
+                socketio.emit('command_response', {
+                    'uuid': beacon_commands['beacon_uuid'][i],
+                    'command': beacon_commands['command'][i],
+                    'response': output
+                })
             else:
                 print(
                     f"Index {i} out of range for ",
