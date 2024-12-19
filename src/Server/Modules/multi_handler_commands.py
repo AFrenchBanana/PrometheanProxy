@@ -132,7 +132,7 @@ class MultiHandlerCommands:
         """
         available_commands = WordCompleter(['shell', 'close', 'processes',
         'sysinfo', 'close', 'checkfiles', 'download', 'upload', 'services',
-        'netstat', 'diskusage', 'listdir'])
+        'netstat', 'diskusage', 'listdir', directory_traversal'])
         """
         def handle_session():
             for i, details in enumerate(beacons["uuid"]):
@@ -156,7 +156,8 @@ class MultiHandlerCommands:
             "diskusage": lambda: self.beaconCommands.disk_usage(UserID),
             "netstat": lambda: self.beaconCommands.netstat(UserID),
             "session": handle_session,
-            "commands": lambda: self.beaconCommands.list_db_commands(UserID)
+            "commands": lambda: self.beaconCommands.list_db_commands(UserID),
+            "directory_traversal": lambda: self.beaconCommands.dir_traversal(UserID)
         }
 
         while True:

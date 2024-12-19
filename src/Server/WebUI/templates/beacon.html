@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Make sure all CSS and JS files are linked properly -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/styles.css">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <button onclick="window.location.href='/'" class="btn btn-primary mb-3">Back</button>
+        <h1>Beacon Details</h1>
+        <div id="loading-spinner" class="text-center spinner">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="loading-message" class="loading-message d-none">Waiting for beacons...</div>
+        <div id="beacon-table-container">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>UUID</th>
+                        <th>Address</th>
+                        <th>Hostname</th>
+                        <th>Operating System</th>
+                        <th>Last Beacon</th>
+                        <th>Next Beacon</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="beacon-table-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Include the UUID in a script block -->
+    <script>
+        const uuid = "{{ uuid }}";
+    </script>
+    <script src="../static/beaconControl.js"></script>
+</body>
+</html>

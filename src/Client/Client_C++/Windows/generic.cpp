@@ -2,6 +2,9 @@
 #include <iphlpapi.h>
 #include <iostream>
 #include <vector>
+#include <string>
+#include <stdexcept>
+#include <ws2tcpip.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Iphlpapi.lib")
@@ -44,4 +47,20 @@ std::vector<std::string> getIPAddresses() {
         free(pAdapterInfo);
 
     return ipAddresses;
+}
+
+
+std::string getHostname() {
+    char hostname[1024];
+    hostname[1023] = '\0';
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        throw std::runtime_error("WSAStartup failed");
+    }
+    if (gethostname(hostname, 1023) == -1) {
+        WSACleanup();
+        throw std::runtime_error("Failed to get hostname");
+    }
+    WSACleanup();
+    return std::string(hostname);
 }

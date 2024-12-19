@@ -72,6 +72,10 @@ class BeaconCommandsClass:
     def disk_usage(self, userID) -> None:
         add_beacon_command_list(userID, "disk_usage")
         return
+    
+    def dir_traversal(self, userID) -> None:
+        add_beacon_command_list(userID, "directory_traversal")
+        return
 
     def netstat(self, userID) -> None:
         add_beacon_command_list(userID, "disk_usage")

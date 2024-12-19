@@ -5,5 +5,6 @@
 #include <string>
 
 std::vector<std::string> getIPAddresses();
+std::string getHostname();
 
 #endif
