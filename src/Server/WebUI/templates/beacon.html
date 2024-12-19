@@ -9,11 +9,24 @@
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
+    <!-- Move the banner outside the container -->
+    <div id="command-response-banner" class="alert alert-success d-none" role="alert">
+        Command Response Received
+    </div>
+    
+    <!-- Dark Mode Toggle -->
+    <div class="dark-mode-toggle" style="position: fixed; top: 1rem; right: 1rem;">
+        <div class="toggle-switch">
+            <input type="checkbox" id="darkModeSwitch" class="toggle-input">
+            <label for="darkModeSwitch" class="toggle-label">
+                <span class="toggle-inner"></span>
+                <span class="toggle-switch"></span>
+            </label>
+        </div>
+    </div>
+
     <div class="container mt-5">
         <button onclick="window.location.href='/'" class="btn btn-primary mb-3">Back</button>
-        <div id="command-response-banner" class="alert alert-info d-none" role="alert">
-            Command Response Received
-        </div>
         <h1>Beacon Details</h1>
         <div id="loading-spinner" class="text-center spinner">
             <div class="spinner-border" role="status">
@@ -39,9 +52,9 @@
             </table>
         </div>
         <div class="text-center mt-3">
-            <button id="task-btn" class="btn btn-secondary m-2 btn-lg same-size-btn" data-direction="left">Task</button>
-            <button id="results-btn" class="btn btn-secondary m-2 btn-lg same-size-btn" data-direction="right">Results</button>
-            <button id="directory-btn" class="btn btn-secondary m-2 btn-lg same-size-btn" data-direction="left">Directory Listing</button>
+            <button id="task-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="left">Task</button>
+            <button id="results-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Results</button>
+            <button id="directory-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="left">Directory Listing</button>
         </div>
         <div id="info-box" class="info-box mt-3">
             <div id="task-info" class="info-content">
@@ -55,6 +68,7 @@
                         <option value="">-- Select an Option --</option>
                         <option value="systeminfo">System Info</option>
                         <option value="list_dir">List Directory</option>
+                        <option value="shell">Shell Command</option>
                         <!-- Add more options as needed -->
                     </select>
                 </div>
@@ -84,7 +98,20 @@
                     </button>
                 </div>
             </div>
-            <div id="results-info" class="info-content d-none">Results Information</div>
+            <div id="results-info" class="info-content d-none">
+                <h2>Command Results</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Response</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-table-body">
+                    </tbody>
+                </table>
+            </div>
             <div id="directory-info" class="info-content d-none">Directory Listing Information</div>
         </div>
     </div>
@@ -93,5 +120,27 @@
         window.uuid = "{{ uuid }}"; // Changed from 'const uuid' to 'window.uuid' for global access
     </script>
     <script src="../static/beaconControl.js"></script>
+    <script>
+        // Dark Mode Toggle Script
+        document.addEventListener('DOMContentLoaded', () => {
+            const darkModeSwitch = document.getElementById('darkModeSwitch');
+            const currentMode = localStorage.getItem('darkMode');
+
+            if (currentMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeSwitch.checked = true;
+            }
+
+            darkModeSwitch.addEventListener('change', () => {
+                if (darkModeSwitch.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

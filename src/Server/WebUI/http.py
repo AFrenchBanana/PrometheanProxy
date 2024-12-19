@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect
+from flask import Flask, render_template, jsonify, request, redirect, make_response
 from flask_socketio import SocketIO
 from Modules.global_objects import beacons, beacon_commands, add_beacon_command_list
 import logging
@@ -91,10 +91,6 @@ def api_beacon(uuid):
         return jsonify({"beacon": beacon_data})
     else:
         return jsonify({"error": "Beacon not found"}), 404
-@app.route('/')
-def index():
-    return render_template('index.html', beacons=beacons, commands=beacon_commands)
-
 
 @app.route('/beacons')
 def beacon():
@@ -119,6 +115,16 @@ def beacon():
             return redirect('/')
     else:
         return redirect('/')
+    
+    
+@app.route('/')
+def index():
+    response = make_response(render_template('index.html', beacons=beacons, commands=beacon_commands))
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 
 @app.route('/favicon.ico')
 def favicon():

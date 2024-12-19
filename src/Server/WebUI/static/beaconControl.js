@@ -1,48 +1,6 @@
 let beaconTimers = {};
 const socket = io();
 
-// Listen for the 'command_response' event
-socket.on('command_response', function(data) {
-    const resultsInfo = document.getElementById('results-info');
-
-    // Create or find the table
-    let table = resultsInfo.querySelector('table');
-    if (!table) {
-        table = document.createElement('table');
-        table.classList.add('table');
-        
-        const thead = document.createElement('thead');
-        thead.innerHTML = `
-            <tr>
-                <th>Command ID</th>
-                <th>Command</th>
-                <th>Response</th>
-            </tr>
-        `;
-        table.appendChild(thead);
-
-        const tbody = document.createElement('tbody');
-        table.appendChild(tbody);
-        resultsInfo.appendChild(table);
-    }
-
-    const tbody = table.querySelector('tbody');
-
-    // Append the new command response
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td>${data.command_id}</td>
-        <td>${data.command}</td>
-        <td>${data.response}</td>
-    `;
-    tbody.appendChild(tr);
-
-    // Show the results-info div
-    resultsInfo.classList.remove('d-none');
-    // Optionally hide other info-content divs
-    document.getElementById('task-info').classList.add('d-none');
-    document.getElementById('directory-info').classList.add('d-none');
-});
 
 document.addEventListener('DOMContentLoaded', function() {
     fetch(`/api/v1/beacons?history=${window.uuid}`)
@@ -72,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     tr.innerHTML = `
                         <td>${item.command_id}</td>
                         <td>${item.command}</td>
-                        <td>${item.response}</td>
+                        <td><pre><code>${item.response}</code></pre></td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -162,18 +120,18 @@ function updateLastBeacon(data) {
     const nextBeaconDate = new Date(lastBeaconDate.getTime() + Number(beacon.timer) * 1000);
 
     // Check if the row already exists
-    let row = document.getElementById(`beacon-${uuid}`);
+    let row = document.getElementById(`beacon-${window.uuid}`);
     if (!row) {
         row = document.createElement('tr');
-        row.id = `beacon-${uuid}`;
+        row.id = `beacon-${window.uuid}`; // Updated to use window.uuid
         row.innerHTML = `
-            <td>${uuid}</td>
+            <td>${window.uuid}</td>
             <td>${beacon.address}</td>
             <td>${beacon.hostname}</td>
             <td>${beacon.operating_system}</td>
             <td><span class="last-beacon">${formatDateWithoutMilliseconds(lastBeaconDate)}</span></td>
-            <td><span class="next-beacon" id="next-beacon-${uuid}">${formatDateWithoutMilliseconds(nextBeaconDate)}</span></td>
-            <td><span class="countdown" id="countdown-${uuid}"></span></td>
+            <td><span class="next-beacon" id="next-beacon-${window.uuid}">${formatDateWithoutMilliseconds(nextBeaconDate)}</span></td>
+            <td><span class="countdown" id="countdown-${window.uuid}"></span></td>
         `;
         beaconTableBody.appendChild(row);
     } else {
@@ -184,7 +142,7 @@ function updateLastBeacon(data) {
         setTimeout(() => row.classList.remove('highlight'), 2000);
     }
 
-    beaconTimers[uuid] = {
+    beaconTimers[window.uuid] = { // Updated to use window.uuid
         lastBeacon: lastBeaconDate,
         timer: beacon.timer,
         jitter: beacon.jitter
@@ -263,60 +221,72 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for beacon updates
     socket.on('beacon_update', (data) => {
         // Only update if the data contains our specific UUID
-        if (data.beacons && data.beacons[uuid]) {
+        if (data.beacons && data.beacons[window.uuid]) {
             const singleBeaconData = {
-                beacon: data.beacons[uuid]
+                beacon: data.beacons[window.uuid]
             };
             updateLastBeacon(singleBeaconData);
-            updateNextBeacon(uuid);
+            updateNextBeacon(window.uuid);
             toggleLoadingSpinner(false);
         }
     });
 
+    // Listen for the 'command_response' event
     socket.on('command_response', function(data) {
-        const resultsInfo = document.getElementById('results-info');
-        const banner = document.getElementById('command-response-banner');
+        // Only process responses for the current beacon UUID
+        if (data.uuid === window.uuid) {
+            const resultsInfo = document.getElementById('results-info');
+            const resultsTabButton = document.getElementById('results-btn');
+            const isResultsTabActive = !resultsInfo.classList.contains('d-none');
     
-        // Show the banner
-        banner.classList.remove('d-none');
-        setTimeout(() => {
-            banner.classList.add('d-none');
-        }, 5000); // Hide after 5 seconds
+            // Create or find the table
+            let table = resultsInfo.querySelector('table');
+            if (!table) {
+                table = document.createElement('table');
+                table.classList.add('table');
+                
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th>Command ID</th>
+                        <th>Command</th>
+                        <th>Response</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
     
-        // Create or find the table
-        let table = resultsInfo.querySelector('table');
-        if (!table) {
-            table = document.createElement('table');
-            table.classList.add('table');
-            
-            const thead = document.createElement('thead');
-            thead.innerHTML = `
-                <tr>
-                    <th>Command ID</th>
-                    <th>Command</th>
-                    <th>Response</th>
-                </tr>
+                const tbody = document.createElement('tbody');
+                table.appendChild(tbody);
+                resultsInfo.appendChild(table);
+            }
+    
+            const tbody = table.querySelector('tbody');
+    
+            // Append the new command response
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${data.command_id}</td>
+                <td>${data.command}</td>
+                <td><pre><code>${data.response}</code></pre></td>
             `;
-            table.appendChild(thead);
+            tbody.appendChild(tr);
     
-            const tbody = document.createElement('tbody');
-            table.appendChild(tbody);
-            resultsInfo.appendChild(table);
+            // Show the results-info div only if Results tab is active
+            if (isResultsTabActive) {
+                resultsInfo.classList.remove('d-none');
+                // Optionally hide other info-content divs
+                document.getElementById('task-info').classList.add('d-none');
+                document.getElementById('directory-info').classList.add('d-none');
+            }
+    
+            const banner = document.getElementById('command-response-banner');
+            
+            // Show the banner
+            banner.classList.remove('d-none');
+            setTimeout(() => {
+                banner.classList.add('d-none');
+            }, 5000); // Hide after 5 seconds
         }
-    
-        const tbody = table.querySelector('tbody');
-    
-        // Append the new command response
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${data.uuid}</td>
-            <td>${data.command}</td>
-            <td><pre>${data.response}</pre></td>
-        `;
-        tbody.appendChild(tr);
-    
-        // Show the results-info div
-        resultsInfo.classList.remove('d-none');
     });
 
     // Handle countdown updates
@@ -368,9 +338,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Set intervals for updating countdowns
-    setInterval(() => updateNextBeacon(uuid), 1000);
+    setInterval(() => updateNextBeacon(window.uuid), 1000);
 
-    fetch(`/api/v1/beacons/${uuid}`)
+    fetch(`/api/v1/beacons/${window.uuid}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -384,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleLoadingSpinner(true);
             } else {
                 updateLastBeacon(data);
-                updateNextBeacon(uuid);
+                updateNextBeacon(window.uuid);
                 toggleLoadingSpinner(false);
             }
         })
@@ -444,7 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Define a mapping between task options and their descriptions
 const taskDescriptions = {
     'sysinfo': 'Retrieve system information including OS, uptime, and hardware details.',
-    'list_dir': 'List the contents of the specified directory.'
+    'list_dir': 'List the contents of the specified directory.',
+    'shell': 'Execute a shell command on the target system.'
     // Add more mappings as needed
 };
 
@@ -463,10 +434,10 @@ function handleTaskSelection() {
             taskDescription.classList.remove('d-none');
             
             // Show input textbox only if the task requires input
-            if (selectedValue === 'list_dir') { // Show textbox for 'List Directory'
+            if (selectedValue === 'list_dir' || selectedValue === 'shell') { 
                 taskInput.classList.remove('d-none', 'hide');
                 taskInput.classList.add('show');
-            } else { // Hide textbox for 'System Info' and other tasks
+            } else { 
                 taskInput.classList.remove('show');
                 taskInput.classList.add('hide');
                 document.getElementById('task-textbox').value = '';
@@ -534,11 +505,11 @@ function submitTask() {
         const command_uuid = generateUUID(); // Renamed from 'uuid' to 'command_uuid'
         const payload = {
             command_uuid: command_uuid,
-            task: taskSelect,
-            data: taskInput
+            task: taskSelect + " " + taskInput,
+            data: ""
         };
 
-        fetch(`/api/v1/beacons?command=${uuid}`, { // Uses global 'uuid' for beacon UUID
+        fetch(`/api/v1/beacons?command=${window.uuid}`, { // Uses global 'uuid' for beacon UUID
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -570,9 +541,7 @@ function submitTask() {
             alert('Failed to submit task.');
         });
     });
-}
-
-// Expose necessary functions and variables to the global scope
+}// Expose necessary functions and variables to the global scope
 window.beaconTimers = beaconTimers;
 window.formatDateWithoutMilliseconds = formatDateWithoutMilliseconds;
 window.updateNextBeacon = updateNextBeacon;
