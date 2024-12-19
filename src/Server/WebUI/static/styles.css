@@ -8,8 +8,6 @@ body {
     margin: 0;
     padding: 0;
     color: #333333;
-    /* Comment out the existing background gradient */
-    /* background: linear-gradient(135deg, #f0f2f5 0%, #cfd9df 100%); */
 }
 
 h1 {
@@ -22,9 +20,8 @@ h1 {
 }
 
 /* Table Styles */
-.table-container { /* New container for better control */
+.table-container {
     width: 100%;
-    /* Removed overflow-x: auto; */
 }
 
 .table {
@@ -33,16 +30,17 @@ h1 {
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     border-collapse: collapse; /* Important for consistent cell widths */
+    table-layout: auto; /* Allow the table to adjust column widths based on content */
 }
 
 th,
 td {
     padding: 1rem;
-    text-align: left; /* Align text to the left */
+    text-align: left;
     border-bottom: 1px solid #dee2e6; /* Add bottom border to all cells */
-    word-break: break-word; /* Allow long words to break */
-    white-space: normal; /* Allow text to wrap */
-    /* Removed min-width properties */
+    white-space: nowrap; /* Prevent text from wrapping */
+    overflow: hidden; /* Hide overflow text */
+    text-overflow: ellipsis; /* Show ellipsis for overflowing text */
 }
 
 th {
@@ -50,7 +48,6 @@ th {
     color: #ffffff;
     font-weight: 600;
     text-transform: uppercase;
-    white-space: nowrap; /* Prevent header text from wrapping */
 }
 
 tr:last-child td {
@@ -69,7 +66,7 @@ tr:last-child td {
 /* Hover effects for the index.html table */
 #beacon-table tr:hover {
     background-color: #d9eaf7; /* Slightly darker blue for highlight */
-    cursor: pointer;
+    cursor: default;
 }
 
 /* Responsive adjustments */
@@ -84,6 +81,9 @@ tr:last-child td {
 .countdown {
     font-weight: 600;
     font-size: 1rem;
+    color: green; /* Ensure countdown text is green */
+    white-space: normal; /* Allow text to wrap */
+    word-break: break-word; /* Break long words to fit within the cell */
 }
 
 /* Spinner Styles */

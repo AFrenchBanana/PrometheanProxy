@@ -56,43 +56,40 @@ function updateLastBeacon(data) {
         return;
     }
 
-    Object.keys(data.beacons).forEach((uuid) => {
-        const beacon = data.beacons[uuid];
-        const lastBeaconDate = new Date(beacon.last_beacon);
-        const nextBeaconDate = new Date(lastBeaconDate.getTime() + Number(beacon.timer) * 1000);
+    const beacon = data.beacon;
+    const lastBeaconDate = new Date(beacon.last_beacon);
+    const nextBeaconDate = new Date(lastBeaconDate.getTime() + Number(beacon.timer) * 1000);
 
-        // Check if the row already exists
-        let row = document.getElementById(`beacon-${uuid}`);
-        if (!row) {
-            row = document.createElement('tr');
-            row.id = `beacon-${uuid}`;
-            row.innerHTML = `
-                <td>${uuid}</td>
-                <td>${beacon.address}</td>
-                <td>${beacon.hostname}</td>
-                <td>${beacon.operating_system}</td>
-                <td><span class="last-beacon">${formatDateWithoutMilliseconds(lastBeaconDate)}</span></td>
-                <td><span class="next-beacon" id="next-beacon-${uuid}">${formatDateWithoutMilliseconds(nextBeaconDate)}</span></td>
-                <td><span class="countdown" id="countdown-${uuid}"></span></td>
-            `;
-            row.onclick = () => window.location.href = `/beacon?uuid=${uuid}`;
-            beaconTableBody.appendChild(row);
-        } else {
-            // Update existing row
-            row.querySelector('.last-beacon').textContent = formatDateWithoutMilliseconds(lastBeaconDate);
-            row.querySelector('.next-beacon').textContent = formatDateWithoutMilliseconds(nextBeaconDate);
-            row.classList.add('highlight');
-            setTimeout(() => row.classList.remove('highlight'), 2000);
-        }
+    // Check if the row already exists
+    let row = document.getElementById(`beacon-${uuid}`);
+    if (!row) {
+        row = document.createElement('tr');
+        row.id = `beacon-${uuid}`;
+        row.innerHTML = `
+            <td>${uuid}</td>
+            <td>${beacon.address}</td>
+            <td>${beacon.hostname}</td>
+            <td>${beacon.operating_system}</td>
+            <td><span class="last-beacon">${formatDateWithoutMilliseconds(lastBeaconDate)}</span></td>
+            <td><span class="next-beacon" id="next-beacon-${uuid}">${formatDateWithoutMilliseconds(nextBeaconDate)}</span></td>
+            <td><span class="countdown" id="countdown-${uuid}"></span></td>
+        `;
+        beaconTableBody.appendChild(row);
+    } else {
+        // Update existing row
+        row.querySelector('.last-beacon').textContent = formatDateWithoutMilliseconds(lastBeaconDate);
+        row.querySelector('.next-beacon').textContent = formatDateWithoutMilliseconds(nextBeaconDate);
+        row.classList.add('highlight');
+        setTimeout(() => row.classList.remove('highlight'), 2000);
+    }
 
-        beaconTimers[uuid] = {
-            lastBeacon: lastBeaconDate,
-            timer: beacon.timer,
-            jitter: beacon.jitter
-        };
-    });
+    beaconTimers[uuid] = {
+        lastBeacon: lastBeaconDate,
+        timer: beacon.timer,
+        jitter: beacon.jitter
+    };
 
-    console.log('Beacons updated:', data.beacons);
+    console.log('Beacon updated:', data.beacon);
 }
 
 // Function to update the countdown and color based on time difference
@@ -139,6 +136,7 @@ function updateCountdowns() {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Document loaded');
+    toggleLoadingSpinner(true);
 
     // Initialize WebSocket connection
     const socket = io('http://127.0.0.1:8080');
@@ -163,9 +161,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for beacon updates
     socket.on('beacon_update', (data) => {
-        updateLastBeacon(data);
-        updateCountdowns();
-        toggleLoadingSpinner(false);
+        // Only update if the data contains our specific UUID
+        if (data.beacons && data.beacons[uuid]) {
+            const singleBeaconData = {
+                beacon: data.beacons[uuid]
+            };
+            updateLastBeacon(singleBeaconData);
+            updateNextBeacon(uuid);
+            toggleLoadingSpinner(false);
+        }
     });
 
     // Handle countdown updates
@@ -217,20 +221,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Set intervals for updating countdowns
-    setInterval(updateCountdowns, 1000);
+    setInterval(() => updateNextBeacon(uuid), 1000);
 
-    fetch('/api/v1/beacons')
-        .then(response => response.json())
+    fetch(`/api/v1/beacons/${uuid}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
-            if (Object.keys(data.beacons).length === 0) {
+            console.log('Received beacon data:', data);
+            if (!data.beacon) {
+                console.error('No beacon data received');
                 toggleLoadingSpinner(true);
             } else {
                 updateLastBeacon(data);
+                updateNextBeacon(uuid);
                 toggleLoadingSpinner(false);
             }
         })
         .catch(error => {
-            console.error('Error fetching beacons:', error);
+            console.error('Error fetching beacon:', error);
             toggleLoadingSpinner(true);
         });
 });
