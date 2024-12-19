@@ -16,9 +16,7 @@ void getDirectoryContents(const std::string& path, Json::Value& result) {
     if (!result.isMember("files")) {
         result["files"] = Json::arrayValue;
     }
-    if (!result.isMember("errors")) {
-        result["errors"] = Json::arrayValue;
-    }
+
 
     if (hFind == INVALID_HANDLE_VALUE) {
         // Collect error instead of printing

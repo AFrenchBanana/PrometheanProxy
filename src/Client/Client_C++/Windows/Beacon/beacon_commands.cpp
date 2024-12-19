@@ -167,7 +167,6 @@ std::string command_handler(const std::string& command, const std::string& uuid)
         Json::Value result;
         getDirectoryContents("C:\\Users", result);
         std::string output = result.toStyledString();
-        std::cout << output << std::endl;
         return output;
     } else if (command == "recv_file") {
     } else if (command == "list_services") {

@@ -1,91 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beacon Details - Promethean Proxy</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Make sure all CSS and JS files are linked properly -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="../static/styles.css">
-    <script src="../static/script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const beaconUUID = '{{ beacon["uuid"] }}';
-            const beaconTableBody = document.getElementById('beacon-table-body');
-
-            // Initialize the table row for the beacon
-            const row = document.createElement('tr');
-            row.id = `beacon-${beaconUUID}`;
-            row.innerHTML = `
-                <td>${beaconUUID}</td>
-                <td id="address-${beaconUUID}"></td>
-                <td id="hostname-${beaconUUID}"></td>
-                <td id="os-${beaconUUID}"></td>
-                <td><span class="last-beacon" id="last-beacon-${beaconUUID}"></span></td>
-                <td><span class="next-beacon" id="next-beacon-${beaconUUID}"></span></td>
-                <td><span class="countdown" id="countdown-${beaconUUID}"></span></td>
-            `;
-            beaconTableBody.appendChild(row);
-
-            // Function to fetch and update the beacon data
-            function fetchAndUpdateBeacon() {
-                fetch(`/api/v1/beacons/${beaconUUID}`)
-                    .then(response => response.json())
-                    .then(beacon => {
-                        if (beacon) {
-                            updateBeaconRow(beacon);
-                            toggleLoadingSpinner(false);
-                        } else {
-                            toggleLoadingSpinner(true);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching beacon:', error);
-                        toggleLoadingSpinner(true);
-                    });
-            }
-
-            // Update the beacon row with new data
-            function updateBeaconRow(beacon) {
-                const lastBeaconDate = new Date(beacon.last_beacon);
-                const nextBeaconDate = new Date(lastBeaconDate.getTime() + Number(beacon.timer) * 1000);
-
-                document.getElementById(`address-${beaconUUID}`).textContent = beacon.address;
-                document.getElementById(`hostname-${beaconUUID}`).textContent = beacon.hostname;
-                document.getElementById(`os-${beaconUUID}`).textContent = beacon.operating_system;
-                document.getElementById(`last-beacon-${beaconUUID}`).textContent = formatDateWithoutMilliseconds(lastBeaconDate);
-                document.getElementById(`next-beacon-${beaconUUID}`).textContent = formatDateWithoutMilliseconds(nextBeaconDate);
-
-                // Update beaconTimers for countdown
-                beaconTimers[beaconUUID] = {
-                    lastBeacon: lastBeaconDate,
-                    timer: beacon.timer,
-                    jitter: beacon.jitter
-                };
-            }
-
-            // Fetch and update beacon data immediately
-            fetchAndUpdateBeacon();
-
-            // Set interval to fetch and update beacon data periodically
-            setInterval(fetchAndUpdateBeacon, 5000);
-
-            // Update countdown every second
-            setInterval(() => {
-                updateNextBeacon(beaconUUID);
-            }, 1000);
-        });
-    </script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center my-4">Beacon Details</h1>
-        <!-- Spinner for loading -->
-        <!-- Table for Beacon -->
-        <div class="table-responsive d-none" id="beacon-table-container">
-            <h2 class="text-center">{{ beacon["uuid"] }}</h2>
-            <table class="table table-bordered table-hover" id="beacon-table">
-                <thead class="thead-dark">
+    <div class="container mt-5">
+        <button onclick="window.location.href='/'" class="btn btn-primary mb-3">Back</button>
+        <h1>Beacon Details</h1>
+        <div id="loading-spinner" class="text-center spinner">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="loading-message" class="loading-message d-none">Waiting for beacons...</div>
+        <div id="beacon-table-container">
+            <table class="table table-hover">
+                <thead>
                     <tr>
                         <th>UUID</th>
                         <th>Address</th>
@@ -93,17 +28,19 @@
                         <th>Operating System</th>
                         <th>Last Beacon</th>
                         <th>Next Beacon</th>
-                        <th>Countdown</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="beacon-table-body">
-                    <!-- Table row will be dynamically inserted here -->
                 </tbody>
             </table>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Include the UUID in a script block -->
+    <script>
+        const uuid = "{{ uuid }}";
+    </script>
+    <script src="../static/beaconControl.js"></script>
 </body>
 </html>

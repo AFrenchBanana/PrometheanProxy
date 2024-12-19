@@ -32,6 +32,31 @@ def api_beacons():
 
     return jsonify({"beacons": beacons_grouped})
 
+@app.route('/api/v1/beacons/<uuid>')
+def api_beacon(uuid):
+    if request.remote_addr != '127.0.0.1':
+        return jsonify({"error": "Access denied"}), 403
+
+    # Find the beacon with the given UUID
+    beacon_data = None
+    for i in range(len(beacons["uuid"])):
+        if beacons["uuid"][i] == uuid:
+            beacon_data = {
+                "address": beacons["address"][i],
+                "hostname": beacons["hostname"][i],
+                "operating_system": beacons["operating_system"][i],
+                "last_beacon": beacons["last_beacon"][i],
+                "next_beacon": beacons["next_beacon"][i],
+                "timer": beacons["timer"][i],
+                "jitter": beacons["jitter"][i]
+            }
+            break
+
+    if beacon_data:
+        return jsonify({"beacon": beacon_data})
+    else:
+        return jsonify({"error": "Beacon not found"}), 404
+
 @app.route('/')
 def index():
     return render_template('index.html', beacons=beacons, commands=beacon_commands)
@@ -41,12 +66,25 @@ def index():
 def beacon():
     if request.args.get('uuid'):
         uuid = request.args.get('uuid')
+        beacon_data = None
         for i in range(len(beacons["uuid"])):
             if beacons["uuid"][i] == uuid:
-                return render_template('beacon.html', beacon=beacons, uuid=uuid)    
+                beacon_data = {
+                    "address": beacons["address"][i],
+                    "hostname": beacons["hostname"][i],
+                    "operating_system": beacons["operating_system"][i],
+                    "last_beacon": beacons["last_beacon"][i],
+                    "next_beacon": beacons["next_beacon"][i],
+                    "timer": beacons["timer"][i],
+                    "jitter": beacons["jitter"][i]
+                }
+                break
+        if beacon_data:
+            return render_template('beacon.html', beacon=beacon_data, uuid=uuid)
+        else:
+            return redirect('/')
     else:
-        redirect('/')
-
+        return redirect('/')
 
 @app.route('/favicon.ico')
 def favicon():
