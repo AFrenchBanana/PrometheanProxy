@@ -35,8 +35,48 @@
                 </tbody>
             </table>
         </div>
+        <div class="text-center mt-3">
+            <button id="task-btn" class="btn btn-secondary m-2 btn-lg same-size-btn" data-direction="left">Task</button>
+            <button id="results-btn" class="btn btn-secondary m-2 btn-lg same-size-btn" data-direction="right">Results</button>
+            <button id="directory-btn" class="btn btn-secondary m-2 btn-lg same-size-btn" data-direction="left">Directory Listing</button>
+        </div>
+        <div id="info-box" class="info-box mt-3">
+            <div id="task-info" class="info-content">
+                <!-- Task Information Text -->
+                <h2>Task Information</h2>
+                
+                <!-- Dropdown Menu for Task Information -->
+                <div class="form-group mt-4">
+                    <label for="task-select">Task:</label>
+                    <select id="task-select" class="form-control">
+                        <option value="">-- Select an Option --</option>
+                        <option value="sysinfo">System Info</option>
+                        <option value="list_dir">List Directory</option>
+                        <!-- Add more options as needed -->
+                    </select>
+                </div>
+                
+                <!-- Dynamic Description -->
+                <div id="task-description" class="form-group d-none">
+                    <label for="task-description-text">Description:</label>
+                    <p id="description-text"></p>
+                </div>
+                
+                <!-- Dynamic Textbox -->
+                <div id="task-input" class="form-group d-none">
+                    <label for="task-textbox">Input:</label>
+                    <input type="text" id="task-textbox" class="form-control" placeholder="Enter your input here">
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="text-center mt-3">
+                    <button id="submit-task-btn" class="btn btn-success mt-2" disabled>Enter</button>
+                </div>
+            </div>
+            <div id="results-info" class="info-content d-none">Results Information</div>
+            <div id="directory-info" class="info-content d-none">Directory Listing Information</div>
+        </div>
     </div>
-
     <!-- Include the UUID in a script block -->
     <script>
         const uuid = "{{ uuid }}";

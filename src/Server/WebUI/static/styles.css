@@ -106,7 +106,32 @@ tr:last-child td {
 }
 
 .text-center {
+    display: flex;
+    justify-content: center;
     text-align: center;
+}
+
+/* Ensure consistent margins for buttons */
+.text-center button {
+    margin: 0.5rem;
+}
+
+/* Set a fixed width for buttons to ensure uniform size */
+.same-size-btn {
+    min-width: 180px; /* Adjust the width as needed */
+    text-align: center;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    background: linear-gradient(45deg, #6a11cb, #2575fc); /* Gradient background */
+    color: #ffffff; /* White text */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Update hover effects for buttons */
+.same-size-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(45deg, #2575fc, #6a11cb); /* Reverse gradient on hover */
 }
 
 .my-4 {
@@ -158,6 +183,87 @@ tr:last-child td {
     margin-bottom: 10px;
 }
 
+/* Info Box Styles */
+.info-box {
+    display: block; /* Change from flex to block for natural stacking */
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #ffffff;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    height: auto; /* Ensure height is set to auto */
+}
+
+.info-content {
+    min-width: 100%;
+    padding: 1rem;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    position: static; /* Changed from absolute to static to allow stacking */
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Optional: Add margin or padding if needed for spacing between info-content sections */
+.info-content + .info-content {
+    margin-top: 1rem;
+}
+
+/* Center the submit button */
+.info-content .text-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Disabled Submit Button Styles */
+.btn-success:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+/* Smooth Animation for Input Box */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 200px; /* Adjust as needed */
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        max-height: 200px; /* Adjust as needed */
+    }
+    to {
+        opacity: 0;
+        max-height: 0;
+    }
+}
+
+.info-content .form-group {
+    transition: all 0.5s ease;
+}
+
+/* Apply animation when showing the input */
+.form-group.show {
+    animation: fadeIn 0.5s forwards;
+}
+
+/* Apply animation when hiding the input */
+.form-group.hide {
+    animation: fadeOut 0.5s forwards;
+}
+
 /* Keyframe Animations */
 @keyframes fadeInDown {
     from {
@@ -179,4 +285,66 @@ tr:last-child td {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Sliding Animations */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+/* Animation Classes */
+.slide-in-left {
+    animation: slideInLeft 0.5s forwards;
+}
+
+.slide-out-right {
+    animation: slideOutRight 0.5s forwards;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.5s forwards;
+}
+
+.slide-out-left {
+    animation: slideOutLeft 0.5s forwards;
 }

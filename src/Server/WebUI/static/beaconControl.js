@@ -252,7 +252,173 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching beacon:', error);
             toggleLoadingSpinner(true);
         });
+
+    // Add event listeners for buttons
+    document.getElementById('task-btn').addEventListener('click', (event) => {
+        showInfo('task-info', event);
+    });
+    document.getElementById('results-btn').addEventListener('click', (event) => {
+        showInfo('results-info', event);
+    });
+    document.getElementById('directory-btn').addEventListener('click', (event) => {
+        showInfo('directory-info', event);
+    });
+
+    function showInfo(infoId, event) { // Updated function signature
+        const infoBox = document.getElementById('info-box');
+        const currentInfo = document.querySelector('.info-content:not(.d-none)');
+        const newInfo = document.getElementById(infoId);
+        const clickedButton = event.target; // Get the clicked button
+        const direction = clickedButton.getAttribute('data-direction'); // Get the slide direction
+
+        if (currentInfo !== newInfo) {
+            // Determine animation classes based on direction
+            let slideOutClass, slideInClass;
+            if (direction === 'left') {
+                slideOutClass = 'slide-out-right';
+                slideInClass = 'slide-in-left';
+            } else {
+                slideOutClass = 'slide-out-left';
+                slideInClass = 'slide-in-right';
+            }
+
+            // Add slide out animation to current info
+            currentInfo.classList.add(slideOutClass);
+            currentInfo.classList.remove('slide-in-left', 'slide-in-right');
+
+            // After animation ends, hide current and show new with slide in animation
+            currentInfo.addEventListener('animationend', () => {
+                currentInfo.classList.add('d-none');
+                currentInfo.classList.remove(slideOutClass);
+
+                newInfo.classList.remove('d-none');
+                newInfo.classList.add(slideInClass);
+            }, { once: true });
+        }
+    }
+
+    handleTaskSelection();
+    submitTask();
 });
+
+// Define a mapping between task options and their descriptions
+const taskDescriptions = {
+    'sysinfo': 'Retrieve system information including OS, uptime, and hardware details.',
+    'list_dir': 'List the contents of the specified directory.'
+    // Add more mappings as needed
+};
+
+// Function to handle dropdown selection
+function handleTaskSelection() {
+    const taskSelect = document.getElementById('task-select');
+    const taskDescription = document.getElementById('task-description');
+    const descriptionText = document.getElementById('description-text');
+    const taskInput = document.getElementById('task-input');
+    const submitBtn = document.getElementById('submit-task-btn');
+
+    taskSelect.addEventListener('change', () => {
+        const selectedValue = taskSelect.value;
+        if (selectedValue && taskDescriptions[selectedValue]) {
+            descriptionText.textContent = taskDescriptions[selectedValue];
+            taskDescription.classList.remove('d-none');
+            
+            // Show input textbox only if the task requires input
+            if (selectedValue === 'list_dir') { // Show textbox for 'List Directory'
+                taskInput.classList.remove('d-none', 'hide');
+                taskInput.classList.add('show');
+            } else { // Hide textbox for 'System Info' and other tasks
+                taskInput.classList.remove('show');
+                taskInput.classList.add('hide');
+                document.getElementById('task-textbox').value = '';
+            }
+        } else {
+            taskDescription.classList.add('d-none');
+            taskInput.classList.remove('show');
+            taskInput.classList.add('hide');
+            descriptionText.textContent = '';
+            document.getElementById('task-textbox').value = '';
+        }
+        validateForm();
+    });
+
+    // Add input event listener to the textbox
+    const taskTextbox = document.getElementById('task-textbox');
+    taskTextbox.addEventListener('input', validateForm);
+}
+
+// Function to validate form and enable/disable submit button
+function validateForm() {
+    const taskSelect = document.getElementById('task-select').value;
+    const taskInput = document.getElementById('task-textbox').value.trim();
+    const submitBtn = document.getElementById('submit-task-btn');
+    const taskInputContainer = document.getElementById('task-input');
+
+    if (taskSelect) {
+        if (taskInputContainer.classList.contains('show')) {
+            // If input is required, enable submit only if input is provided
+            submitBtn.disabled = taskInput === '';
+        } else {
+            // If input is not required, enable submit as long as a task is selected
+            submitBtn.disabled = false;
+        }
+    } else {
+        submitBtn.disabled = true;
+    }
+}
+
+// Function to generate UUID
+function generateUUID() {
+    // Simple UUID generator
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+// Function to submit task
+function submitTask() {
+    const submitBtn = document.getElementById('submit-task-btn');
+    submitBtn.addEventListener('click', () => {
+        const taskSelect = document.getElementById('task-select').value;
+        const taskInput = document.getElementById('task-textbox').value.trim();
+
+        if (!taskSelect || !taskInput) {
+            alert('Please select a task and enter the input.');
+            return;
+        }
+
+        const uuid = generateUUID();
+        const payload = {
+            command: uuid,
+            task: taskSelect,
+            input: taskInput
+        };
+
+        fetch(`/api/v1/beacons?command=${uuid}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            alert('Task submitted successfully.');
+            submitBtn.disabled = true; // Reset the button state
+            document.getElementById('task-select').value = '';
+            document.getElementById('task-input').value = '';
+            document.getElementById('task-input').classList.add('hide');
+            document.getElementById('task-input').classList.remove('show');
+            document.getElementById('task-description').classList.add('d-none');
+        })
+        .catch(error => {
+            console.error('Error submitting task:', error);
+            alert('Failed to submit task.');
+        });
+    });
+}
 
 // Expose necessary functions and variables to the global scope
 window.beaconTimers = beaconTimers;
