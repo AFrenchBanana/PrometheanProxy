@@ -42,6 +42,13 @@ function formatDateWithoutMilliseconds(date) {
     return `${day}/${month} ${hours}:${minutes}:${seconds}`;
 }
 
+// Function to format time in minutes and seconds
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+}
+
 // Function to update beacon data dynamically
 function updateLastBeacon(data) {
     const beaconTableBody = document.getElementById('beacon-table-body');
@@ -103,13 +110,13 @@ function updateNextBeacon(uuid) {
 
     // Update the countdown text and style based on the time difference
     if (timeDiff >= 0) {
-        countdownElement.textContent = `Next Callback expected in ${Math.floor(timeDiff / 1000)} seconds`;
+        countdownElement.textContent = `Next Callback expected in ${formatTime(Math.floor(timeDiff / 1000))}`;
         countdownElement.style.color = 'green';
     } else if (jitterDiff >= 0) {
-        countdownElement.textContent = `Expected Callback was ${nextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(timeDiff / 1000))} seconds late. (Within Jitter)`;
+        countdownElement.textContent = `Expected Callback was ${nextBeaconDate.toISOString()}. It is ${formatTime(Math.abs(Math.floor(timeDiff / 1000)))} late. (Within Jitter)`;
         countdownElement.style.color = 'orange';
     } else {
-        countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(jitterDiff / 1000))} seconds late`;
+        countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${formatTime(Math.abs(Math.floor(jitterDiff / 1000)))} late`;
         countdownElement.style.color = 'red';
     }
 }
@@ -190,13 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
                 // Update the countdown text and color based on the time difference
                 if (timeDiff >= 0) {
-                    countdownElement.textContent = `Next Callback expected in ${Math.floor(timeDiff / 1000)} seconds`;
+                    countdownElement.textContent = `Next Callback expected in ${formatTime(Math.floor(timeDiff / 1000))}`;
                     countdownElement.style.color = 'green';
                 } else if (jitterDiff >= 0) {
-                    countdownElement.textContent = `Expected Callback was ${nextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(timeDiff / 1000))} seconds late. (Within Jitter)`;
+                    countdownElement.textContent = `Expected Callback was ${nextBeaconDate.toISOString()}. It is ${formatTime(Math.abs(Math.floor(timeDiff / 1000)))} late. (Within Jitter)`;
                     countdownElement.style.color = 'orange';
                 } else {
-                    countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${Math.abs(Math.floor(jitterDiff / 1000))} seconds late`;
+                    countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${formatTime(Math.abs(Math.floor(jitterDiff / 1000)))} late`;
                     countdownElement.style.color = 'red';
                 }
     
