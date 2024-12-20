@@ -112,6 +112,7 @@ def beacon(part1, part2):
         if beacon_commands["beacon_uuid"][j] == id:
             data["command_uuid"] = beacon_commands["command_uuid"][j]
             data["command"] = beacon_commands["command"][j]
+            data["data"] = beacon_commands["command_data"][j]
             beacon_commands["executed"][j] = True
 
     if not data:

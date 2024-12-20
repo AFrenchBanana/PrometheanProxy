@@ -25,7 +25,7 @@ def api_beacons():
         request_data = request.get_json()
         app.logger.debug(f"Command UUID: {uuid}, Data: {request_data}")
         if request_data and "task" in request_data:  
-            add_beacon_command_list(uuid, request_data["task"])
+            add_beacon_command_list(uuid, request_data["task"], request_data["data"])
             app.logger.info(f"Command added for UUID: {uuid}")
             return jsonify({"status": "Command added"})
         else:

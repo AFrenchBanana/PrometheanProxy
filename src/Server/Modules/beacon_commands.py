@@ -50,7 +50,7 @@ class BeaconCommandsClass:
             f"Shell {IPAddress}: Type exit to quit session, "
             "Please use absolute paths")
         command = input("Command: ")
-        add_beacon_command_list(userID, f"shell {command}")
+        add_beacon_command_list(userID, "shell", command)
 
     def list_dir(self, userID, IPAddress) -> None:
         """runs a shell between the sessions client and server"""
@@ -58,27 +58,27 @@ class BeaconCommandsClass:
             f"ListDir {IPAddress}: Type exit to quit session, "
             "Please use absolute paths")
         command = input("Directory: ")
-        add_beacon_command_list(userID, f"list_dir {command}")
+        add_beacon_command_list(userID, "list_dir", command)
 
     def list_processes(self, userID) -> None:
-        add_beacon_command_list(userID, "list_processes")
+        add_beacon_command_list(userID, "list_processes", "")
         return
 
     def systeminfo(self, userID) -> None:
         """gets the systeminfo of the client"""
-        add_beacon_command_list(userID, "systeminfo")
+        add_beacon_command_list(userID, "systeminfo", "")
         return
 
     def disk_usage(self, userID) -> None:
-        add_beacon_command_list(userID, "disk_usage")
+        add_beacon_command_list(userID, "disk_usage", "")
         return
     
     def dir_traversal(self, userID) -> None:
-        add_beacon_command_list(userID, "directory_traversal")
+        add_beacon_command_list(userID, "directory_traversal", "")
         return
 
     def netstat(self, userID) -> None:
-        add_beacon_command_list(userID, "disk_usage")
+        add_beacon_command_list(userID, "netstat", "")
         return
 
     def list_db_commands(self, userID) -> None:

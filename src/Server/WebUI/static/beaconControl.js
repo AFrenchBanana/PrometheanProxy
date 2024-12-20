@@ -505,8 +505,8 @@ function submitTask() {
         const command_uuid = generateUUID(); // Renamed from 'uuid' to 'command_uuid'
         const payload = {
             command_uuid: command_uuid,
-            task: taskSelect + " " + taskInput,
-            data: ""
+            task: taskSelect,
+            data: taskInput || null
         };
 
         fetch(`/api/v1/beacons?command=${window.uuid}`, { // Uses global 'uuid' for beacon UUID

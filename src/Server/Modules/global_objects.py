@@ -44,7 +44,7 @@ beacon_commands = {
     "command": [],
     "command_output": [],
     "executed": [],
-    "command_data": [],  # Initialize command_data as an empty list
+    "command_data": [], 
 }
 
 try:

