@@ -155,9 +155,9 @@ class MultiHandler:
                 readline.set_completer(
                     lambda text, state:
                         tab_completion(text,
-                                       state, ["list", "sessions", "beacon",
+                                       state, ["list", "sessions", "beacons",
                                                "close", "closeall",
-                                               "beacon config",
+                                               "configbeacon",
                                                "command", "hashfiles",
                                                "config", "help", "exit",]))
                 command = input("MultiHandler: ").lower()
@@ -199,7 +199,7 @@ class MultiHandler:
                             sessions.details, sessions.address),
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
                     "config": config_menu,
-                    "beacon config": beacon_config_menu
+                    "configBeacon": beacon_config_menu
                 }
 
                 try:

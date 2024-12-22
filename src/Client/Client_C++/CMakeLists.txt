@@ -43,7 +43,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     )
 
     # Link Windows-specific libraries for networking
-    set(WINDOWS_LIBS ws2_32 iphlpapi)
+    set(WINDOWS_LIBS ws2_32 iphlpapi gdiplus)
 else()
     message(FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}")
 endif()
