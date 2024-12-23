@@ -114,6 +114,7 @@ tr:last-child td {
 /* Ensure consistent margins for buttons */
 .text-center button {
     margin: 0.5rem;
+    display: inline-block; /* Ensure buttons are inline */
 }
 
 /* Set a fixed width for buttons to ensure uniform size */

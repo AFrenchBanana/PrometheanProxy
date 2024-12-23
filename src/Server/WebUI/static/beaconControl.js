@@ -418,8 +418,14 @@ document.addEventListener('DOMContentLoaded', () => {
 const taskDescriptions = {
     'sysinfo': 'Retrieve system information including OS, uptime, and hardware details.',
     'list_dir': 'List the contents of the specified directory.',
-    'shell': 'Execute a shell command on the target system.'
-    // Add more mappings as needed
+    'shell': 'Execute a shell command on the target system.',
+    'close': 'Close the connection with the beacon.',
+    'processes': 'List all running processes on the target system.',
+    'diskusage': 'Check disk usage on the target system.',
+    'netstat': 'Display network statistics and connections.',
+    'session': 'Switch the beacon to session mode.',
+    'directorytraversal': 'Perform directory traversal operations on the target system.',
+    'takephoto': 'Capture a photo using the target system’s camera.'
 };
 
 // Function to handle dropdown selection
@@ -497,7 +503,7 @@ function submitTask() {
         const taskInput = document.getElementById('task-textbox').value.trim();
 
         // Define tasks that require input
-        const tasksRequiringInput = ['list_dir']; // Add other tasks as needed
+        const tasksRequiringInput = ['list_dir', 'shell']; 
         const requiresInput = tasksRequiringInput.includes(taskSelect);
 
         if (!taskSelect || (requiresInput && !taskInput)) {
