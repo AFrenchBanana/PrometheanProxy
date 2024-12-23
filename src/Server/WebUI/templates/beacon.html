@@ -55,6 +55,7 @@
             <button id="task-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="left">Task</button>
             <button id="results-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Results</button>
             <button id="directory-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="left">Directory Listing</button>
+            <button id="media-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Media</button>
         </div>
         <div id="info-box" class="info-box mt-3">
             <div id="task-info" class="info-content">
@@ -113,6 +114,19 @@
                 </table>
             </div>
             <div id="directory-info" class="info-content d-none">Directory Listing Information</div>
+            <div id="media-info" class="info-content d-none">
+                <h2>Media</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>UUID</th>
+                            <th>Time</th>
+                            <th>Image</th>
+                        </tr>
+                    </thead>
+                    <tbody id="media-table-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
     <!-- Include the UUID in a script block -->

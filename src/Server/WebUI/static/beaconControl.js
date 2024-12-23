@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleLoadingSpinner(true);
 
     // Initialize WebSocket connection
-    const socket = io('http://127.0.0.1:8080');
+    const socket = io('http://127.0.0.1:8000');
 
     // Log WebSocket connection details
     socket.on('connect', () => {
@@ -372,6 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('directory-btn').addEventListener('click', (event) => {
         showInfo('directory-info', event);
+    });
+    document.getElementById('media-btn').addEventListener('click', (event) => {
+        showInfo('media-info', event);
     });
 
     function showInfo(infoId, event) { // Updated function signature
