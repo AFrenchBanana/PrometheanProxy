@@ -4,7 +4,23 @@
 
 #pragma comment (lib,"Gdiplus.lib")
 
+// Define the minimum supported version (Windows Vista or later)
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600 // Windows Vista
+#endif
+
 void CapturePhoto(const std::wstring& filename) {
+    // Check if SetProcessDPIAware is available
+    HMODULE hUser32 = LoadLibrary(TEXT("user32.dll"));
+    if (hUser32) {
+        typedef BOOL (WINAPI *LPFNSETPROCESSDPIAWARE)(void);
+        LPFNSETPROCESSDPIAWARE pSetProcessDPIAware = (LPFNSETPROCESSDPIAWARE)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (pSetProcessDPIAware) {
+            pSetProcessDPIAware();
+        }
+        FreeLibrary(hUser32);
+    }
+
     // Initialize GDI+
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
@@ -14,16 +30,35 @@ void CapturePhoto(const std::wstring& filename) {
     HDC hScreenDC = GetDC(nullptr);
     HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
 
-    // Get screen dimensions
-    int width = GetSystemMetrics(SM_CXSCREEN);
-    int height = GetSystemMetrics(SM_CYSCREEN);
+    // Get screen dimensions for all monitors
+    int width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    int left = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int top = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
-    // Create a compatible bitmap
+    // Create a compatible bitmap with the correct width and height
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
+    if (!hBitmap) {
+        ReleaseDC(nullptr, hScreenDC);
+        DeleteDC(hMemoryDC);
+        return;
+    }
+
     HGDIOBJ hOldBitmap = SelectObject(hMemoryDC, hBitmap);
 
-    // Copy the screen to the bitmap
-    BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, 0, 0, SRCCOPY);
+    // Set proper scaling
+    SetGraphicsMode(hMemoryDC, GM_ADVANCED);
+    SetStretchBltMode(hMemoryDC, HALFTONE);
+
+    // Copy the screen to the bitmap, ensuring we capture from the correct position
+    if (!BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, left, top, SRCCOPY)) {
+        // Handle error
+        SelectObject(hMemoryDC, hOldBitmap);
+        DeleteObject(hBitmap);
+        DeleteDC(hMemoryDC);
+        ReleaseDC(nullptr, hScreenDC);
+        return;
+    }
 
     // Initialize GDI+ Bitmap from HBITMAP
     Gdiplus::Bitmap bitmap(hBitmap, nullptr);
