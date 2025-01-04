@@ -145,40 +145,32 @@ def response(path1, version):
         for commandID, command in command_list.items():
             if commandID == cid:
                 found = True
-                if i < len(beacon_commands["command_output"]):
-                    beacon_commands["command_output"][i] = output
-                    if beacon_commands["command"][i] == "directory_traversal":
-                        # need to handle this properly
-                        print("Directory Traversal Responded, saved to file")
-                        with open("directory_traversal.txt", "w") as f:
-                            f.write(output)
-                    elif beacon_commands["command"][i] in ["takePhoto", "downloadFile"]:
-                        print(f"Command {beacon_commands['beacon_uuid'][i]} ",
-                              f"responded with: {output}") 
-                        dir_path = f"~/.promeathanProxy/{beacon_commands['beacon_uuid'][i]}"
-                        if not os.path.isdir(dir_path):
-                            os.mkdir(dir_path)
-                        file_path = os.path.join(dir_path, f"{beacon_commands['command_data'][i]}.jpg")
-                        with open(file_path, "wb") as f:
-                            f.write(base64.b64decode(output))
+                for i, (beaconID, beacon) in enumerate(beacon_list.items()):  # Updated loop
+                    if beaconID == command.beacon_uuid:
+                        # Update beacon attributes
+                        beacon.last_beacon = time.asctime()
+                        timer = beacon.timer
+                        jitter = beacon.jitter
+                        next_beacon_time = time.time() + timer
+                        beacon.next_beacon = time.asctime(
+                            time.localtime(next_beacon_time))
+                        socketio.emit('countdown_update', {
+                            'uuid': command.beacon_uuid,
+                            'timer': timer,
+                            'jitter': jitter,
+                        })
                     else:
                         print(
-                            f"Command {beacon_commands['beacon_uuid'][i]} ",
+                            f"Command {beaconID} ",
                             "responded with:"
                         )
                         print(output)
-                    socketio.emit('command_response', {
-                        'uuid': beacon_commands['beacon_uuid'][i],
-                        'command': beacon_commands['command'][i],
+                    socketio.emit('command_response',{
+                        'uuid': beaconID,
+                        'command': command.command,
                         'response': output
                     })
-                else:
-                    print(
-                        f"Index {i} out of range for ",
-                        f"{beacon_commands['command_output']}"
-                    )
     if not found:
         return '', 500
     return '', 200
 
-    return "", 204
