@@ -16,36 +16,41 @@ import ssl
 import os
 import uuid
 
-# global socket details to allow multiple connections and the ability
-# to interact with them individually.
-sessions = {
-    "uuid": [],
-    "address": [],
-    "details": [],
-    "hostname": [],
-    "operating_system": [],
-    "mode": [],
-}
+beacon_list = {}
+command_list = {}
+sessions_list = {}
 
-beacons = {
-    "uuid": [],
-    "address": [],
-    "hostname": [],
-    "operating_system": [],
-    "last_beacon": [],
-    "next_beacon": [],
-    "timer": [],
-    "jitter": [],
-}
 
-beacon_commands = {
-    "beacon_uuid": [],
-    "command_uuid": [],
-    "command": [],
-    "command_output": [],
-    "executed": [],
-    "command_data": [], 
-}
+class session:
+    def __init__(self, address, details, hostname, operating_system, mode):
+        self.address = address
+        self.details = details
+        self.hostname = hostname
+        self.operating_system = operating_system
+        self.mode = mode
+
+
+class beacon:
+    def __init__(self, address, hostname, operating_system,
+                 last_beacon, timer, jitter):
+        self.address = address
+        self.hostname = hostname
+        self.operating_system = operating_system
+        self.last_beacon = last_beacon
+        self.next_beacon = str(last_beacon) + str(timer)
+        self.timer = timer
+        self.jitter = jitter
+
+
+class beacon_command:
+    def __init__(self, beacon_uuid, command, command_output,
+                 executed, command_data):
+        self.beacon_uuid = beacon_uuid
+        self.command = command
+        self.command_output = command_output
+        self.executed = executed
+        self.command_data = command_data
+
 
 try:
     with TomlFiles("config.toml") as f:
@@ -64,70 +69,46 @@ def add_connection_list(conn: ssl.SSLSocket,
     """
     Adds connection details to the global connections dictionary.
     """
-    sessions["details"].append(conn)  # the socket connection details
-    sessions["address"].append(r_address)  # the IP address and port
-    sessions["hostname"].append(host)  # hostname or the socket
-    sessions["operating_system"].append(operating_system)
-    print(f"User {user_id} connected")
-    sessions["uuid"].append(user_id)
-    sessions["mode"].append(mode)
+    new_session = session(r_address, conn, host, operating_system, mode)
+    sessions_list[user_id] = new_session
 
 
 def add_beacon_list(uuid: str, r_address: str, hostname: str,
                     operating_system: str, last_beacon, timer,
                     jitter) -> None:
-    beacons["uuid"].append(uuid)
-    beacons["address"].append(r_address)
-    beacons["hostname"].append(hostname)
-    beacons["operating_system"].append(operating_system)
-    beacons["last_beacon"].append(last_beacon)
-    beacons["next_beacon"].append(str(last_beacon) + str(timer))
-    beacons["timer"].append(timer)
-    beacons["jitter"].append(jitter)
+    new_beacon = beacon(
+        r_address, hostname, operating_system, last_beacon, timer, jitter
+    )
+    beacon_list[uuid] = new_beacon
 
 
 def add_beacon_command_list(beacon_uuid: str,
                             command: str, command_data: json = {}) -> None:
     command_uuid = str(uuid.uuid4())
-    beacon_commands["beacon_uuid"].append(beacon_uuid)
-    beacon_commands["command_uuid"].append(command_uuid)
-    beacon_commands["command"].append(command)
-    beacon_commands["command_data"].append(command_data)
-    beacon_commands["command_output"].append("Awaiting Response")
-    beacon_commands["executed"].append(False)
-    print(f"Command {command_uuid} added to beacon {beacon_uuid}")
+    new_command = beacon_command(beacon_uuid, command, "", False, command_data)
+    command_list[command_uuid] = new_command
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:
     """
     Removes connection from the global connections dictionary.
     """
-    for i, item in enumerate(sessions["address"]):
-        if item == r_address:
-            sessions["details"].pop(i)
-            sessions["address"].pop(i)
-            sessions["hostname"].pop(i)
-            sessions["operating_system"].pop(i)
-            sessions["uuid"].pop(i)
-            sessions["mode"].pop(i)
-        else:
-            print("Address not found")
+    for key, value in sessions_list.items():
+        if value.address == r_address:
+            sessions_list.pop(key)
             break
+    else:
+        print(f"Connection {r_address} not found in sessions list")
 
 
 def remove_beacon_list(uuid: str) -> None:
-    if uuid in beacons["uuid"]:
-        index = beacons["uuid"].index(uuid)
-        beacons["uuid"].pop(index)
-        beacons["address"].pop(index)
-        beacons["hostname"].pop(index)
-        beacons["operating_system"].pop(index)
-        beacons["last_beacon"].pop(index)
-        beacons["next_beacon"].pop(index)
-        beacons["timer"].pop(index)
-        beacons["jitter"].pop(index)
+    """
+    Removes beacon from the global beacon dictionary.
+    """
+    if uuid in beacon_list:
+        beacon_list.pop(uuid)
     else:
-        print(f"UUID {uuid} not found in beacons list")
+        print(f"Beacon {uuid} not found in beacon list")
 
 
 def send_data(conn: ssl.SSLSocket, data: any) -> None:

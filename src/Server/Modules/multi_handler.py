@@ -23,11 +23,11 @@ from .global_objects import (
     send_data,
     receive_data,
     add_connection_list,
-    sessions,
+    sessions_list,
     execute_local_commands,
     config,
     tab_completion,
-    beacons,
+    beacon_list,
 )
 from Modules.config_configuration import config_menu, beacon_config_menu
 
@@ -166,19 +166,20 @@ class MultiHandler:
                     break  # exits the multihandler
 
                 def handle_sessions():
-                    if len(sessions["uuid"]) == 0:
+                    if len(sessions_list) == 0:
                         print(colorama.Fore.RED + "No sessions connected")
                     else:
                         self.multihandlercommands.sessionconnect()
 
                 def handle_beacons():
-                    if len(beacons["uuid"]) == 0:
+                    if len(beacon_list) == 0:
                         print(colorama.Fore.RED + "No beacons connected")
-                    elif len(beacons["uuid"]) > 1:
+                    elif len(beacon_list) > 1:
                         index = int(input("Enter the index of the beacon: "))
                         try:
+                            beacon = beacon_list[index]
                             self.multihandlercommands.use_beacon(
-                                beacons["uuid"][index],
+                                beacons,
                                 beacons["address"][index])
                         except IndexError:
                             print(colorama.Fore.RED + "Index out of range")

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, redirect, send_from_directory
+from flask import Flask, request, jsonify, redirect
 import uuid
 import time
 import logging
@@ -6,7 +6,7 @@ import os
 import base64
 from flask_socketio import SocketIO
 from Modules.global_objects import (
-    beacons, add_beacon_list, beacon_commands, config)
+    beacon_list, add_beacon_list, command_list, config)
 
 
 beaconControl = Flask(__name__)
@@ -27,7 +27,8 @@ it will return a 404
 """
 
 
-@beaconControl.route('/<part1>/<part2>/<ad_param>/api/v<int:version>', methods=['POST'])
+@beaconControl.route('/<part1>/<part2>/<ad_param>/api/v<int:version>',
+                     methods=['POST'])
 def connectionRequest(part1, part2, ad_param, version):
     if "ad" not in ad_param or version not in range(1, 11):
         return '', 404
@@ -41,7 +42,7 @@ def connectionRequest(part1, part2, ad_param, version):
                         os, time.asctime(),
                         config['beacon']["interval"],
                         config['beacon']['jitter'])
-        socketio.emit('new_connection', {'uuid': userID, 'name': name, 'os': os, 'address': address, "interval": config['beacon']["interval"], "jitter": config['beacon']['jitter']})
+        socketio.emit('new_connection', {'uuid': userID, 'name': name, 'os': os, 'address': address, "interval": config['beacon']["interval"], "jitter": config['beacon']['jitter']}) # noqa
         return {"timer": config['beacon']["interval"],
                 "uuid": userID, "jitter": config['beacon']['jitter']}, 200
     else:
@@ -85,20 +86,18 @@ def reconect(part1, ad_param):
 
 
 @beaconControl.route('/checkUpdates/<part1>/<part2>', methods=['GET'])
-def beacon(part1, part2):
+def beaconCallIn(part1, part2):
     data = {}
     id = request.args.get('session')
     if not id:
         return '', 400
-
-    user_ids = beacons.get("uuid", [])
-    for i, beacon_id in enumerate(user_ids):
-        if beacon_id == id:
-            beacons["last_beacon"][i] = time.asctime()
-            timer = beacons["timer"][i]
-            jitter = beacons["jitter"][i]
+    for userID, beacon in beacon_list.items():
+        if userID == id:
+            beacon.last_beacon = time.asctime()
+            timer = beacon.timer  # Removed comma
+            jitter = beacon.jitter  # Removed comma
             next_beacon_time = time.time() + timer
-            beacons["next_beacon"][i] = time.asctime(
+            beacon.next_beacon = time.asctime(
                 time.localtime(next_beacon_time))
 
             # Emit countdown update via SocketIO
@@ -108,25 +107,27 @@ def beacon(part1, part2):
                 'jitter': jitter,
             })
 
-    commands = []
-    for j in range(len(beacon_commands["beacon_uuid"])):
-        if j < len(beacon_commands["executed"]) and beacon_commands["executed"][j]:
-            continue
-        if beacon_commands["beacon_uuid"][j] == id:
-            commands.append({
-                "command_uuid": beacon_commands["command_uuid"][j],
-                "command": beacon_commands["command"][j],
-                "data": beacon_commands["command_data"][j]
-            })
-            beacon_commands["executed"][j] = True
-    if commands:
-        data["commands"] = commands
+    commandToSend = []
+    for commandID, command in command_list.items():
+        if command.beacon_uuid == id:
+            if command.executed:
+                continue
+            else:
+                commandToSend.append({
+                    "command_uuid": commandID,
+                    "command": command.command,
+                    "data": command.command_data
+                })
+            command.executed = True
+    if commandToSend:
+        data["commands"] = commandToSend
     else:
         data["none"] = "none"
     return jsonify(data), 200
 
 
-@beaconControl.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
+@beaconControl.route('/updateReport/<path1>/api/v<int:version>',
+                     methods=['POST'])
 def response(path1, version):
     if version not in range(1, 11):
         return '', 404
@@ -141,8 +142,8 @@ def response(path1, version):
         cid = report.get('command_uuid', '')
         output = report.get('output', '')
         found = False
-        for i, command_uuid in enumerate(beacon_commands["command_uuid"]):
-            if cid == command_uuid:
+        for commandID, command in command_list.items():
+            if commandID == cid:
                 found = True
                 if i < len(beacon_commands["command_output"]):
                     beacon_commands["command_output"][i] = output

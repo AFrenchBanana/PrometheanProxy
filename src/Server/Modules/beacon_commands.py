@@ -2,7 +2,7 @@ from ServerDatabase.database import DatabaseClass
 from .global_objects import (
     add_beacon_command_list,
     remove_beacon_list,
-    beacon_commands
+    command_list
 )
 
 
@@ -86,11 +86,12 @@ class BeaconCommandsClass:
         return
 
     def list_db_commands(self, userID) -> None:
-        for j in range(len(beacon_commands["beacon_uuid"])):
-            if beacon_commands["beacon_uuid"][j] == userID:
-                print(f"""Command ID: {beacon_commands["command_uuid"][j]}
-                    Command: {beacon_commands["command"][j]}
-                    Response: {beacon_commands["command_output"][j]}""")
+        for beaconID, beacon_commands in command_list.items():
+            if beacon_commands["beacon_uuid"] == userID:
+                print(f"""Command ID: {beacon_commands["command_uuid"]}
+                    Command: {beacon_commands["command"]}
+                    Response: {beacon_commands["command_output"]}""")
+        return
     
     def beacon_configueration(self, userID) -> None:
         data = {}
