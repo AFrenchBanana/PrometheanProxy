@@ -1,5 +1,5 @@
 let beaconTimers = {};
-const socket = io();
+// const socket = io();
 
 
 document.addEventListener('DOMContentLoaded', function() {

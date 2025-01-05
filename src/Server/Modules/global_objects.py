@@ -31,8 +31,9 @@ class session:
 
 
 class beacon:
-    def __init__(self, address, hostname, operating_system,
+    def __init__(self, uuid, address, hostname, operating_system,
                  last_beacon, timer, jitter):
+        self.uuid = uuid
         self.address = address
         self.hostname = hostname
         self.operating_system = operating_system
@@ -43,8 +44,9 @@ class beacon:
 
 
 class beacon_command:
-    def __init__(self, beacon_uuid, command, command_output,
+    def __init__(self, command_uuid, beacon_uuid, command, command_output,
                  executed, command_data):
+        self.command_uuid = command_uuid
         self.beacon_uuid = beacon_uuid
         self.command = command
         self.command_output = command_output
@@ -77,7 +79,7 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
                     operating_system: str, last_beacon, timer,
                     jitter) -> None:
     new_beacon = beacon(
-        r_address, hostname, operating_system, last_beacon, timer, jitter
+        uuid, r_address, hostname, operating_system, last_beacon, timer, jitter
     )
     beacon_list[uuid] = new_beacon
 
@@ -85,7 +87,8 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
 def add_beacon_command_list(beacon_uuid: str,
                             command: str, command_data: json = {}) -> None:
     command_uuid = str(uuid.uuid4())
-    new_command = beacon_command(beacon_uuid, command, "", False, command_data)
+    new_command = beacon_command(command_uuid, beacon_uuid,
+                                 command, "", False, command_data)
     command_list[command_uuid] = new_command
 
 

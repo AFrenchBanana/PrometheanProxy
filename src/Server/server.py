@@ -25,10 +25,10 @@ if __name__ == '__main__':
         multi_handler.create_certificate()
         threading.Thread(
             target=beaconSocketIO.run, args=(beaconControl,), kwargs={'port': config["server"]["webPort"],
-                                    'debug': False}, daemon=True).start()
+                                    'debug': False, 'use_reloader': False}, daemon=True).start()
         threading.Thread(
             target=webSocketIO.run, args=(app,), kwargs={'port': 9000,
-                                    'debug': False}, daemon=True).start()
+                                    'debug': False, 'use_reloader': False}, daemon=True).start()
         multi_handler.startsocket()
         if not config['server']['quiet_mode']:
             colors = [colorama.Fore.CYAN, colorama.Fore.RED,

@@ -177,27 +177,29 @@ class MultiHandler:
                     elif len(beacon_list) > 1:
                         index = int(input("Enter the index of the beacon: "))
                         try:
-                            beacon = beacon_list[index]
+                            beacon = list(beacon_list.values())[index]                       
                             self.multihandlercommands.use_beacon(
-                                beacons,
-                                beacons["address"][index])
+                                beacon.uuid,
+                                beacon.address
+                            )
+                                
                         except IndexError:
                             print(colorama.Fore.RED + "Index out of range")
                     else:
-                        index = 0
+                        beacon = list(beacon_list.values())[0]                       
                         self.multihandlercommands.use_beacon(
-                            beacons["uuid"][0], beacons["address"][0])
+                            beacon.uuid,
+                            beacon.address
+                        )
 
                 command_handlers = {
                     "list": self.multihandlercommands.listconnections,
                     "sessions": handle_sessions,
                     "beacons": handle_beacons,
                     "close": lambda:
-                        self.multihandlercommands.close_from_multihandler(
-                            sessions.details, sessions.address),
+                        self.multihandlercommands.close_from_multihandler(),
                     "closeall": lambda:
-                        self.multihandlercommands.close_all_connections(
-                            sessions.details, sessions.address),
+                        self.multihandlercommands.close_all_connections(),
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
                     "config": config_menu,
                     "configBeacon": beacon_config_menu

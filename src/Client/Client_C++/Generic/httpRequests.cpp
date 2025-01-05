@@ -10,12 +10,12 @@
 
 
 #include "config.h"
-#include "urlObfuscation.h"
+#include "urlObfuscation.hpp"
 
 #ifdef __unix__
 #define OS "Linux"
-#include "../Linux/Beacon/beacon_commands.h"
-#include "../Linux/generic.h"
+#include "../Linux/Beacon/beacon_commands.hpp"
+#include "../Linux/generic.hpp"
 #include <chrono>
 #include <thread>
 #endif
@@ -23,8 +23,8 @@
 #ifdef WIN32
 #include <windows.h>
 #define OS "Windows"
-#include "../Windows/generic.h"
-#include "../Windows/Beacon/beacon_commands.h"
+#include "../Windows/generic.hpp"
+#include "../Windows/Beacon/beacon_commands.hpp"
 #endif
 
 

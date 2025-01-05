@@ -124,8 +124,8 @@ def beacon():
             return redirect('/')
     else:
         return redirect('/')
-    
-    
+  
+
 @app.route('/')
 def index():
     response = make_response(render_template('index.html', beacons=beacon_list, commands=command_list))

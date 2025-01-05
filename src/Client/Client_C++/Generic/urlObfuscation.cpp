@@ -3,7 +3,7 @@
 #include <random>
 #include <sstream>
 
-#include "config.h"
+#include "config.hpp"
 
 std::vector<std::string> adDownloadUrlParams = {
     "ad_id",

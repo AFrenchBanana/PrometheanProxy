@@ -15,12 +15,12 @@
 
 #ifdef __unix__
 #define OS "Linux"
-#include "../Linux/generic.h"
+#include "../Linux/generic.hpp"
 #endif
 
 #ifdef WIN32
 #define OS "Windows"
-#include "../Windows/generic.h"
+#include "../Windows/generic.hpp"
 #endif
 
 

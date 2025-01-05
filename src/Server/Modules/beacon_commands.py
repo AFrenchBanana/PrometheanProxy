@@ -20,7 +20,6 @@ class BeaconCommandsClass:
         """
         closes connection from the current session within the session commands
         """
-        # confirmation to close connection
         if (input(
                 colorama.Back.RED +
                 "Are you sure want to close the connection?: Y/N ").lower()
@@ -86,11 +85,13 @@ class BeaconCommandsClass:
         return
 
     def list_db_commands(self, userID) -> None:
-        for beaconID, beacon_commands in command_list.items():
-            if beacon_commands["beacon_uuid"] == userID:
-                print(f"""Command ID: {beacon_commands["command_uuid"]}
-                    Command: {beacon_commands["command"]}
-                    Response: {beacon_commands["command_output"]}""")
+        for _, beacon_commands in command_list.items():
+            if beacon_commands.beacon_uuid == userID:
+                print(f"""Command ID: {beacon_commands.command_uuid}
+                    Command: {beacon_commands.command}
+                    Response: {beacon_commands.command_output if
+                    beacon_commands.command_output
+                    else "Awaiting Response"}""")
         return
     
     def beacon_configueration(self, userID) -> None:

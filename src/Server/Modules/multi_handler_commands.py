@@ -277,31 +277,26 @@ class MultiHandlerCommands:
                 "Not a Valid Client")
         return
 
-    def close_all_connections(
-            self,
-            connection_details: list,
-            connection_address: list) -> None:
+    def close_all_connections(self) -> None:
         """
         close all connections and remove the details
         from the lists in global objects
         """
         error = False
-        for i, conn in enumerate(connection_details):
+        for i, conn in enumerate(sessions_list):
             try:
-                send_data(conn, "shutdown")
-                if receive_data(conn) == "ack":
-                    conn.shutdown(socket.SHUT_RDWR)
-                    conn.close()  # closes connection
+                send_data(conn.details, "shutdown")
+                if receive_data(conn.details) == "ack":
+                    conn.details.shutdown(socket.SHUT_RDWR)
+                    conn.details.close()
                 if not config["server"]["quiet_mode"]:
                     print(
                         colorama.Back.GREEN +
-                        f"Closed {connection_address[i]}")
+                        f"Closed {conn.address}")
             except Exception as e:  # handles ssl.SSLEOFError
-                if not config["server"]["quiet_mode"]:
-                    # user message
-                    print(colorama.Back.RED +
-                          f"Error Closing + {connection_address[i]}")
-                    print(colorama.Back.RED + str(e))
+                print(colorama.Back.RED +
+                      f"Error Closing + {conn.address}")
+                print(colorama.Back.RED + str(e))
                 error = True
                 pass
         sessions_list.clear()
@@ -313,23 +308,30 @@ class MultiHandlerCommands:
             print(colorama.Back.RED + "Not all connections could be closed")
         return
 
-    def close_from_multihandler(
-            self,
-            connection_details: list,
-            connection_address: list) -> None:
+    def close_from_multihandler(self) -> None:
+        
         """allows an indiviudal client to be closed the multi handler menu"""
         try:
-            # socker to close
-            data = int(input("What client do you want to close? "))
-            session = list(sessions_list.values())[data]
-            self.sessioncommands.close_connection(
-                session.connection_details,
-                session.connection_address)
-            remove_connection_list(
-                connection_address[data])  # removes data from lists
-            print(colorama.Back.GREEN + "Connection Closed")  # success message
+            readline.set_completer(
+                    lambda text, state: tab_completion(
+                        text, state, (list(sessions_list.keys())
+                                      + list(beacon_list.keys()))))
+            data = int(input("What client do you want to close? (UUID) "))
+            for sessionID, session in sessions_list:
+                if sessionID == data:
+                    self.sessioncommands.close_connection(
+                        session.connection_details,
+                        session.connection_address)
+                    remove_connection_list(session.uuid)
+                    print(colorama.Back.GREEN + "Session Closed")
+            else:
+                for beaconID, _ in beacon_list:
+                    if beaconID == data:
+                        self.beaconCommands.close_connection(beaconID)
+                        remove_beacon_list(beaconID)
+                        print(colorama.Back.GREEN +
+                              "Beacon will shutdown at next callback")
         except ValueError:
-            # not a valid connection message
             print(colorama.Back.RED + "Not a valid connection")
         except IndexError:
             pass
@@ -343,7 +345,6 @@ class MultiHandlerCommands:
         """
         dir = input(
             "What directory or file do you want to hash?: ")
-        # initalise variables
         length = 0
         fileList = []
         try:
