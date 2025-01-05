@@ -36,6 +36,13 @@ def api_beacons():
             add_beacon_command_list(uuid, request_data["task"],
                                     request_data["data"])
             app.logger.info(f"Command added for UUID: {uuid}")
+            # Emit 'command_response' event with correct data
+            socketio.emit('command_response', {
+                'uuid': uuid,
+                'command_id': request_data["task"],  # Should be task_uuid
+                'command': request_data["task"],
+                'response': request_data["data"]
+            })
             return jsonify({"status": "Command added"})
         else:
             app.logger.error("No data provided in POST request.")
@@ -44,14 +51,14 @@ def api_beacons():
     elif request.method == 'GET':
         if request.args.get('history'):
             uuid = request.args.get('history')
-            userID = request.args.get('history')
+            # Removed redundant userID assignment
             history_data = []
-            for beaconID, beacon_commands in command_list.items():
-                if beaconID == userID:
+            for command in command_list.values():
+                if command.beacon_uuid == uuid:
                     history_data.append({
-                        "command_id": beacon_commands["command_uuid"],
-                        "command": beacon_commands["command"],
-                        "response": beacon_commands["command_output"]
+                        "command_id": command.command_uuid,
+                        "command": command.command,
+                        "response": command.command_output,
                     })
             return jsonify({"history": history_data})
         else:

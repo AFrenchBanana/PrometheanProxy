@@ -231,80 +231,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listen for the 'command_response' event
-    socket.on('command_response', function(data) {
-        // Only process responses for the current beacon UUID
-        if (data.uuid === window.uuid) {
-            const resultsInfo = document.getElementById('results-info');
-            const resultsTabButton = document.getElementById('results-btn');
-            const isResultsTabActive = !resultsInfo.classList.contains('d-none');
-    
-            // Create or find the table
-            let table = resultsInfo.querySelector('table');
-            if (!table) {
-                table = document.createElement('table');
-                table.classList.add('table');
-                
-                const thead = document.createElement('thead');
-                thead.innerHTML = `
-                    <tr>
-                        <th>Command ID</th>
-                        <th>Command</th>
-                        <th>Response</th>
-                    </tr>
-                `;
-                table.appendChild(thead);
-    
-                const tbody = document.createElement('tbody');
-                table.appendChild(tbody);
-                resultsInfo.appendChild(table);
-            }
-    
-            const tbody = table.querySelector('tbody');
-    
-            // Append the new command response
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${data.command_id}</td>
-                <td>${data.command}</td>
-                <td><pre><code>${data.response}</code></pre></td>
-            `;
-            tbody.appendChild(tr);
-    
-            // Show the results-info div only if Results tab is active
-            if (isResultsTabActive) {
-                resultsInfo.classList.remove('d-none');
-                // Optionally hide other info-content divs
-                document.getElementById('task-info').classList.add('d-none');
-                document.getElementById('directory-info').classList.add('d-none');
-            }
-    
-            const banner = document.getElementById('command-response-banner');
-            
-            // Show the banner
-            banner.classList.remove('d-none');
-            setTimeout(() => {
-                banner.classList.add('d-none');
-            }, 5000); // Hide after 5 seconds
-        }
-    });
-
     // Handle countdown updates
     socket.on('countdown_update', (data) => {
         if (data.uuid && data.timer !== undefined && data.jitter !== undefined) {
             const countdownElement = document.querySelector(`#countdown-${data.uuid}`);
             if (countdownElement) {
                 const { timer, jitter } = data;
-    
+
                 // Get the last beacon time and calculate the next expected time
                 const lastBeacon = beaconTimers[data.uuid].lastBeacon;
                 const nextBeaconDate = new Date(lastBeacon.getTime() + (timer * 1000));
                 const expectedNextBeaconDate = new Date(nextBeaconDate.getTime() + (jitter * 1000));
-    
+
                 const currentTime = new Date();
                 const timeDiff = nextBeaconDate - currentTime;
                 const jitterDiff = expectedNextBeaconDate - currentTime;
-    
+
                 // Update the countdown text and color based on the time difference
                 if (timeDiff >= 0) {
                     countdownElement.textContent = `Next Callback expected in ${formatTime(Math.floor(timeDiff / 1000))}`;
@@ -316,16 +258,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     countdownElement.textContent = `Expected Callback was ${expectedNextBeaconDate.toISOString()}. It is ${formatTime(Math.abs(Math.floor(jitterDiff / 1000)))} late`;
                     countdownElement.style.color = 'red';
                 }
-    
+
                 // Update beaconTimers to reflect the latest countdown update
                 beaconTimers[data.uuid].lastBeacon = new Date(expectedNextBeaconDate.getTime() - jitterDiff);
-    
+
                 // Highlight the row green (no fade-out effect)
                 const row = document.getElementById(`beacon-${data.uuid}`);
                 if (row) {
                     // Add Bootstrap class for green background
                     row.classList.add('bg-success', 'text-white');
-    
+
                     // Set a timeout to remove the highlight after 1 second
                     setTimeout(() => {
                         row.classList.remove('bg-success', 'text-white');
@@ -416,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Define a mapping between task options and their descriptions
 const taskDescriptions = {
-    'sysinfo': 'Retrieve system information including OS, uptime, and hardware details.',
+    'systeminfo': 'Retrieve system information including OS, uptime, and hardware details.', // Updated key from 'sysinfo' to 'systeminfo'
     'list_dir': 'List the contents of the specified directory.',
     'shell': 'Execute a shell command on the target system.',
     'close': 'Close the connection with the beacon.',
@@ -550,7 +492,9 @@ function submitTask() {
             alert('Failed to submit task.');
         });
     });
-}// Expose necessary functions and variables to the global scope
+}
+
+// Expose necessary functions and variables to the global scope
 window.beaconTimers = beaconTimers;
 window.formatDateWithoutMilliseconds = formatDateWithoutMilliseconds;
 window.updateNextBeacon = updateNextBeacon;

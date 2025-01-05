@@ -21,7 +21,7 @@ TLSkey = "./Certificates/key.pem"
 debugPrint = true
 
 [beacon]
-interval = 2   
+interval = 10  
 jitter = 0
 
 

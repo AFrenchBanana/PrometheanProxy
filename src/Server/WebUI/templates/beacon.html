@@ -67,7 +67,7 @@
                     <label for="task-select">Task:</label>
                     <select id="task-select" class="form-control">
                         <option value="">-- Select an Option --</option>
-                        <option value="systeminfo">System Info</option>
+                        <option value="systeminfo">System Info</option> <!-- Ensure this matches 'systeminfo' in taskDescriptions -->
                         <option value="list_dir">List Directory</option>
                         <option value="shell">Shell Command</option>
                         <option value="close">Close Beacon</option>
@@ -77,7 +77,6 @@
                         <option value="session">Switch Session</option>
                         <option value="directorytraversal">Directory Traversal</option>
                         <option value="takephoto">Take Photo</option>
-
                     </select>
                 </div>
                 
@@ -113,7 +112,6 @@
                         <tr>
                             <th>Command</th>
                             <th>Response</th>
-                            <th>Timestamp</th>
                         </tr>
                     </thead>
                     <tbody id="results-table-body">
