@@ -124,7 +124,8 @@ def beaconCallIn(part1, part2):
     return jsonify(data), 200
 
 
-@beaconControl.route('/updateReport/<path1>/api/v<int:version>', methods=['POST'])
+@beaconControl.route('/updateReport/<path1>/api/v<int:version>',
+                     methods=['POST'])
 def response(path1, version):
     if version not in range(1, 11):
         return '', 404

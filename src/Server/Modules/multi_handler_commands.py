@@ -309,7 +309,6 @@ class MultiHandlerCommands:
         return
 
     def close_from_multihandler(self) -> None:
-        
         """allows an indiviudal client to be closed the multi handler menu"""
         try:
             readline.set_completer(

@@ -29,7 +29,6 @@ def handle_join(data):
 def api_beacons():
     # Log incoming request method and IP
     app.logger.info(f"Received {request.method} request from {request.remote_addr}") # noqa
-    
     if request.remote_addr != '127.0.0.1':
         app.logger.warning("Access denied from non-local address.")
         return jsonify({"error": "Access denied"}), 403
@@ -41,13 +40,14 @@ def api_beacons():
             request_data = request.get_json()
             beacon_uuid = request_data.get('command_id')
             app.logger.debug(f"Command UUID: {uuid}, Data: {request_data}")
-            if request_data and "task" in request_data:  
-                add_beacon_command_list(uuid, beacon_uuid, request_data["task"],
+            if request_data and "task" in request_data:
+                add_beacon_command_list(uuid,
+                                        beacon_uuid, request_data["task"],
                                         request_data["data"])
                 app.logger.info(f"Command added for UUID: {uuid}")
                 socketio.emit('command_response', {
                     'uuid': uuid,
-                    'command_id': request_data["command_id"], 
+                    'command_id': request_data["command_id"],
                     'command': request_data["task"],
                     'response': request_data["data"]
                 }, room=uuid)
@@ -141,11 +141,13 @@ def beacon():
             return redirect('/')
     else:
         return redirect('/')
-  
+
 
 @app.route('/')
 def index():
-    response = make_response(render_template('index.html', beacons=beacon_list, commands=command_list))
+    response = make_response(render_template('index.html',
+                                             beacons=beacon_list,
+                                             commands=command_list))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0' # noqa
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '-1'

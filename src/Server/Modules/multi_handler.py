@@ -177,16 +177,16 @@ class MultiHandler:
                     elif len(beacon_list) > 1:
                         index = int(input("Enter the index of the beacon: "))
                         try:
-                            beacon = list(beacon_list.values())[index]                       
+                            beacon = list(beacon_list.values())[index]
                             self.multihandlercommands.use_beacon(
                                 beacon.uuid,
                                 beacon.address
                             )
-                                
+
                         except IndexError:
                             print(colorama.Fore.RED + "Index out of range")
                     else:
-                        beacon = list(beacon_list.values())[0]                       
+                        beacon = list(beacon_list.values())[0]
                         self.multihandlercommands.use_beacon(
                             beacon.uuid,
                             beacon.address
