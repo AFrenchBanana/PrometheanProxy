@@ -47,6 +47,17 @@
 
     <div id="log"></div>
 
+    <!-- Dark Mode Toggle -->
+    <div class="dark-mode-toggle" style="position: fixed; top: 1rem; right: 1rem;">
+        <div class="toggle-switch">
+            <input type="checkbox" id="darkModeSwitch" class="toggle-input">
+            <label for="darkModeSwitch" class="toggle-label">
+                <span class="toggle-inner"></span>
+                <span class="toggle-switch"></span>
+            </label>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -68,6 +79,25 @@
                     console.error('Error fetching beacons:', error);
                     toggleLoadingSpinner(true);
                 });
+
+            // Dark Mode Toggle Script
+            const darkModeSwitch = document.getElementById('darkModeSwitch');
+            const currentMode = localStorage.getItem('darkMode');
+
+            if (currentMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeSwitch.checked = true;
+            }
+
+            darkModeSwitch.addEventListener('change', () => {
+                if (darkModeSwitch.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
+            });
         });
     </script>
 </body>

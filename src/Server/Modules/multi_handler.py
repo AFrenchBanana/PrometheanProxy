@@ -23,11 +23,11 @@ from .global_objects import (
     send_data,
     receive_data,
     add_connection_list,
-    sessions,
+    sessions_list,
     execute_local_commands,
     config,
     tab_completion,
-    beacons,
+    beacon_list,
 )
 from Modules.config_configuration import config_menu, beacon_config_menu
 
@@ -155,9 +155,9 @@ class MultiHandler:
                 readline.set_completer(
                     lambda text, state:
                         tab_completion(text,
-                                       state, ["list", "sessions", "beacon",
+                                       state, ["list", "sessions", "beacons",
                                                "close", "closeall",
-                                               "beacon config",
+                                               "configbeacon",
                                                "command", "hashfiles",
                                                "config", "help", "exit",]))
                 command = input("MultiHandler: ").lower()
@@ -166,40 +166,43 @@ class MultiHandler:
                     break  # exits the multihandler
 
                 def handle_sessions():
-                    if len(sessions["uuid"]) == 0:
+                    if len(sessions_list) == 0:
                         print(colorama.Fore.RED + "No sessions connected")
                     else:
                         self.multihandlercommands.sessionconnect()
 
                 def handle_beacons():
-                    if len(beacons["uuid"]) == 0:
+                    if len(beacon_list) == 0:
                         print(colorama.Fore.RED + "No beacons connected")
-                    elif len(beacons["uuid"]) > 1:
+                    elif len(beacon_list) > 1:
                         index = int(input("Enter the index of the beacon: "))
                         try:
+                            beacon = list(beacon_list.values())[index]
                             self.multihandlercommands.use_beacon(
-                                beacons["uuid"][index],
-                                beacons["address"][index])
+                                beacon.uuid,
+                                beacon.address
+                            )
+
                         except IndexError:
                             print(colorama.Fore.RED + "Index out of range")
                     else:
-                        index = 0
+                        beacon = list(beacon_list.values())[0]
                         self.multihandlercommands.use_beacon(
-                            beacons["uuid"][0], beacons["address"][0])
+                            beacon.uuid,
+                            beacon.address
+                        )
 
                 command_handlers = {
                     "list": self.multihandlercommands.listconnections,
                     "sessions": handle_sessions,
                     "beacons": handle_beacons,
                     "close": lambda:
-                        self.multihandlercommands.close_from_multihandler(
-                            sessions.details, sessions.address),
+                        self.multihandlercommands.close_from_multihandler(),
                     "closeall": lambda:
-                        self.multihandlercommands.close_all_connections(
-                            sessions.details, sessions.address),
+                        self.multihandlercommands.close_all_connections(),
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
                     "config": config_menu,
-                    "beacon config": beacon_config_menu
+                    "configBeacon": beacon_config_menu
                 }
 
                 try:

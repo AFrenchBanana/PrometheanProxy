@@ -4,14 +4,14 @@
 #include <stdexcept>
 #include <curl/curl.h>
 
-#include "Generic/config.h"
-#include "Generic/httpRequests.h"
+#include "Generic/config.hpp"
+#include "Generic/httpRequests.hpp"
 
 #ifdef __unix__
-#include "Linux/generic.h"
+#include "Linux/generic.hpp"
 #endif
 #ifdef _WIN32
-#include "Windows/generic.h"
+#include "Windows/generic.hpp"
 #endif
 
 int main() {

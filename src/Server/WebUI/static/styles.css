@@ -8,8 +8,6 @@ body {
     margin: 0;
     padding: 0;
     color: #333333;
-    /* Comment out the existing background gradient */
-    /* background: linear-gradient(135deg, #f0f2f5 0%, #cfd9df 100%); */
 }
 
 h1 {
@@ -22,9 +20,8 @@ h1 {
 }
 
 /* Table Styles */
-.table-container { /* New container for better control */
+.table-container {
     width: 100%;
-    /* Removed overflow-x: auto; */
 }
 
 .table {
@@ -33,16 +30,17 @@ h1 {
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     border-collapse: collapse; /* Important for consistent cell widths */
+    table-layout: auto; /* Allow the table to adjust column widths based on content */
 }
 
 th,
 td {
     padding: 1rem;
-    text-align: left; /* Align text to the left */
+    text-align: left;
     border-bottom: 1px solid #dee2e6; /* Add bottom border to all cells */
-    word-break: break-word; /* Allow long words to break */
-    white-space: normal; /* Allow text to wrap */
-    /* Removed min-width properties */
+    white-space: nowrap; /* Prevent text from wrapping */
+    overflow: hidden; /* Hide overflow text */
+    text-overflow: ellipsis; /* Show ellipsis for overflowing text */
 }
 
 th {
@@ -50,7 +48,6 @@ th {
     color: #ffffff;
     font-weight: 600;
     text-transform: uppercase;
-    white-space: nowrap; /* Prevent header text from wrapping */
 }
 
 tr:last-child td {
@@ -69,7 +66,7 @@ tr:last-child td {
 /* Hover effects for the index.html table */
 #beacon-table tr:hover {
     background-color: #d9eaf7; /* Slightly darker blue for highlight */
-    cursor: pointer;
+    cursor: default;
 }
 
 /* Responsive adjustments */
@@ -84,6 +81,9 @@ tr:last-child td {
 .countdown {
     font-weight: 600;
     font-size: 1rem;
+    color: green; /* Ensure countdown text is green */
+    white-space: normal; /* Allow text to wrap */
+    word-break: break-word; /* Break long words to fit within the cell */
 }
 
 /* Spinner Styles */
@@ -106,7 +106,33 @@ tr:last-child td {
 }
 
 .text-center {
+    display: flex;
+    justify-content: center;
     text-align: center;
+}
+
+/* Ensure consistent margins for buttons */
+.text-center button {
+    margin: 0.5rem;
+    display: inline-block; /* Ensure buttons are inline */
+}
+
+/* Set a fixed width for buttons to ensure uniform size */
+.same-size-btn {
+    min-width: 180px; /* Adjust the width as needed */
+    text-align: center;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    background: linear-gradient(45deg, #6a11cb, #2575fc); /* Gradient background */
+    color: #ffffff; /* White text */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Update hover effects for buttons */
+.same-size-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(45deg, #2575fc, #6a11cb); /* Reverse gradient on hover */
 }
 
 .my-4 {
@@ -158,6 +184,87 @@ tr:last-child td {
     margin-bottom: 10px;
 }
 
+/* Info Box Styles */
+.info-box {
+    display: block; /* Change from flex to block for natural stacking */
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #ffffff;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    height: auto; /* Ensure height is set to auto */
+}
+
+.info-content {
+    min-width: 100%;
+    padding: 1rem;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    position: static; /* Changed from absolute to static to allow stacking */
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Optional: Add margin or padding if needed for spacing between info-content sections */
+.info-content + .info-content {
+    margin-top: 1rem;
+}
+
+/* Center the submit button */
+.info-content .text-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Disabled Submit Button Styles */
+.btn-success:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+/* Smooth Animation for Input Box */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 200px; /* Adjust as needed */
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        max-height: 200px; /* Adjust as needed */
+    }
+    to {
+        opacity: 0;
+        max-height: 0;
+    }
+}
+
+.info-content .form-group {
+    transition: all 0.5s ease;
+}
+
+/* Apply animation when showing the input */
+.form-group.show {
+    animation: fadeIn 0.5s forwards;
+}
+
+/* Apply animation when hiding the input */
+.form-group.hide {
+    animation: fadeOut 0.5s forwards;
+}
+
 /* Keyframe Animations */
 @keyframes fadeInDown {
     from {
@@ -179,4 +286,381 @@ tr:last-child td {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+/* Sliding Animations */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.5s forwards;
+}
+
+.slide-out-right {
+    animation: slideOutRight 0.5s forwards;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.5s forwards;
+}
+
+.slide-out-left {
+    animation: slideOutLeft 0.5s forwards;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-color: #bee5eb;
+    text-align: center;
+    font-weight: bold;
+}
+
+.alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1050; /* Ensure it appears above other elements */
+    margin: 0; /* Remove any default margins */
+    border-radius: 0; /* Optional: Remove border radius for full-width */
+    padding: 1rem; /* Add padding for better visibility */
+    text-align: center; /* Center the text */
+    /* Ensure background and text colors are visible */
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.alert-success {
+    background-color: #28a745; /* Green background */
+    color: #ffffff; /* White text */
+}
+
+.alert-danger {
+    background-color: #dc3545; /* Red background */
+    color: #ffffff; /* White text */
+}
+
+/* Code Formatting */
+pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    white-space: pre-wrap; /* Allow wrapping */
+    word-wrap: break-word; /* Break long words */
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+    color: #ffffff;
+}
+
+body.dark-mode .table {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+body.dark-mode .table th {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+body.dark-mode .table td {
+    border-color: #444444;
+}
+
+body.dark-mode .btn-primary {
+    background-color: #bb86fc;
+    border-color: #bb86fc;
+}
+
+body.dark-mode .btn-primary:hover {
+    background-color: #9a67ea;
+    border-color: #9a67ea;
+}
+
+body.dark-mode .alert-success {
+    background-color: #388e3c;
+    color: #ffffff;
+}
+
+/* Dark Mode Button Styles */
+body.dark-mode .dark-mode-btn {
+    background: linear-gradient(45deg, #444444, #666666);
+    color: #e0e0e0;
+    border-color: #555555;
+}
+
+body.dark-mode .dark-mode-btn:hover {
+    background: linear-gradient(45deg, #555555, #777777);
+    border-color: #666666;
+}
+
+/* Dark Mode Info Box Styles */
+body.dark-mode .info-box {
+    background-color: #1e1e1e;
+    border-color: #333333;
+    box-shadow: 0 6px 12px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .info-content {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+body.dark-mode .info-content h2 {
+    color: #ffffff;
+}
+
+body.dark-mode .info-content .form-group label {
+    color: #cccccc;
+}
+
+body.dark-mode .info-content .form-control {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    border: 1px solid #555555;
+}
+
+body.dark-mode .info-content .form-control::placeholder {
+    color: #aaaaaa;
+}
+
+body.dark-mode .info-content .btn {
+    background-color: #555555;
+    color: #e0e0e0;
+    border-color: #666666;
+}
+
+body.dark-mode .info-content .btn:hover {
+    background-color: #666666;
+    border-color: #777777;
+}
+
+body.dark-mode .info-content .alert {
+    background-color: #388e3c;
+    color: #ffffff;
+}
+
+/* Dark Mode Table Styles within Info Box */
+body.dark-mode .info-content table {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+}
+
+body.dark-mode .info-content table th {
+    background-color: #444444;
+    color: #ffffff;
+}
+
+body.dark-mode .info-content table td {
+    border-color: #555555;
+}
+
+/* Additional dark mode styles as needed */
+
+
+/* Dark Mode Toggle Icons */
+.dark-mode-toggle .form-check-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark-mode-toggle .form-check-label i {
+    margin: 0 0.5rem;
+    transition: opacity 0.3s ease;
+    color: #f39c12; /* Sun color */
+}
+
+.dark-mode-toggle .form-check-label .fa-moon {
+    color: #f1c40f; /* Moon color */
+}
+
+body.dark-mode .dark-mode-toggle .form-check-label .fa-sun {
+    opacity: 0;
+}
+
+body.dark-mode .dark-mode-toggle .form-check-label .fa-moon {
+    opacity: 1;
+}
+
+.dark-mode-toggle .form-check-label .fa-moon {
+    opacity: 0;
+}
+
+body.dark-mode .dark-mode-toggle .form-check-label .fa-moon {
+    opacity: 1;
+}
+
+body.dark-mode .dark-mode-toggle .form-check-label .fa-sun {
+    opacity: 0;
+}
+
+/* Modern Toggle Switch Styles */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-label {
+    position: relative;
+    display: block;
+    width: 60px;
+    height: 34px;
+    background-color: #ccc;
+    border-radius: 34px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-label:before {
+    content: '';
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-label {
+    background-color: #6a11cb;
+}
+
+.toggle-input:checked + .toggle-label:before {
+    transform: translateX(26px);
+    background-color: #ffffff;
+}
+
+/* Toggle Icons */
+.toggle-label:after {
+    content: '🌞';
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    font-size: 16px;
+}
+
+.toggle-input:checked + .toggle-label:after {
+    content: '🌜';
+    left: 8px;
+    right: auto;
+}
+
+/* Add hover effect */
+.toggle-label:hover {
+    box-shadow: 0 0 5px rgba(106, 17, 203, 0.5);
+}
+
+/* Active state animation */
+.toggle-input:checked + .toggle-label:before {
+    animation: slideRight 0.3s ease forwards;
+}
+
+.toggle-input:not(:checked) + .toggle-label:before {
+    animation: slideLeft 0.3s ease forwards;
+}
+
+@keyframes slideRight {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(26px); }
+}
+
+@keyframes slideLeft {
+    0% { transform: translateX(26px); }
+    100% { transform: translateX(0); }
+}
+
+/* Dark mode specific toggle styles */
+body.dark-mode .toggle-label {
+    background-color: #2c2c2c;
+}
+
+body.dark-mode .toggle-label:before {
+    background-color: #bb86fc;
+}
+
+body.dark-mode .toggle-label:hover {
+    box-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
+}
+
+/* Transition for the command-response-banner */
+#command-response-banner {
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+#command-response-banner.d-none {
+    opacity: 0;
+    visibility: hidden;
 }

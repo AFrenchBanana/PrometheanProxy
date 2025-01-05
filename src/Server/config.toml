@@ -1,6 +1,6 @@
 [server]
 listenaddress = "0.0.0.0"
-webPort = 8080
+webPort = 8000
 port = 2000
 TLSCertificateDir = "./Certificates/"
 TLSCertificate = "cert.pem"
@@ -21,8 +21,8 @@ TLSkey = "./Certificates/key.pem"
 debugPrint = true
 
 [beacon]
-interval = 10   
-jitter = 0
+interval = 30 
+jitter = 5
 
 
 [MultiHandlerCommands]

