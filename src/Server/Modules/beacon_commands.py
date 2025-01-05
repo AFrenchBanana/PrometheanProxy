@@ -89,9 +89,7 @@ class BeaconCommandsClass:
             if beacon_commands.beacon_uuid == userID:
                 print(f"""Command ID: {beacon_commands.command_uuid}
                     Command: {beacon_commands.command}
-                    Response: {beacon_commands.command_output if
-                    beacon_commands.command_output
-                    else "Awaiting Response"}""")
+                    Response: {beacon_commands.command_output if beacon_commands.command_output else "Awaiting Response"}""") # noqa
         return
 
     def beacon_configueration(self, userID) -> None:
