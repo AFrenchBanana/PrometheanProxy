@@ -110,11 +110,15 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>Command ID</th>
                             <th>Command</th>
                             <th>Response</th>
                         </tr>
                     </thead>
                     <tbody id="results-table-body">
+                        <tr>
+                            <td colspan="3">No history available.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -136,7 +140,7 @@
     </div>
     <!-- Include the UUID in a script block -->
     <script>
-        window.uuid = "{{ uuid }}"; // Changed from 'const uuid' to 'window.uuid' for global access
+        window.uuid = "{{ uuid }}"; // Ensure window.uuid is set correctly for global access
     </script>
     <script src="../static/beaconControl.js"></script>
     <script>

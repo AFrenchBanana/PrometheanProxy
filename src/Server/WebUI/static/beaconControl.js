@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 table.appendChild(thead);
 
                 const tbody = document.createElement('tbody');
+                tbody.id = 'results-table-body';
 
                 data.history.forEach(item => {
                     const tr = document.createElement('tr');
@@ -38,7 +39,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 table.appendChild(tbody);
                 resultsInfo.appendChild(table);
             } else {
-                resultsInfo.innerHTML = '<p>No history available.</p>';
+                const table = document.createElement('table');
+                table.classList.add('table');
+
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th>Command ID</th>
+                        <th>Command</th>
+                        <th>Response</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                tbody.id = 'results-table-body';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td colspan="3">No history available.</td>
+                `;
+                tbody.appendChild(tr);
+
+                table.appendChild(tbody);
+                resultsInfo.appendChild(table);
             }
 
             // Show the results-info div
@@ -200,6 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize WebSocket connection
     const socket = io('http://127.0.0.1:8000');
 
+    // Join a room specific to this UUID
+    socket.emit('join', window.uuid);
+
     // Log WebSocket connection details
     socket.on('connect', () => {
         console.log('WebSocket connected');
@@ -276,6 +303,55 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 console.error(`Countdown element not found for uuid: ${data.uuid}`);
             }
+        }
+    });
+
+    // Listen for command_response to update Results tab
+    socket.on('command_response', (data) => {
+        console.log('Received command_response:', data); // Added for debugging
+
+        // Ensure the UUID matches the current beacon's UUID
+        if (data.uuid === window.uuid) {
+            const resultsInfo = document.getElementById('results-info');
+            const resultsTableBody = document.getElementById('results-table-body');
+
+            if (resultsTableBody) {
+                // **Prevent Duplicate Entries by Ensuring Consistent 'command_id'**
+                const existingRow = resultsTableBody.querySelector(`tr[data-command-id="${data.command_id}"]`);
+                if (existingRow) {
+                    // Update the Response cell
+                    existingRow.querySelector('td:nth-child(3)').innerHTML = `<pre><code>${data.response}</code></pre>`;
+                } else {
+                    // Remove "No history available." row if present and add new task
+                    const noHistoryRow = resultsTableBody.querySelector('tr td[colspan="3"]');
+                    if (noHistoryRow) {
+                        noHistoryRow.parentElement.remove();
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-command-id', data.command_id); 
+                    tr.innerHTML = `
+                        <td>${data.command_id}</td>
+                        <td>${data.command}</td>
+                        <td><pre><code>${data.response}</code></pre></td>
+                    `;
+                    resultsTableBody.appendChild(tr);
+                }
+
+                // Show the command-response-banner div
+                const banner = document.getElementById('command-response-banner');
+                banner.textContent = 'New command response received.';
+                banner.classList.remove('d-none');
+
+                // Hide the banner after 3 seconds
+                setTimeout(() => {
+                    banner.classList.add('d-none');
+                }, 3000);
+            } else {
+                console.error('results-table-body element not found');
+            }
+        } else {
+            console.warn(`UUID mismatch: received ${data.uuid}, expected ${window.uuid}`);
         }
     });
 
@@ -453,9 +529,9 @@ function submitTask() {
             return;
         }
 
-        const command_uuid = generateUUID(); // Renamed from 'uuid' to 'command_uuid'
+        const command_id = generateUUID(); // Renamed from 'command_uuid' to 'command_id'
         const payload = {
-            command_uuid: command_uuid,
+            command_id: command_id, // Use 'command_id' consistently
             task: taskSelect,
             data: taskInput || null
         };
@@ -478,6 +554,23 @@ function submitTask() {
             setTimeout(() => {
                 confirmationAlert.classList.add('d-none');
             }, 5000);
+
+            // **Remove "No history available." row if present**
+            const resultsTableBody = document.getElementById('results-table-body');
+            const noHistoryRow = resultsTableBody.querySelector('tr td[colspan="3"]');
+            if (noHistoryRow) {
+                noHistoryRow.parentElement.remove();
+            }
+
+            // **Add new task to Results tab**
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-command-id', command_id);
+            tr.innerHTML = `
+                <td>${command_id}</td>
+                <td>${taskSelect}</td>
+                <td>Awaiting Response</td>
+            `;
+            resultsTableBody.appendChild(tr);
 
             // Reset the form
             submitBtn.disabled = true; // Reset the button state

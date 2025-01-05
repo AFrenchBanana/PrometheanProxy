@@ -4,7 +4,7 @@ from flask import (Flask,
                    request,
                    redirect,
                    make_response)
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 from Modules.global_objects import (
     beacon_list,
     command_list,
@@ -16,6 +16,13 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 log = logging.getLogger('werkzeug')
 app.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
+
+
+@socketio.on('join')
+def handle_join(data):
+    uuid = data
+    join_room(uuid)
+    app.logger.info(f"Client joined room: {uuid}")
 
 
 @app.route('/api/v1/beacons', methods=['GET', 'POST'])  # Added 'POST' method
@@ -30,23 +37,26 @@ def api_beacons():
     if request.method == 'POST' and request.args.get('command'):
         app.logger.info("Command API called via POST")
         uuid = request.args.get('command')
-        request_data = request.get_json()
-        app.logger.debug(f"Command UUID: {uuid}, Data: {request_data}")
-        if request_data and "task" in request_data:  
-            add_beacon_command_list(uuid, request_data["task"],
-                                    request_data["data"])
-            app.logger.info(f"Command added for UUID: {uuid}")
-            # Emit 'command_response' event with correct data
-            socketio.emit('command_response', {
-                'uuid': uuid,
-                'command_id': request_data["task"],  # Should be task_uuid
-                'command': request_data["task"],
-                'response': request_data["data"]
-            })
-            return jsonify({"status": "Command added"})
-        else:
-            app.logger.error("No data provided in POST request.")
-            return jsonify({"error": "No data provided"}), 400
+        try:
+            request_data = request.get_json()
+            beacon_uuid = request_data.get('command_id')
+            app.logger.debug(f"Command UUID: {uuid}, Data: {request_data}")
+            if request_data and "task" in request_data:  
+                add_beacon_command_list(uuid, beacon_uuid, request_data["task"],
+                                        request_data["data"])
+                app.logger.info(f"Command added for UUID: {uuid}")
+                socketio.emit('command_response', {
+                    'uuid': uuid,
+                    'command_id': request_data["command_id"], 
+                    'command': request_data["task"],
+                    'response': request_data["data"]
+                }, room=uuid)
+                return jsonify({"status": "Command added"})
+            else:
+                app.logger.error("No data provided in POST request.")
+                return jsonify({"error": "No data provided"}), 400
+        except KeyError as e:
+            return jsonify({"error": f"Missing key: {str(e)}"}), 400
 
     elif request.method == 'GET':
         if request.args.get('history'):

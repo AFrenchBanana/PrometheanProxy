@@ -652,3 +652,15 @@ body.dark-mode .toggle-label:before {
 body.dark-mode .toggle-label:hover {
     box-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
 }
+
+/* Transition for the command-response-banner */
+#command-response-banner {
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+#command-response-banner.d-none {
+    opacity: 0;
+    visibility: hidden;
+}

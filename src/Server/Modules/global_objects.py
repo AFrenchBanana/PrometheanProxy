@@ -84,9 +84,10 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
     beacon_list[uuid] = new_beacon
 
 
-def add_beacon_command_list(beacon_uuid: str,
+def add_beacon_command_list(beacon_uuid: str, command_uuid: str,
                             command: str, command_data: json = {}) -> None:
-    command_uuid = str(uuid.uuid4())
+    if not command_uuid or command_uuid == "":
+        command_uuid = str(uuid.uuid4())
     new_command = beacon_command(command_uuid, beacon_uuid,
                                  command, "", False, command_data)
     command_list[command_uuid] = new_command

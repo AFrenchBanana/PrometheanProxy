@@ -152,6 +152,12 @@ def response(path1, version):
                     "responded with:"
                 )
                 print(output)
+            socketio.emit('command_response', {
+                'uuid': command.beacon_uuid,
+                'command_id': command.command_uuid,  # Added this line
+                'command': command.command,
+                'response': output
+                })
     if not found:
         return '', 500
     return '', 200
