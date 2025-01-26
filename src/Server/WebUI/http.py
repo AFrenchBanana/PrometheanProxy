@@ -29,10 +29,6 @@ def handle_join(data):
 def api_beacons():
     # Log incoming request method and IP
     app.logger.info(f"Received {request.method} request from {request.remote_addr}") # noqa
-    if request.remote_addr != '127.0.0.1':
-        app.logger.warning("Access denied from non-local address.")
-        return jsonify({"error": "Access denied"}), 403
-
     if request.method == 'POST' and request.args.get('command'):
         app.logger.info("Command API called via POST")
         uuid = request.args.get('command')
@@ -94,8 +90,6 @@ def api_beacons():
 
 @app.route('/api/v1/beacons/<uuid>')
 def api_beacon(uuid):
-    if request.remote_addr != '127.0.0.1':
-        return jsonify({"error": "Access denied"}), 403
 
     # Find the beacon with the given UUID
     beacon_data = None

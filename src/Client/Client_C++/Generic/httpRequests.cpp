@@ -9,7 +9,7 @@
 #include <ctime>
 
 
-#include "config.h"
+#include "config.hpp"
 #include "urlObfuscation.hpp"
 
 #ifdef __unix__

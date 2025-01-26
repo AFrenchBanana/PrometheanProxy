@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleLoadingSpinner(true);
 
     // Initialize WebSocket connection
-    const socket = io('http://127.0.0.1:8000');
+    const socket = io(`http://${window.webIP}:8000`);
 
     // Join a room specific to this UUID
     socket.emit('join', window.uuid);

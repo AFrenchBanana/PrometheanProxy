@@ -12,8 +12,8 @@
 #include <tlhelp32.h>
 #include <json/json.h>  // Include jsoncpp header
 
-#include "directory_traversal.h"
-#include "images.h"
+#include "directory_traversal.hpp"
+#include "images.hpp"
 
 
 #pragma comment(lib, "iphlpapi.lib")
