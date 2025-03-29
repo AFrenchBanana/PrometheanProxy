@@ -19,11 +19,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     file(GLOB SOURCES 
         "${CMAKE_SOURCE_DIR}/main.cpp"
         "${CMAKE_SOURCE_DIR}/Linux/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Linux/*.h"
+        "${CMAKE_SOURCE_DIR}/Linux/*.hpp"
         "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.h"
+        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.hpp"
         "${CMAKE_SOURCE_DIR}/Generic/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Generic/*.h"
+        "${CMAKE_SOURCE_DIR}/Generic/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Generic/beacon/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Generic/beacon/*.hpp"
     )
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -34,12 +36,15 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     # Specify sources for Windows
     file(GLOB SOURCES 
         "${CMAKE_SOURCE_DIR}/main.cpp"
-        "${CMAKE_SOURCE_DIR}/Generic/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Generic/*.h"
         "${CMAKE_SOURCE_DIR}/Windows/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Windows/*.h"
+        "${CMAKE_SOURCE_DIR}/Windows/*.hpp"
         "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.h"
+        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Generic/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Generic/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Generic/beacon/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Generic/beacon/*.hpp"
+
     )
 
     # Link Windows-specific libraries for networking
@@ -68,13 +73,13 @@ find_package(jsoncpp CONFIG REQUIRED)
 add_executable(MyExecutable ${SOURCES})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set_target_properties(MyExecutable PROPERTIES SUFFIX ".exe")
     target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} ${WINDOWS_LIBS} JsonCpp::JsonCpp)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} JsonCpp::JsonCpp )
 endif()
 
 set_target_properties(MyExecutable PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "../bin"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )

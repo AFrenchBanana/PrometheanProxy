@@ -17,7 +17,7 @@
 
 #ifdef WIN32
 #define OS "Windows"
-#include "../Windows/generic.hpp"
+#include "../../Windows/generic.hpp"
 #endif
 
 

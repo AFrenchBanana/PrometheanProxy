@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <gdiplus.h>
 #include <string>
-#include "../../../../Generic/logging.hpp"
+#include "../../Generic/logging.hpp"
 
 #pragma comment (lib,"Gdiplus.lib")
 

@@ -17,7 +17,6 @@ void getDirectoryContents(const std::string& path, Json::Value& result) {
         result["files"] = Json::arrayValue;
     }
 
-
     if (hFind == INVALID_HANDLE_VALUE) {
         // Collect error instead of printing
         std::string errorMessage = "Error opening directory: " + path;
@@ -41,18 +40,18 @@ void getDirectoryContents(const std::string& path, Json::Value& result) {
                 result["files"].append(fileOrDir);
             }
         }
+    } while (FindNextFile(hFind, &findFileData));
+
     if (!FindClose(hFind)) {
         log_error("Error closing directory handle for path: " + path);
     }
-
-    FindClose(hFind);
 }
-    logger("Starting directory traversal for root path: " + rootPath);
-    getDirectoryContents(rootPath, root);
-    logger("Completed directory traversal for root path: " + rootPath);
+
 // Convert the directory list to JSON
 Json::Value convertToJSON(const std::string& rootPath) {
+    logger("Starting directory traversal for root path: " + rootPath);
     Json::Value root;
     getDirectoryContents(rootPath, root);
+    logger("Completed directory traversal for root path: " + rootPath);
     return root;
 }
