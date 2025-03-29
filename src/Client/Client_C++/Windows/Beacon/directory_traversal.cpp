@@ -1,9 +1,9 @@
 #include <windows.h>
-#include <iostream>
 #include <vector>
 #include <string>
 #include <json/json.h>
 #include <curl/curl.h>
+#include "../../Generic/logging.hpp"
 
 // Function to traverse the directory recursively
 void getDirectoryContents(const std::string& path, Json::Value& result) {
@@ -17,10 +17,11 @@ void getDirectoryContents(const std::string& path, Json::Value& result) {
         result["files"] = Json::arrayValue;
     }
 
-
     if (hFind == INVALID_HANDLE_VALUE) {
         // Collect error instead of printing
-        result["errors"].append("Error opening directory: " + path);
+        std::string errorMessage = "Error opening directory: " + path;
+        result["errors"].append(errorMessage);
+        logger.error(errorMessage);
         return;
     }
 
@@ -39,14 +40,18 @@ void getDirectoryContents(const std::string& path, Json::Value& result) {
                 result["files"].append(fileOrDir);
             }
         }
-    } while (FindNextFile(hFind, &findFileData) != 0);
+    } while (FindNextFile(hFind, &findFileData));
 
-    FindClose(hFind);
+    if (!FindClose(hFind)) {
+        logger.error("Error closing directory handle for path: " + path);
+    }
 }
 
 // Convert the directory list to JSON
 Json::Value convertToJSON(const std::string& rootPath) {
+    logger.log("Starting directory traversal for root path: " + rootPath);
     Json::Value root;
     getDirectoryContents(rootPath, root);
+    logger.log("Completed directory traversal for root path: " + rootPath);
     return root;
 }

@@ -9,6 +9,8 @@
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Iphlpapi.lib")
 
+#include "../Generic/logging.hpp"
+
 
 // Get the IP addresses of the local machine and return them as a vector of strings
 std::vector<std::string> getIPAddresses() {
@@ -62,5 +64,6 @@ std::string getHostname() {
         throw std::runtime_error("Failed to get hostname");
     }
     WSACleanup();
+    logger.log("Successfully retrieved hostname: " + std::string(hostname));
     return std::string(hostname);
 }

