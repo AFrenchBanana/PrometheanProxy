@@ -23,6 +23,7 @@ std::string executeShellCommand(const char* cmd) {
     std::array<char, 2048> buffer;
     logger.log("Executing shell command: " + std::string(cmd));
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
+    if (!pipe) {
         log_error("_popen() failed!");
         throw std::runtime_error("_popen() failed!");
     if (!pipe) {
