@@ -1,6 +1,3 @@
-#ifndef HTTPREQUESTS_H
-#define HTTPREQUESTS_H
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -15,7 +12,7 @@
 
 #ifdef __unix__
 #define OS "Linux"
-#include "../Linux/generic.hpp"
+#include "../../Linux/generic.hpp"
 #endif
 
 #ifdef WIN32
@@ -34,5 +31,3 @@ void sleepFor(int seconds);
 std::tuple<int, std::string, std::string> getRequest(const std::string& url);
 bool handleResponse(const std::string& response_body, int& timer, const std::string& ID);
 int retryRequest(const std::string& url, int attempts, int sleepTime);
-
-#endif

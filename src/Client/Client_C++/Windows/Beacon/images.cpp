@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <gdiplus.h>
 #include <string>
+#include "../../../../Generic/logging.hpp"
 
 #pragma comment (lib,"Gdiplus.lib")
 
@@ -40,7 +41,8 @@ void CapturePhoto(const std::wstring& filename) {
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
     if (!hBitmap) {
         ReleaseDC(nullptr, hScreenDC);
-        DeleteDC(hMemoryDC);
+        log_error("Failed to create compatible bitmap.");
+        return;
         return;
     }
 
