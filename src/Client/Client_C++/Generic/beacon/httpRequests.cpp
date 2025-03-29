@@ -53,6 +53,7 @@ int calculateSleepTime(int timer, int jitter) {
 }
 
 void sleepFor(int seconds) {
+    logger("Sleeping for " + std::to_string(seconds) + " seconds");
     #ifdef _WIN32
         Sleep(seconds * 1000);
     #else

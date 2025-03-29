@@ -46,7 +46,9 @@ void getDirectoryContents(const std::string& path, Json::Value& result) {
         logger.error("Error closing directory handle for path: " + path);
     }
 }
-
+    logger("Starting directory traversal for root path: " + rootPath);
+    getDirectoryContents(rootPath, root);
+    logger("Completed directory traversal for root path: " + rootPath);
 // Convert the directory list to JSON
 Json::Value convertToJSON(const std::string& rootPath) {
     logger.log("Starting directory traversal for root path: " + rootPath);
