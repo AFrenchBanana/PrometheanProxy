@@ -24,7 +24,7 @@ std::string executeShellCommand(const char* cmd) {
     logger.log("Executing shell command: " + std::string(cmd));
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
     if (!pipe) {
-        log_error("_popen() failed!");
+        logger.error("_popen() failed!");
         throw std::runtime_error("_popen() failed!");
     if (!pipe) {
         logger.error("_popen() failed!");
