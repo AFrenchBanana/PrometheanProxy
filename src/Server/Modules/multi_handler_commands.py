@@ -144,7 +144,8 @@ class MultiHandlerCommands:
                     remove_beacon_list(beaconID)
                     break
             else:
-                print(colorama.Fore.RED + "Beacon with the specified UUID not found.")
+                print(colorama.Fore.RED +
+                      "Beacon with the specified UUID not found.")
             return
 
         command_handlers = {
@@ -201,7 +202,8 @@ class MultiHandlerCommands:
             print("Sessions:")
             table = []
             for userID, session in sessions_list.items():
-                table.append((userID, session.hostname, session.address, session.operating_system))
+                table.append((userID, session.hostname,
+                              session.address, session.operating_system))
             print(colorama.Fore.WHITE + tabulate(
                 table, headers=["UUID", "Hostname", "Address", "OS"],
                 tablefmt="grid"))
