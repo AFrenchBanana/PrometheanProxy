@@ -11,12 +11,10 @@
 
 
 #ifdef __unix__
-#define OS "Linux"
 #include "../../Linux/generic.hpp"
 #endif
 
 #ifdef WIN32
-#define OS "Windows"
 #include "../../Windows/generic.hpp"
 #endif
 

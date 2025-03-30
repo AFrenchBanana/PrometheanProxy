@@ -57,10 +57,10 @@ class MultiHandlerCommands:
         'netstat', 'diskusage', 'listdir'])
         """
         def handle_beacon():
-            for userID, session in beacon_list.items():
-                if session.uuid == user_ID:
+            for beaconID, session in beacon_list.items():
+                if beaconID == user_ID:
                     self.sessioncommands.change_beacon(
-                        conn, r_address, session.uuid)
+                        conn, r_address, beaconID)
             return
 
         command_handlers = {
@@ -134,12 +134,17 @@ class MultiHandlerCommands:
         'netstat', 'diskusage', 'listdir', directoryTraversal', 'takePhoto'])
         """
         def handle_session():
-            if beacon_list["uuid"]:
-                print(colorama.Fore.GREEN +
-                      "Beacon will change to session mode" +
-                      " after the next callback")
-                add_beacon_command_list(UserID, "session")
-                remove_beacon_list(beacon_list["uuid"])
+            for beaconID, beacon in beacon_list.items():
+                if beacon.uuid == UserID:
+                    print(colorama.Fore.GREEN +
+                          "Beacon will change to session mode" +
+                          " after the next callback")
+                    add_beacon_command_list(UserID, None, "session", "")
+
+                    remove_beacon_list(beaconID)
+                    break
+            else:
+                print(colorama.Fore.RED + "Beacon with the specified UUID not found.")
             return
 
         command_handlers = {
@@ -196,12 +201,7 @@ class MultiHandlerCommands:
             print("Sessions:")
             table = []
             for userID, session in sessions_list.items():
-                table.append(
-                    userID,
-                    session.hostname,
-                    session.address,
-                    session.operating_system
-                )
+                table.append((userID, session.hostname, session.address, session.operating_system))
             print(colorama.Fore.WHITE + tabulate(
                 table, headers=["UUID", "Hostname", "Address", "OS"],
                 tablefmt="grid"))
@@ -256,19 +256,19 @@ class MultiHandlerCommands:
             passes connection details through to the current_client function"""
         try:
             if len(sessions_list) == 1:
-                session = list(sessions_list.values())[0]
+                userID, session = list(sessions_list.items())[0]
                 self.current_client_session(
-                    session.conn,
+                    session.details,
                     session.address,
-                    session.uuid
+                    userID
                 )
             else:
                 data = int(input("What client? "))
-                session = list(sessions_list.values())[data]
+                userID, session = list(sessions_list.items())[data]
                 self.current_client_session(
-                    session.conn,
+                    session.details,
                     session.address,
-                    session.uuid
+                    userID
                 )
         except (IndexError, ValueError):
             print(
@@ -316,15 +316,15 @@ class MultiHandlerCommands:
                         text, state, (list(sessions_list.keys())
                                       + list(beacon_list.keys()))))
             data = int(input("What client do you want to close? (UUID) "))
-            for sessionID, session in sessions_list:
+            for sessionID, session in sessions_list.items():
                 if sessionID == data:
                     self.sessioncommands.close_connection(
-                        session.connection_details,
-                        session.connection_address)
-                    remove_connection_list(session.uuid)
+                        session.details,
+                        session.address)
+                    remove_connection_list(sessionID)
                     print(colorama.Back.GREEN + "Session Closed")
             else:
-                for beaconID, _ in beacon_list:
+                for beaconID, _ in beacon_list.items():
                     if beaconID == data:
                         self.beaconCommands.close_connection(beaconID)
                         remove_beacon_list(beaconID)

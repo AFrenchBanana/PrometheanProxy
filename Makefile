@@ -77,7 +77,7 @@ clean:
 vcpkg-dep: vcpkg-dep-windows vcpkg-dep-linux
 
 vcpkg-dep-windows:
-	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-mingw-static jsoncpp:x64-mingw-static  
+	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-mingw-static jsoncpp:x64-mingw-static openssl:x64-mingw-static  
 
 vcpkg-dep-linux:
 	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-linux jsoncpp:x64-linux

