@@ -28,9 +28,6 @@ std::string executeShellCommand(const char* cmd) {
     if (!pipe) {
         logger.error("_popen() failed!");
         throw std::runtime_error("_popen() failed!");
-    if (!pipe) {
-        logger.error("_popen() failed!");
-        throw std::runtime_error("_popen() failed!");
     }
     std::string result;
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
