@@ -19,15 +19,13 @@ from .authentication import Authentication
 from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
 from ServerDatabase.database import DatabaseClass
+from .session import add_connection_list, receive_data, send_data
 from .global_objects import (
-    send_data,
-    receive_data,
-    add_connection_list,
     sessions_list,
+    beacon_list,
     execute_local_commands,
     config,
     tab_completion,
-    beacon_list,
 )
 from Modules.config_configuration import config_menu, beacon_config_menu
 
@@ -40,7 +38,7 @@ class MultiHandler:
         it starts the database for the main thread
         it then runs the multihandler function
         """
-        self.multihandlercommands = MultiHandlerCommands()
+        self.multihandlercommands = MultiHandlerCommands(config)
         self.Authentication = Authentication()
         self.database = DatabaseClass(config)
         colorama.init(autoreset=True)
@@ -131,7 +129,7 @@ class MultiHandler:
                     # send port number
                     send_data(conn, str(config['packetsniffer']['port']))
                 add_connection_list(conn, r_address, hostname,
-                                    OS, id, "session")
+                                    OS, id, "session", config)
                 threadDB.insert_entry(
                     "Addresses",
                     f'"{r_address[0]}", "{r_address[1]}", "{hostname}", ' +

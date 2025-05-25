@@ -75,11 +75,8 @@ def reconect(part1, ad_param):
 
     if name and os and address and ID and timer and jitter:
         add_beacon_list(ID, address, name, os, time.asctime(),
-                        float(timer), float(jitter))
-        return {"timer":
-                config["beacons"]["interval"],
-                "uuid": ID,
-                "jitter": config["beacon"]["jitter"]}, 200
+                        float(timer), float(jitter), config)
+        return {"x": True}, 200
     else:
         return '', 404
 

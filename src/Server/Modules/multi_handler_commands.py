@@ -5,15 +5,11 @@ connection and address variables fed in from the specified socket.
 this allows for multiple connections to be interacted with.
 """
 
-from .sessions_commands import Session
+from .session import Session
 from ServerDatabase.database import DatabaseClass
 from .beacon import Beacon, add_beacon_command_list, remove_beacon_list
 from .global_objects import (
-    remove_connection_list,
     sessions_list,
-    send_data,
-    receive_data,
-    config,
     tab_completion,
     beacon_list,
 )
@@ -36,7 +32,8 @@ class MultiHandlerCommands:
     class with  multihandler commands, each multi handler
     can call the class and have access to the commands
     """
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
+        self.config = config
         self.database = DatabaseClass(config)
         colorama.init(autoreset=True)
         return
@@ -190,8 +187,7 @@ class MultiHandlerCommands:
             except (KeyError, SyntaxError, AttributeError, NameError):
                 if not config['server']['quiet_mode']:
                     print(colorama.Fore.RED + "Traceback:")
-                    traceback.print_exc()
-                
+                    traceback.print_exc()       
         return
 
     def listconnections(self) -> None:

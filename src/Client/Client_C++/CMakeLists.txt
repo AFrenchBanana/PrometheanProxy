@@ -10,6 +10,9 @@ set(BUILD_SHARED_LIBS OFF)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 
+
+
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(CMAKE_CXX_COMPILER g++)
     set(VCPKG_TARGET_TRIPLET "x64-linux")
@@ -18,14 +21,19 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # Specify sources explicitly for Linux
     file(GLOB SOURCES 
         "${CMAKE_SOURCE_DIR}/main.cpp"
-        "${CMAKE_SOURCE_DIR}/Linux/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Linux/*.hpp"
-        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.hpp"
         "${CMAKE_SOURCE_DIR}/Generic/*.cpp"
         "${CMAKE_SOURCE_DIR}/Generic/*.hpp"
         "${CMAKE_SOURCE_DIR}/Generic/beacon/*.cpp"
         "${CMAKE_SOURCE_DIR}/Generic/beacon/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Generic/session/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Generic/session/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Linux/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Linux/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Linux/Beacon/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Linux/Session/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Linux/Session/*.hpp"
+
     )
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -36,14 +44,19 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     # Specify sources for Windows
     file(GLOB SOURCES 
         "${CMAKE_SOURCE_DIR}/main.cpp"
-        "${CMAKE_SOURCE_DIR}/Windows/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Windows/*.hpp"
-        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.cpp"
-        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.hpp"
         "${CMAKE_SOURCE_DIR}/Generic/*.cpp"
         "${CMAKE_SOURCE_DIR}/Generic/*.hpp"
         "${CMAKE_SOURCE_DIR}/Generic/beacon/*.cpp"
         "${CMAKE_SOURCE_DIR}/Generic/beacon/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Generic/session/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Generic/session/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Windows/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Windows/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Windows/Beacon/*.hpp"
+        "${CMAKE_SOURCE_DIR}/Windows/Session/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Windows/Session/*.hpp"
+  
 
     )
 
@@ -72,9 +85,11 @@ find_package(jsoncpp CONFIG REQUIRED)
 
 add_executable(MyExecutable ${SOURCES})
 
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    find_package(OpenSSL REQUIRED)
     set_target_properties(MyExecutable PROPERTIES SUFFIX ".exe")
-    target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} ${WINDOWS_LIBS} JsonCpp::JsonCpp)
+    target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} ${WINDOWS_LIBS} JsonCpp::JsonCpp OpenSSL::SSL OpenSSL::Crypto)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(MyExecutable PRIVATE CURL::libcurl ${Threads_LIBRARIES} JsonCpp::JsonCpp )
 endif()
