@@ -6,7 +6,8 @@ TLSCertificateDir = "./Certificates/"
 TLSCertificate = "cert.pem"
 TLSkey = "key.pem"
 GUI = false 
-quiet_mode = true
+quiet_mode = false
+implant_directory = "./ImplantData/"
 
 [authentication]
 #key length for the random auth string

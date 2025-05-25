@@ -145,7 +145,7 @@ def response(path1, version):
             if command.command == "directory_traversal":
                 # need to handle this properly
                 print("Directory Traversal Responded, saved to file")
-                with open("directory_traversal.txt", "w") as f:
+                with open("directory_traversal.json", "w") as f:
                     f.write(output)
             else:
                 print(

