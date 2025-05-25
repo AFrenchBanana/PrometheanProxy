@@ -11,6 +11,15 @@
 #include "../../Generic/logging.hpp"
 
 
+bool sessionHandler(){ 
+    logger.log("Entering the server handler");
+    while (true) {
+        logger.warn("not implemented yet returning");
+        return true;
+    }   
+
+}
+
 bool sessionConnect() {
     Session session("127.0.0.1", 2000);
     if (session.connectToServer()) {
@@ -34,7 +43,7 @@ bool sessionConnect() {
         }; 
         logger.log("Sending OS and Mode");
         std::string _ = session.receiveData(); //place holder for shark reader
-        // sessionHandler();
+        sessionHandler();
         return true;
     } else {
         logger.error("Couldnt not connect to the server");
@@ -42,12 +51,3 @@ bool sessionConnect() {
     }
 };
 
-
-bool sessionHandler(){ 
-    logger.log("Entering the server handler");
-    while (true) {
-        logger.warn("not implemented yet returning");
-        return true;
-    }   
-
-}

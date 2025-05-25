@@ -8,6 +8,7 @@ can handle bytes and strings.
 """
 
 from .content_handler import TomlFiles
+from .logging import LoggingClass as Logger
 import os
 
 beacon_list = {}
@@ -22,6 +23,14 @@ except FileNotFoundError:
     with TomlFiles("src/Server/config.toml") as f:
         config = f
 
+logger = Logger(
+    name="Server",
+    log_file=config["logging"]["log_file"],
+    level=config["logging"]["level"],
+    fmt=config["logging"]["fmt"],
+    datefmt=config["logging"]["datefmt"]
+)
+
 
 def execute_local_commands(value: str) -> bool:
     """
@@ -32,6 +41,7 @@ def execute_local_commands(value: str) -> bool:
     ):
         if value.startswith("\\"):
             value = value.replace("\\", "")
+        logger.debug(f"Executing local command: {value}")
         os.system(value)
         return True
     else:

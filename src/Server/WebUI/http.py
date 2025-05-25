@@ -7,45 +7,44 @@ from flask import (Flask,
 from flask_socketio import SocketIO, join_room
 from Modules.global_objects import (
     beacon_list,
-    command_list)
+    command_list,
+    logger)
 from Modules.beacon import add_beacon_command_list, remove_beacon_list
 
-import logging
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
-log = logging.getLogger('werkzeug')
-app.logger.setLevel(logging.ERROR)
-log.setLevel(logging.ERROR)
 
 
 @socketio.on('join')
 def handle_join(data):
+    logger.info(f"Client joining room with data: {data}")
     uuid = data
     join_room(uuid)
-    app.logger.info(f"Client joined room: {uuid}")
+    logger.info(f"Client joined room: {uuid}")
+    logger.info(f"Client joined room: {uuid}")
 
 
 @app.route('/api/v1/beacons', methods=['GET', 'POST'])  # Added 'POST' method
 def api_beacons():
     # Log incoming request method and IP
-    app.logger.info(f"Received {request.method} request from {request.remote_addr}") # noqa
+    logger.info(f"Received {request.method} request from {request.remote_addr}") # noqa
     if request.remote_addr != '127.0.0.1':
-        app.logger.warning("Access denied from non-local address.")
+        logger.warning("Access denied from non-local address.")
         return jsonify({"error": "Access denied"}), 403
 
     if request.method == 'POST' and request.args.get('command'):
-        app.logger.info("Command API called via POST")
+        logger.info("Command API called via POST")
         uuid = request.args.get('command')
         try:
             request_data = request.get_json()
             beacon_uuid = request_data.get('command_id')
-            app.logger.debug(f"Command UUID: {uuid}, Data: {request_data}")
+            logger.debug(f"Command UUID: {uuid}, Data: {request_data}")
             if request_data and "task" in request_data:
                 add_beacon_command_list(uuid,
                                         beacon_uuid, request_data["task"],
                                         request_data["data"])
-                app.logger.info(f"Command added for UUID: {uuid}")
+                logger.info(f"Command added for UUID: {uuid}")
                 socketio.emit('command_response', {
                     'uuid': uuid,
                     'command_id': request_data["command_id"],
@@ -54,7 +53,7 @@ def api_beacons():
                 }, room=uuid)
                 return jsonify({"status": "Command added"})
             else:
-                app.logger.error("No data provided in POST request.")
+                logger.error("No data provided in POST request.")
                 return jsonify({"error": "No data provided"}), 400
         except KeyError as e:
             return jsonify({"error": f"Missing key: {str(e)}"}), 400
@@ -86,7 +85,7 @@ def api_beacons():
                     "timer": beacon.timer,
                     "jitter": beacon.jitter
                 }
-            app.logger.info("Beacons data retrieved via GET")
+            logger.info("Beacons data retrieved via GET")
             return jsonify({"beacons": beacons_grouped})
 
     else:
@@ -113,13 +112,16 @@ def api_beacon(uuid):
             }
             break
     if beacon_data:
+        logger.info(f"Beacon data retrieved for UUID: {uuid}")
         return jsonify({"beacon": beacon_data})
     else:
+        logger.error(f"Beacon not found for UUID: {uuid}")
         return jsonify({"error": "Beacon not found"}), 404
 
 
 @app.route('/beacons')
 def beacon():
+    logger.info("Beacon page accessed")
     if request.args.get('uuid'):
         uuid = request.args.get('uuid')
         beacon_data = None
@@ -134,18 +136,22 @@ def beacon():
                     "timer": beacon.timer,
                     "jitter": beacon.jitter
                 }
+                logger.info(f"Beacon data found for UUID: {uuid}")
                 break
         if beacon_data:
             return render_template('beacon.html', beacon=beacon_data,
                                    uuid=uuid)
         else:
+            logger.error(f"Beacon not found for UUID: {uuid}")
             return redirect('/')
     else:
+        logger.error("UUID not provided in request")
         return redirect('/')
 
 
 @app.route('/')
 def index():
+    logger.info("Index page accessed")
     response = make_response(render_template('index.html',
                                              beacons=beacon_list,
                                              commands=command_list))

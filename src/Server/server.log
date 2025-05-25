@@ -1,0 +1,737 @@
+2025-05-25 21:30:44 INFO [Server] Starting MultiHandler
+2025-05-25 21:30:44 INFO [Server] Initializing MultiHandlerCommands
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:30:44 DEBUG [Server] Authentication module initialized
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:30:44 INFO [Server] Checking for TLS certificates
+2025-05-25 21:30:44 DEBUG [Server] Key path: ./Certificates/key.pem, Cert path: ./Certificates/cert.pem
+2025-05-25 21:30:44 INFO [Server] Starting socket server
+2025-05-25 21:30:44 DEBUG [Server] Socket address: ('0.0.0.0', 2000)
+2025-05-25 21:30:44 DEBUG [Server] Creating SSL context
+2025-05-25 21:30:44 DEBUG [Server] Certificate directory: ./Certificates/, Key: key.pem, Cert: cert.pem
+2025-05-25 21:30:44 DEBUG [Server] SSL context loaded with certificate and key
+2025-05-25 21:30:44 DEBUG [Server] Creating clear socket
+2025-05-25 21:30:44 DEBUG [Server] Wrapping socket with SSL context
+2025-05-25 21:30:44 INFO [Server] Socket bound to 0.0.0.0:2000
+2025-05-25 21:30:44 INFO [Server] Socket listening on 0.0.0.0:2000
+2025-05-25 21:30:44 DEBUG [Server] Starting listener thread for accepting connections
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:30:44 INFO [Server] Starting MultiHandler menu
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:30:44 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:30:44 INFO [Server] Accepting connections on socket
+2025-05-25 21:30:49 INFO [Server] Connection request received from contact/posts/ad_position/api/v3
+2025-05-25 21:30:49 DEBUG [Server] Received data: {'address': '127.0.0.1', 'name': 'RyansDesktop', 'os': 'Linux (DEBUG)'}
+2025-05-25 21:30:49 INFO [Server] New connection from RyansDesktop on Linux (DEBUG) at 127.0.0.1 with UUID 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:49 DEBUG [Server] Adding beacon with UUID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:49 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:30:49 DEBUG [Server] Beacon hostname: RyansDesktop
+2025-05-25 21:30:49 DEBUG [Server] Beacon operating system: Linux (DEBUG)
+2025-05-25 21:30:49 DEBUG [Server] Beacon last beacon: Sun May 25 21:30:49 2025
+2025-05-25 21:30:49 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:30:49 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:30:49 DEBUG [Server] Creating beacon with UUID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:30:49 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:30:49 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:30:49 DEBUG [Server] Beacon hostname: RyansDesktop
+2025-05-25 21:30:49 DEBUG [Server] Beacon operating system: Linux (DEBUG)
+2025-05-25 21:30:49 DEBUG [Server] Beacon last beacon: Sun May 25 21:30:49 2025
+2025-05-25 21:30:49 DEBUG [Server] Beacon next beacon: Sun May 25 21:30:49 20255
+2025-05-25 21:30:49 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:30:49 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:30:49 DEBUG [Server] Beacon list updated with userID: 64108c59-112b-43d4-8124-469024adf349, address: 127.0.0.1, name: RyansDesktop, os: Linux (DEBUG)
+2025-05-25 21:30:49 INFO [Server] Emitted new connection event over websockets for UUID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:49 INFO [Server] Beacon call-in received from system/guestbook
+2025-05-25 21:30:49 INFO [Server] Beacon 64108c59-112b-43d4-8124-469024adf349 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:30:54 2025
+2025-05-25 21:30:49 INFO [Server] Emitted countdown update for UUID: 64108c59-112b-43d4-8124-469024adf349 with timer: 5 and jitter: 2
+2025-05-25 21:30:49 DEBUG [Server] Preparing commands for beacon 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:52 DEBUG [Server] Received command: beacons
+2025-05-25 21:30:52 DEBUG [Server] Executing command: beacons
+2025-05-25 21:30:52 DEBUG [Server] Handling beacons command
+2025-05-25 21:30:52 INFO [Server] Using beacon with UserID: 64108c59-112b-43d4-8124-469024adf349 and IPAddress: 127.0.0.1
+2025-05-25 21:30:52 INFO [Server] Beacon RyansDesktop (64108c59-112b-43d4-8124-469024adf349) found
+2025-05-25 21:30:52 INFO [Server] Command input is commands
+2025-05-25 21:30:52 INFO [Server] Executing command: commands
+2025-05-25 21:30:52 DEBUG [Server] Listing commands for userID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:52 INFO [Server] Executed command: commands
+2025-05-25 21:30:54 INFO [Server] Beacon call-in received from client/server
+2025-05-25 21:30:54 INFO [Server] Beacon 64108c59-112b-43d4-8124-469024adf349 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:30:59 2025
+2025-05-25 21:30:54 INFO [Server] Emitted countdown update for UUID: 64108c59-112b-43d4-8124-469024adf349 with timer: 5 and jitter: 2
+2025-05-25 21:30:54 DEBUG [Server] Preparing commands for beacon 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:58 INFO [Server] Command input is sysinfo
+2025-05-25 21:30:58 INFO [Server] Executing command: sysinfo
+2025-05-25 21:30:58 DEBUG [Server] Adding command for beacon UUID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:58 DEBUG [Server] Command UUID: None
+2025-05-25 21:30:58 DEBUG [Server] Command: systeminfo
+2025-05-25 21:30:58 DEBUG [Server] Command data: 
+2025-05-25 21:30:58 DEBUG [Server] Generated new command UUID: 134fbc41-3d22-474a-b19f-993099bb21d7
+2025-05-25 21:30:58 DEBUG [Server] Creating beacon command: 134fbc41-3d22-474a-b19f-993099bb21d7 for beacon: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:58 DEBUG [Server] Command: systeminfo
+2025-05-25 21:30:58 DEBUG [Server] Command data: 
+2025-05-25 21:30:58 DEBUG [Server] New command created: <Modules.beacon.beacon_command object at 0x7fb2494e7770>
+2025-05-25 21:30:58 DEBUG [Server] Systeminfo command added to command list for userID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:58 INFO [Server] Executed command: sysinfo
+2025-05-25 21:30:59 INFO [Server] Beacon call-in received from cgi-bin/search
+2025-05-25 21:30:59 INFO [Server] Beacon 64108c59-112b-43d4-8124-469024adf349 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:31:04 2025
+2025-05-25 21:30:59 INFO [Server] Emitted countdown update for UUID: 64108c59-112b-43d4-8124-469024adf349 with timer: 5 and jitter: 2
+2025-05-25 21:30:59 DEBUG [Server] Preparing commands for beacon 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:30:59 DEBUG [Server] Command 134fbc41-3d22-474a-b19f-993099bb21d7 for beacon 64108c59-112b-43d4-8124-469024adf349 is ready to be sent
+2025-05-25 21:31:00 INFO [Server] Beacon page accessed
+2025-05-25 21:31:00 ERROR [Server] Beacon not found for UUID: 46665db4-2e17-4dc0-b308-5119bfcd633f
+2025-05-25 21:31:00 INFO [Server] Index page accessed
+2025-05-25 21:31:00 INFO [Server] Received GET request from 127.0.0.1
+2025-05-25 21:31:00 INFO [Server] Beacons data retrieved via GET
+2025-05-25 21:31:00 INFO [Server] Received GET request from 127.0.0.1
+2025-05-25 21:31:00 INFO [Server] Beacons data retrieved via GET
+2025-05-25 21:31:01 INFO [Server] Beacon page accessed
+2025-05-25 21:31:01 INFO [Server] Beacon data found for UUID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:31:01 INFO [Server] Received GET request from 127.0.0.1
+2025-05-25 21:31:01 INFO [Server] Beacon data retrieved for UUID: 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:31:04 INFO [Server] Response received from system/api/v8
+2025-05-25 21:31:04 DEBUG [Server] Received data: {'reports': [{'command_uuid': '134fbc41-3d22-474a-b19f-993099bb21d7', 'output': 'System = Linux\nplatform-release = 5.15.167.4-microsoft-standard-WSL2\nplatform-version = #1 SMP Tue Nov 5 00:21:55 UTC 2024\narchitecture = x86_64\nhostname = RyansDesktop\nmac-address = 00:15:5d:be:1a:f6\nprocessor = x86_64\n'}]}
+2025-05-25 21:31:04 INFO [Server] Command UUID 134fbc41-3d22-474a-b19f-993099bb21d7 with output received
+2025-05-25 21:31:04 INFO [Server] Command 64108c59-112b-43d4-8124-469024adf349 responded with output: System = Linux
+platform-release = 5.15.167.4-microsoft-standard-WSL2
+platform-version = #1 SMP Tue Nov 5 00:21:55 UTC 2024
+architecture = x86_64
+hostname = RyansDesktop
+mac-address = 00:15:5d:be:1a:f6
+processor = x86_64
+
+2025-05-25 21:31:04 INFO [Server] Emitted command response for UUID: 64108c59-112b-43d4-8124-469024adf349, command ID: 134fbc41-3d22-474a-b19f-993099bb21d7, command: systeminfo, response: System = Linux
+platform-release = 5.15.167.4-microsoft-standard-WSL2
+platform-version = #1 SMP Tue Nov 5 00:21:55 UTC 2024
+architecture = x86_64
+hostname = RyansDesktop
+mac-address = 00:15:5d:be:1a:f6
+processor = x86_64
+
+2025-05-25 21:31:04 INFO [Server] Beacon call-in received from notes/archive
+2025-05-25 21:31:04 INFO [Server] Beacon 64108c59-112b-43d4-8124-469024adf349 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:31:09 2025
+2025-05-25 21:31:04 INFO [Server] Emitted countdown update for UUID: 64108c59-112b-43d4-8124-469024adf349 with timer: 5 and jitter: 2
+2025-05-25 21:31:04 DEBUG [Server] Preparing commands for beacon 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:31:08 INFO [Server] Beacon call-in received from yaml/build
+2025-05-25 21:31:08 INFO [Server] Beacon 64108c59-112b-43d4-8124-469024adf349 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:31:13 2025
+2025-05-25 21:31:08 INFO [Server] Emitted countdown update for UUID: 64108c59-112b-43d4-8124-469024adf349 with timer: 5 and jitter: 2
+2025-05-25 21:31:08 DEBUG [Server] Preparing commands for beacon 64108c59-112b-43d4-8124-469024adf349
+2025-05-25 21:31:09 WARNING [Server] KeyboardInterrupt received, exiting MultiHandler
+2025-05-25 21:32:11 INFO [Server] Starting server...
+2025-05-25 21:32:11 DEBUG [Server] Server: Initializing colorama
+2025-05-25 21:32:11 INFO [Server] Starting MultiHandler
+2025-05-25 21:32:11 INFO [Server] Initializing MultiHandlerCommands
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:32:11 DEBUG [Server] Authentication module initialized
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:32:11 INFO [Server] Checking for TLS certificates
+2025-05-25 21:32:11 DEBUG [Server] Key path: ./Certificates/key.pem, Cert path: ./Certificates/cert.pem
+2025-05-25 21:32:11 DEBUG [Server] Server: Starting socket and web server threads
+2025-05-25 21:32:11 INFO [Server] Starting socket server
+2025-05-25 21:32:11 DEBUG [Server] Socket address: ('0.0.0.0', 2000)
+2025-05-25 21:32:11 DEBUG [Server] Creating SSL context
+2025-05-25 21:32:11 DEBUG [Server] Certificate directory: ./Certificates/, Key: key.pem, Cert: cert.pem
+2025-05-25 21:32:11 DEBUG [Server] SSL context loaded with certificate and key
+2025-05-25 21:32:11 DEBUG [Server] Creating clear socket
+2025-05-25 21:32:11 DEBUG [Server] Wrapping socket with SSL context
+2025-05-25 21:32:11 INFO [Server] Socket bound to 0.0.0.0:2000
+2025-05-25 21:32:11 INFO [Server] Socket listening on 0.0.0.0:2000
+2025-05-25 21:32:11 DEBUG [Server] Starting listener thread for accepting connections
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:32:11 DEBUG [Server] Server: Socket and web server threads started successfully
+2025-05-25 21:32:11 INFO [Server] Server: Displaying ASCII art with key art1
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:32:11 INFO [Server] Starting MultiHandler menu
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:32:11 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:32:11 INFO [Server] Accepting connections on socket
+2025-05-25 21:32:13 INFO [Server] Connection request received from category/archive/fbclidad/api/v6
+2025-05-25 21:32:13 DEBUG [Server] Received data: {'address': '127.0.0.1', 'name': 'RyansDesktop', 'os': 'Linux (DEBUG)'}
+2025-05-25 21:32:13 INFO [Server] New connection from RyansDesktop on Linux (DEBUG) at 127.0.0.1 with UUID c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:13 DEBUG [Server] Adding beacon with UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:13 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:13 DEBUG [Server] Beacon hostname: RyansDesktop
+2025-05-25 21:32:13 DEBUG [Server] Beacon operating system: Linux (DEBUG)
+2025-05-25 21:32:13 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:13 2025
+2025-05-25 21:32:13 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:13 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:13 DEBUG [Server] Creating beacon with UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:13 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:32:13 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:32:14 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:32:14 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:14 DEBUG [Server] Beacon hostname: RyansDesktop
+2025-05-25 21:32:14 DEBUG [Server] Beacon operating system: Linux (DEBUG)
+2025-05-25 21:32:14 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:13 2025
+2025-05-25 21:32:14 DEBUG [Server] Beacon next beacon: Sun May 25 21:32:13 20255
+2025-05-25 21:32:14 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:14 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:14 DEBUG [Server] Beacon list updated with userID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899, address: 127.0.0.1, name: RyansDesktop, os: Linux (DEBUG)
+2025-05-25 21:32:14 INFO [Server] Emitted new connection event over websockets for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:14 INFO [Server] Beacon call-in received from offline/reviews
+2025-05-25 21:32:14 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:19 2025
+2025-05-25 21:32:14 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:14 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:15 INFO [Server] Beacon call-in received from invoices/order
+2025-05-25 21:32:15 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:20 2025
+2025-05-25 21:32:15 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:15 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:17 INFO [Server] Connection request received from debug/translations/ad_position/api/v5
+2025-05-25 21:32:17 DEBUG [Server] Received data: {'address': '127.0.0.1', 'name': 'Ryans_Desktop', 'os': 'Windows (DEBUG)'}
+2025-05-25 21:32:17 INFO [Server] New connection from Ryans_Desktop on Windows (DEBUG) at 127.0.0.1 with UUID 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:17 DEBUG [Server] Adding beacon with UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:17 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:17 DEBUG [Server] Beacon hostname: Ryans_Desktop
+2025-05-25 21:32:17 DEBUG [Server] Beacon operating system: Windows (DEBUG)
+2025-05-25 21:32:17 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:17 2025
+2025-05-25 21:32:17 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:17 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:17 DEBUG [Server] Creating beacon with UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:32:17 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:32:17 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:17 DEBUG [Server] Beacon hostname: Ryans_Desktop
+2025-05-25 21:32:17 DEBUG [Server] Beacon operating system: Windows (DEBUG)
+2025-05-25 21:32:17 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:17 2025
+2025-05-25 21:32:17 DEBUG [Server] Beacon next beacon: Sun May 25 21:32:17 20255
+2025-05-25 21:32:17 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:17 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:17 DEBUG [Server] Beacon list updated with userID: 134639cb-851a-433d-b7ac-928d7fd54c3c, address: 127.0.0.1, name: Ryans_Desktop, os: Windows (DEBUG)
+2025-05-25 21:32:17 INFO [Server] Emitted new connection event over websockets for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:17 INFO [Server] Beacon call-in received from graphics/cgi-bin
+2025-05-25 21:32:17 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:22 2025
+2025-05-25 21:32:17 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:17 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:18 INFO [Server] Beacon call-in received from calendar/js
+2025-05-25 21:32:18 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:23 2025
+2025-05-25 21:32:18 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:18 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:22 INFO [Server] Beacon call-in received from dev/offline
+2025-05-25 21:32:22 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:27 2025
+2025-05-25 21:32:22 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:22 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:23 INFO [Server] Connection request received from cgi-bin/services/ad_language/api/v7
+2025-05-25 21:32:23 DEBUG [Server] Received data: {'address': '127.0.0.1', 'name': 'Ryans_Desktop', 'os': 'Windows'}
+2025-05-25 21:32:23 INFO [Server] New connection from Ryans_Desktop on Windows at 127.0.0.1 with UUID dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:23 DEBUG [Server] Adding beacon with UUID: dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:23 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:23 DEBUG [Server] Beacon hostname: Ryans_Desktop
+2025-05-25 21:32:23 DEBUG [Server] Beacon operating system: Windows
+2025-05-25 21:32:23 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:23 2025
+2025-05-25 21:32:23 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:23 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:23 DEBUG [Server] Creating beacon with UUID: dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:32:23 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:32:23 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:23 DEBUG [Server] Beacon hostname: Ryans_Desktop
+2025-05-25 21:32:23 DEBUG [Server] Beacon operating system: Windows
+2025-05-25 21:32:23 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:23 2025
+2025-05-25 21:32:23 DEBUG [Server] Beacon next beacon: Sun May 25 21:32:23 20255
+2025-05-25 21:32:23 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:23 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:23 DEBUG [Server] Beacon list updated with userID: dc9c149d-c815-4d56-8139-07591e8e11b3, address: 127.0.0.1, name: Ryans_Desktop, os: Windows
+2025-05-25 21:32:23 INFO [Server] Emitted new connection event over websockets for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:23 INFO [Server] Beacon call-in received from history/error
+2025-05-25 21:32:23 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:28 2025
+2025-05-25 21:32:23 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:23 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:24 INFO [Server] Beacon call-in received from search/members
+2025-05-25 21:32:24 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:29 2025
+2025-05-25 21:32:24 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:24 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:25 INFO [Server] Connection request received from site/status/ad_type/api/v7
+2025-05-25 21:32:25 DEBUG [Server] Received data: {'address': '127.0.0.1', 'name': 'Ryans_Desktop', 'os': 'Windows'}
+2025-05-25 21:32:25 INFO [Server] New connection from Ryans_Desktop on Windows at 127.0.0.1 with UUID f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:25 DEBUG [Server] Adding beacon with UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:25 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:25 DEBUG [Server] Beacon hostname: Ryans_Desktop
+2025-05-25 21:32:25 DEBUG [Server] Beacon operating system: Windows
+2025-05-25 21:32:25 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:25 2025
+2025-05-25 21:32:25 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:25 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:25 DEBUG [Server] Creating beacon with UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Initializing database connection
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Creating database connection
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Database connection established
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Initializing database tables
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table Addresses created successfully
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table Shell created successfully
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table Processes created successfully
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table Services created successfully
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table Netstat created successfully
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table SystemInfo created successfully
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table Hashes created successfully
+2025-05-25 21:32:25 DEBUG [Server] DatabaseClass: Table Disk created successfully
+2025-05-25 21:32:25 DEBUG [Server] Beacon address: 127.0.0.1
+2025-05-25 21:32:25 DEBUG [Server] Beacon hostname: Ryans_Desktop
+2025-05-25 21:32:25 DEBUG [Server] Beacon operating system: Windows
+2025-05-25 21:32:25 DEBUG [Server] Beacon last beacon: Sun May 25 21:32:25 2025
+2025-05-25 21:32:25 DEBUG [Server] Beacon next beacon: Sun May 25 21:32:25 20255
+2025-05-25 21:32:25 DEBUG [Server] Beacon timer: 5
+2025-05-25 21:32:25 DEBUG [Server] Beacon jitter: 2
+2025-05-25 21:32:25 DEBUG [Server] Beacon list updated with userID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8, address: 127.0.0.1, name: Ryans_Desktop, os: Windows
+2025-05-25 21:32:25 INFO [Server] Emitted new connection event over websockets for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:25 INFO [Server] Beacon call-in received from notifications/style
+2025-05-25 21:32:25 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:30 2025
+2025-05-25 21:32:25 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:25 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:26 INFO [Server] Beacon call-in received from browse/logout
+2025-05-25 21:32:26 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:31 2025
+2025-05-25 21:32:26 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:26 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:28 INFO [Server] Beacon call-in received from home/reviews
+2025-05-25 21:32:28 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:33 2025
+2025-05-25 21:32:28 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:28 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:28 INFO [Server] Beacon call-in received from control-panel/locale
+2025-05-25 21:32:28 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:33 2025
+2025-05-25 21:32:28 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:28 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:31 INFO [Server] Beacon call-in received from lang/purchase
+2025-05-25 21:32:31 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:36 2025
+2025-05-25 21:32:31 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:31 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:31 INFO [Server] Beacon call-in received from admin/css
+2025-05-25 21:32:31 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:36 2025
+2025-05-25 21:32:31 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:31 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:33 INFO [Server] Beacon call-in received from locale/about
+2025-05-25 21:32:33 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:38 2025
+2025-05-25 21:32:33 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:33 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:35 INFO [Server] Beacon call-in received from register/password
+2025-05-25 21:32:35 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:40 2025
+2025-05-25 21:32:35 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:35 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:36 INFO [Server] Beacon call-in received from webhooks/manage
+2025-05-25 21:32:36 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:41 2025
+2025-05-25 21:32:36 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:36 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:36 INFO [Server] Beacon call-in received from theme/cart
+2025-05-25 21:32:36 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:41 2025
+2025-05-25 21:32:36 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:36 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:38 INFO [Server] Beacon call-in received from calendar/tracking
+2025-05-25 21:32:38 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:43 2025
+2025-05-25 21:32:38 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:38 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:39 INFO [Server] Beacon call-in received from store/events
+2025-05-25 21:32:39 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:44 2025
+2025-05-25 21:32:39 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:39 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:41 INFO [Server] Beacon call-in received from payment/tmp
+2025-05-25 21:32:41 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:46 2025
+2025-05-25 21:32:41 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:41 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:43 INFO [Server] Beacon call-in received from checkout/orders
+2025-05-25 21:32:43 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:48 2025
+2025-05-25 21:32:43 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:43 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:42 INFO [Server] Beacon call-in received from debug/forum
+2025-05-25 21:32:42 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:47 2025
+2025-05-25 21:32:42 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:42 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:43 INFO [Server] Beacon call-in received from plugins/posts
+2025-05-25 21:32:43 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:48 2025
+2025-05-25 21:32:43 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:43 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:45 INFO [Server] Beacon call-in received from media/util
+2025-05-25 21:32:45 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:50 2025
+2025-05-25 21:32:45 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:45 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:46 INFO [Server] Beacon call-in received from messages/posts
+2025-05-25 21:32:46 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:51 2025
+2025-05-25 21:32:46 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:46 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:47 INFO [Server] Beacon call-in received from calendar/license
+2025-05-25 21:32:47 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:52 2025
+2025-05-25 21:32:47 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:47 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:48 DEBUG [Server] Received command: beacons
+2025-05-25 21:32:48 DEBUG [Server] Executing command: beacons
+2025-05-25 21:32:48 DEBUG [Server] Handling beacons command
+2025-05-25 21:32:48 INFO [Server] Beacon call-in received from list/sitemap
+2025-05-25 21:32:48 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:53 2025
+2025-05-25 21:32:48 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:48 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:49 DEBUG [Server] Selected beacon index: 2
+2025-05-25 21:32:49 INFO [Server] Using beacon with UserID: dc9c149d-c815-4d56-8139-07591e8e11b3 and IPAddress: 127.0.0.1
+2025-05-25 21:32:49 INFO [Server] Beacon Ryans_Desktop (dc9c149d-c815-4d56-8139-07591e8e11b3) found
+2025-05-25 21:32:51 INFO [Server] Beacon call-in received from default/logout
+2025-05-25 21:32:51 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:56 2025
+2025-05-25 21:32:51 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:51 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:51 INFO [Server] Command input is sysinfo
+2025-05-25 21:32:51 INFO [Server] Executing command: sysinfo
+2025-05-25 21:32:51 DEBUG [Server] Adding command for beacon UUID: dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:51 DEBUG [Server] Command UUID: None
+2025-05-25 21:32:51 DEBUG [Server] Command: systeminfo
+2025-05-25 21:32:51 DEBUG [Server] Command data: 
+2025-05-25 21:32:51 DEBUG [Server] Generated new command UUID: 0cc1c86a-dd12-418e-9371-5c4ea3608995
+2025-05-25 21:32:51 DEBUG [Server] Creating beacon command: 0cc1c86a-dd12-418e-9371-5c4ea3608995 for beacon: dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:51 DEBUG [Server] Command: systeminfo
+2025-05-25 21:32:51 DEBUG [Server] Command data: 
+2025-05-25 21:32:51 DEBUG [Server] New command created: <Modules.beacon.beacon_command object at 0x7f1868883aa0>
+2025-05-25 21:32:51 DEBUG [Server] Systeminfo command added to command list for userID: dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:51 INFO [Server] Executed command: sysinfo
+2025-05-25 21:32:51 INFO [Server] Beacon call-in received from features/payment
+2025-05-25 21:32:51 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:56 2025
+2025-05-25 21:32:51 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:51 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:52 INFO [Server] Beacon call-in received from import/icons
+2025-05-25 21:32:52 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:32:57 2025
+2025-05-25 21:32:52 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:52 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:53 INFO [Server] Command input is exit
+2025-05-25 21:32:53 INFO [Server] Using beacon dc9c149d-c815-4d56-8139-07591e8e11b3 at 127.0.0.1
+2025-05-25 21:32:54 DEBUG [Server] Received command: beacons
+2025-05-25 21:32:54 DEBUG [Server] Executing command: beacons
+2025-05-25 21:32:54 DEBUG [Server] Handling beacons command
+2025-05-25 21:32:55 DEBUG [Server] Selected beacon index: 0
+2025-05-25 21:32:55 INFO [Server] Using beacon with UserID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 and IPAddress: 127.0.0.1
+2025-05-25 21:32:55 INFO [Server] Beacon RyansDesktop (c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899) found
+2025-05-25 21:32:55 INFO [Server] Beacon call-in received from reviews/icons
+2025-05-25 21:32:55 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:00 2025
+2025-05-25 21:32:55 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:55 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:55 DEBUG [Server] Command 0cc1c86a-dd12-418e-9371-5c4ea3608995 for beacon dc9c149d-c815-4d56-8139-07591e8e11b3 is ready to be sent
+2025-05-25 21:32:56 INFO [Server] Beacon call-in received from rss/about
+2025-05-25 21:32:56 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:01 2025
+2025-05-25 21:32:56 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:32:56 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:32:58 INFO [Server] Beacon call-in received from mail/tmp
+2025-05-25 21:32:58 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:03 2025
+2025-05-25 21:32:58 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:32:58 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:32:59 INFO [Server] Beacon call-in received from tmp/community
+2025-05-25 21:32:59 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:04 2025
+2025-05-25 21:32:59 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:32:59 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:32:59 INFO [Server] Beacon call-in received from support/help
+2025-05-25 21:32:59 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:04 2025
+2025-05-25 21:32:59 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:32:59 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:32:59 INFO [Server] Response received from media/api/v10
+2025-05-25 21:32:59 DEBUG [Server] Received data: {'reports': [{'command_uuid': '0cc1c86a-dd12-418e-9371-5c4ea3608995', 'output': 'System = Windows\nComputer Name = RYANS_DESKTOP\nMAC Address = b4:2e:99:f0:a8:c2d8:3b:bf:b8:df:e30:50:56:c0:0:10:50:56:c0:0:80:15:5d:ef:81:63d8:3b:bf:b8:df:dfd8:3b:bf:b8:df:e0da:3b:bf:b8:df:df\nProcessor Architecture = 9\nNumber of Processors = 12\nProcessor Type = 8664\nProcessor Level = 25\nProcessor Revision = 8448\nOS Version = 6.2.9200\nOS Platform ID = 2\nOS Service Pack = \n'}]}
+2025-05-25 21:32:59 INFO [Server] Command UUID 0cc1c86a-dd12-418e-9371-5c4ea3608995 with output received
+2025-05-25 21:32:59 INFO [Server] Command dc9c149d-c815-4d56-8139-07591e8e11b3 responded with output: System = Windows
+Computer Name = RYANS_DESKTOP
+MAC Address = b4:2e:99:f0:a8:c2d8:3b:bf:b8:df:e30:50:56:c0:0:10:50:56:c0:0:80:15:5d:ef:81:63d8:3b:bf:b8:df:dfd8:3b:bf:b8:df:e0da:3b:bf:b8:df:df
+Processor Architecture = 9
+Number of Processors = 12
+Processor Type = 8664
+Processor Level = 25
+Processor Revision = 8448
+OS Version = 6.2.9200
+OS Platform ID = 2
+OS Service Pack = 
+
+2025-05-25 21:32:59 INFO [Server] Emitted command response for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3, command ID: 0cc1c86a-dd12-418e-9371-5c4ea3608995, command: systeminfo, response: System = Windows
+Computer Name = RYANS_DESKTOP
+MAC Address = b4:2e:99:f0:a8:c2d8:3b:bf:b8:df:e30:50:56:c0:0:10:50:56:c0:0:80:15:5d:ef:81:63d8:3b:bf:b8:df:dfd8:3b:bf:b8:df:e0da:3b:bf:b8:df:df
+Processor Architecture = 9
+Number of Processors = 12
+Processor Type = 8664
+Processor Level = 25
+Processor Revision = 8448
+OS Version = 6.2.9200
+OS Platform ID = 2
+OS Service Pack = 
+
+2025-05-25 21:33:02 INFO [Server] Command input is processes
+2025-05-25 21:33:02 INFO [Server] Executing command: processes
+2025-05-25 21:33:02 DEBUG [Server] Listing processes for userID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:33:02 DEBUG [Server] Adding command for beacon UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:33:02 DEBUG [Server] Command UUID: None
+2025-05-25 21:33:02 DEBUG [Server] Command: list_processes
+2025-05-25 21:33:02 DEBUG [Server] Command data: 
+2025-05-25 21:33:02 DEBUG [Server] Generated new command UUID: 81f924bc-099d-4f40-bcef-d4b432cac46d
+2025-05-25 21:33:02 DEBUG [Server] Creating beacon command: 81f924bc-099d-4f40-bcef-d4b432cac46d for beacon: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:33:02 DEBUG [Server] Command: list_processes
+2025-05-25 21:33:02 DEBUG [Server] Command data: 
+2025-05-25 21:33:02 DEBUG [Server] New command created: <Modules.beacon.beacon_command object at 0x7f1868cfd430>
+2025-05-25 21:33:02 DEBUG [Server] List processes command added to command list for userID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:33:02 INFO [Server] Executed command: processes
+2025-05-25 21:33:02 INFO [Server] Beacon call-in received from invoices/widgets
+2025-05-25 21:33:02 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:07 2025
+2025-05-25 21:33:02 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:33:02 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:33:04 INFO [Server] Beacon call-in received from store/tags
+2025-05-25 21:33:04 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:09 2025
+2025-05-25 21:33:04 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:33:04 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:33:05 INFO [Server] Beacon call-in received from calendar/install
+2025-05-25 21:33:05 INFO [Server] Beacon dc9c149d-c815-4d56-8139-07591e8e11b3 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:10 2025
+2025-05-25 21:33:05 INFO [Server] Emitted countdown update for UUID: dc9c149d-c815-4d56-8139-07591e8e11b3 with timer: 5 and jitter: 2
+2025-05-25 21:33:05 DEBUG [Server] Preparing commands for beacon dc9c149d-c815-4d56-8139-07591e8e11b3
+2025-05-25 21:33:06 INFO [Server] Beacon call-in received from notifications/features
+2025-05-25 21:33:06 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:11 2025
+2025-05-25 21:33:06 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:33:06 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:33:06 DEBUG [Server] Command 81f924bc-099d-4f40-bcef-d4b432cac46d for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 is ready to be sent
+2025-05-25 21:33:07 INFO [Server] Beacon call-in received from queries/info
+2025-05-25 21:33:07 INFO [Server] Beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:12 2025
+2025-05-25 21:33:07 INFO [Server] Emitted countdown update for UUID: f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8 with timer: 5 and jitter: 2
+2025-05-25 21:33:07 DEBUG [Server] Preparing commands for beacon f6d9a652-691d-4f9d-b4ce-7dcf2f1a1ff8
+2025-05-25 21:33:07 INFO [Server] Beacon call-in received from img/modules
+2025-05-25 21:33:07 INFO [Server] Beacon 134639cb-851a-433d-b7ac-928d7fd54c3c updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:12 2025
+2025-05-25 21:33:07 INFO [Server] Emitted countdown update for UUID: 134639cb-851a-433d-b7ac-928d7fd54c3c with timer: 5 and jitter: 2
+2025-05-25 21:33:07 DEBUG [Server] Preparing commands for beacon 134639cb-851a-433d-b7ac-928d7fd54c3c
+2025-05-25 21:33:12 INFO [Server] Response received from purchase/api/v2
+2025-05-25 21:33:12 DEBUG [Server] Received data: {'reports': [{'command_uuid': '81f924bc-099d-4f40-bcef-d4b432cac46d', 'output': 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nroot           1  0.0  0.0  21788 13100 ?        Ss   18:24   0:00 /sbin/init\nroot           2  0.0  0.0   2776  1928 ?        Sl   18:24   0:00 /init\nroot           7  0.0  0.0   3392   296 ?        Sl   18:24   0:04 plan9 --control-socket 7 --log-level 4 --server-fd 8 --pipe-fd 10 --log-truncate\nroot          53  0.0  0.0  66844 15976 ?        S<s  18:24   0:00 /usr/lib/systemd/systemd-journald\nroot          80  0.0  0.0  24916  6704 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-udevd\nroot         106  0.0  0.0 152936   180 ?        Ssl  18:24   0:00 snapfuse /var/lib/snapd/snaps/core_17200.snap /snap/core/17200 -o ro,nodev,allow_other,suid\nroot         107  0.0  0.0 302596  8836 ?        Ssl  18:24   0:00 snapfuse /var/lib/snapd/snaps/core_17210.snap /snap/core/17210 -o ro,nodev,allow_other,suid\nsystemd+     179  0.0  0.0  21452 11920 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-resolved\nsystemd+     180  0.0  0.0  91020  6584 ?        Ssl  18:24   0:00 /usr/lib/systemd/systemd-timesyncd\nroot         190  0.0  0.0   4236  2628 ?        Ss   18:24   0:00 /usr/sbin/cron -f -P\nmessage+     191  0.0  0.0   9624  5220 ?        Ss   18:24   0:00 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only\nredis        199  0.0  0.0  62348 16040 ?        Ssl  18:24   0:09 /usr/bin/redis-server 127.0.0.1:6379\nroot         205  0.0  0.3 2510040 52748 ?       Ssl  18:24   0:01 /usr/lib/snapd/snapd\nroot         206  0.0  0.0  17976  8192 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-logind\nroot         211  0.0  0.1 1756096 17968 ?       Ssl  18:24   0:00 /usr/libexec/wsl-pro-service -vv\nroot         229  0.0  0.0   3160  1144 hvc0     Ss+  18:24   0:00 /sbin/agetty -o -p -- \\u --noclear --keep-baud - 115200,38400,9600 vt220\nroot         241  0.0  0.0   3116  1188 tty1     Ss+  18:24   0:00 /sbin/agetty -o -p -- \\u --noclear - linux\nroot         243  0.0  0.3 2392588 51440 ?       Ssl  18:24   0:04 /usr/bin/containerd\nsyslog       244  0.0  0.0 222508  5224 ?        Ssl  18:24   0:00 /usr/sbin/rsyslogd -n -iNONE\nroot         257  0.0  0.1 107020 22496 ?        Ssl  18:24   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal\npostgres     305  0.0  0.1 220224 30556 ?        Ss   18:24   0:00 /usr/lib/postgresql/16/bin/postgres -D /var/lib/postgresql/16/main -c config_file=/etc/postgresql/16/main/postgresql.conf\npostgres     331  0.0  0.0 220360  5908 ?        Ss   18:24   0:00 postgres: 16/main: checkpointer \npostgres     332  0.0  0.0 220376  5964 ?        Ss   18:24   0:00 postgres: 16/main: background writer \nroot         342  0.0  0.5 2641052 88388 ?       Ssl  18:24   0:00 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock\npostgres     437  0.0  0.0 220224 10168 ?        Ss   18:24   0:00 postgres: 16/main: walwriter \npostgres     438  0.0  0.0 221816  8060 ?        Ss   18:24   0:00 postgres: 16/main: autovacuum launcher \npostgres     439  0.0  0.0 221800  6620 ?        Ss   18:24   0:00 postgres: 16/main: logical replication launcher \nroot         635  0.0  0.0   6816  4656 pts/1    Ss   18:24   0:00 /bin/login -f\nroot         656  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init\nroot         657  0.0  0.0   2784   220 ?        S    18:24   0:00 /init\nryan         658  0.0  0.0   2800  1064 pts/0    Ss+  18:24   0:00 sh -c "$VSCODE_WSL_EXT_LOCATION/scripts/wslServer.sh" e54c774e0add60467559eb0d1e229c6452cf8447 stable code-server .vscode-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all\nryan         660  0.0  0.0   2800  1116 pts/0    S+   18:24   0:00 sh /mnt/c/Users/ryand/.vscode/extensions/ms-vscode-remote.remote-wsl-0.88.5/scripts/wslServer.sh e54c774e0add60467559eb0d1e229c6452cf8447 stable code-server .vscode-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all\nryan         699  0.0  0.0  20436 11336 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd --user\nryan         700  0.0  0.0  21144  1724 ?        S    18:24   0:00 (sd-pam)\nryan         713  0.0  0.0   6072  5216 pts/1    S+   18:24   0:00 -bash\nryan         794  0.0  0.0   2800  1024 pts/0    S+   18:24   0:00 sh /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/bin/code-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all\nryan         798  0.6  1.0 11875936 166220 pts/0 Sl+  18:24   1:10 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/server-main.js --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all\nroot        1005  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init\nroot        1006  0.0  0.0   2784   220 ?        S    18:24   0:01 /init\nryan        1007  0.0  0.3 1002448 60112 pts/2   Ssl+ 18:24   0:04 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node -e const net = require(\'net\'); process.stdin.pause(); const client = net.createConnection({ host: \'127.0.0.1\', port: 38879 }, () => { client.pipe(process.stdout); process.stdin.pipe(client); }); client.on(\'close\', function (hadError) { console.error(hadError ? \'Remote close with error\' : \'Remote close\'); process.exit(hadError ? 1 : 0); }); client.on(\'error\', function (err) { process.stderr.write(err && (err.stack || err.message) || String(err)); });\nroot        1014  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init\nroot        1015  0.0  0.0   2784   220 ?        S    18:24   0:07 /init\nryan        1016  0.1  0.3 1000080 58184 pts/3   Ssl+ 18:24   0:21 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node -e const net = require(\'net\'); process.stdin.pause(); const client = net.createConnection({ host: \'127.0.0.1\', port: 38879 }, () => { client.pipe(process.stdout); process.stdin.pipe(client); }); client.on(\'close\', function (hadError) { console.error(hadError ? \'Remote close with error\' : \'Remote close\'); process.exit(hadError ? 1 : 0); }); client.on(\'error\', function (err) { process.stderr.write(err && (err.stack || err.message) || String(err)); });\nryan        1023  0.2  0.9 11940328 161832 pts/0 Sl+  18:24   0:33 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=fileWatcher\nryan        1035  4.1  8.2 99220852 1340952 pts/0 Sl+ 18:24   7:45 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node --dns-result-order=ipv4first /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=extensionHost --transformURIs --useHostProxy=true\nryan        1069  0.1  0.4 11629276 78300 pts/0  Sl+  18:24   0:13 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=ptyHost --logsPath /home/ryan/.vscode-server/data/logs/20250525T183832\nroot        1095  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init\nroot        1097  0.0  0.0   2784   220 ?        S    18:24   0:00 /init\nryan        1101  0.0  0.0   2800  1176 pts/5    Ss+  18:24   0:00 /bin/sh -c cd \'/home/ryan/PrometheanProxy\' && /bin/sh\nryan        1102  0.0  0.0   2800  1768 pts/5    S+   18:24   0:00 /bin/sh\nryan        1112  0.0  0.3 992268 49772 pts/5    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-remote-containers/dist/vscode-remote-containers-server-0.401.0.js\nryan        1340  0.0  0.0   2804  1096 pts/5    S+   18:24   0:00 /bin/sh\nryan        1353  0.0  0.3 993232 58652 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-azuretools.vscode-docker-1.29.4/dist/dockerfile-language-server-nodejs/lib/server.js --node-ipc --node-ipc --clientProcessId=1035\nryan        1359  0.0  0.2 991980 48528 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-azuretools.vscode-docker-1.29.4/dist/compose-language-service/lib/server.js --node-ipc --node-ipc --clientProcessId=1035\nryan        1424  0.0  0.0   6188  5340 pts/6    Ss+  18:24   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh\nryan        1479  2.1  1.5 305748 251980 pts/0   Sl+  18:24   3:58 /home/ryan/.vscode-server/extensions/ms-vscode.cpptools-1.22.11-linux-x64/bin/cpptools\nryan        1500  0.0  0.3 995824 58096 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clientProcessId=1035\nryan        1514  0.0  0.0   7552  6760 pts/7    Ss   18:24   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh\nryan        1759  0.0  0.5 1025504 88884 pts/0   Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/github.vscode-github-actions-0.27.1/dist/server-node.js --node-ipc --clientProcessId=1035\nryan        2286  6.2  7.9 13898464 1299980 pts/0 Sl+ 18:24  11:43 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-python.vscode-pylance-2024.12.1/dist/server.bundle.js --cancellationReceive=file:4af9594a66ecea825756227fabc49f472f393708dd --node-ipc --clientProcessId=1035\nryan       36239  0.0  1.4 11829004 241816 pts/0 Sl+  18:35   0:08 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/visualstudioexptteam.intellicode-api-usage-examples-0.2.9/dist/server/server.js --node-ipc --clientProcessId=1035\nryan       36247  0.4  0.4 442644 71456 pts/0    Sl+  18:35   0:48 /bin/python3 /home/ryan/.vscode-server/extensions/ms-python.flake8-2024.0.0/bundled/tool/lsp_server.py\npolkitd    37820  0.0  0.0 308160  7192 ?        Ssl  18:44   0:00 /usr/lib/polkit-1/polkitd --no-debug\nryan       42344  0.0  0.0   7920  6528 pts/8    Ss   19:02   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh\nryan       58419  0.0  0.0   7532  6716 pts/9    Ss+  19:44   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh\nryan       60815  0.0  0.6 4273460 99468 pts/0   Sl+  19:50   0:01 /home/ryan/.vscode-server/extensions/ms-vscode.cpptools-1.22.11-linux-x64/bin/cpptools-srv 1479 {1F70D8C9-23FC-4F9A-B619-90805BD3609C}\nryan      131912  0.4  0.2 790092 46296 pts/7    Sl+  21:32   0:00 python3 server.py\nryan      131967  0.0  0.0  91416  6460 pts/8    Sl+  21:32   0:00 ./Executable-debug.elf\nryan      134564  0.0  0.0   2800  1092 pts/0    S+   21:33   0:00 /bin/sh -c "/home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/base/node/cpuUsage.sh" 42344 131967\nryan      134565  0.0  0.0   4752  3444 pts/0    S+   21:33   0:00 /bin/bash /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/base/node/cpuUsage.sh 42344 131967\nryan      134569  0.0  0.0   3124  1032 pts/0    S+   21:33   0:00 sleep 1\nryan      134570  0.0  0.0   2804  1172 pts/8    S+   21:33   0:00 sh -c -- ps aux\nryan      134571  0.0  0.0   8468  4324 pts/8    R+   21:33   0:00 ps aux\n'}]}
+2025-05-25 21:33:12 INFO [Server] Command UUID 81f924bc-099d-4f40-bcef-d4b432cac46d with output received
+2025-05-25 21:33:12 INFO [Server] Command c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 responded with output: USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0  21788 13100 ?        Ss   18:24   0:00 /sbin/init
+root           2  0.0  0.0   2776  1928 ?        Sl   18:24   0:00 /init
+root           7  0.0  0.0   3392   296 ?        Sl   18:24   0:04 plan9 --control-socket 7 --log-level 4 --server-fd 8 --pipe-fd 10 --log-truncate
+root          53  0.0  0.0  66844 15976 ?        S<s  18:24   0:00 /usr/lib/systemd/systemd-journald
+root          80  0.0  0.0  24916  6704 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-udevd
+root         106  0.0  0.0 152936   180 ?        Ssl  18:24   0:00 snapfuse /var/lib/snapd/snaps/core_17200.snap /snap/core/17200 -o ro,nodev,allow_other,suid
+root         107  0.0  0.0 302596  8836 ?        Ssl  18:24   0:00 snapfuse /var/lib/snapd/snaps/core_17210.snap /snap/core/17210 -o ro,nodev,allow_other,suid
+systemd+     179  0.0  0.0  21452 11920 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-resolved
+systemd+     180  0.0  0.0  91020  6584 ?        Ssl  18:24   0:00 /usr/lib/systemd/systemd-timesyncd
+root         190  0.0  0.0   4236  2628 ?        Ss   18:24   0:00 /usr/sbin/cron -f -P
+message+     191  0.0  0.0   9624  5220 ?        Ss   18:24   0:00 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+redis        199  0.0  0.0  62348 16040 ?        Ssl  18:24   0:09 /usr/bin/redis-server 127.0.0.1:6379
+root         205  0.0  0.3 2510040 52748 ?       Ssl  18:24   0:01 /usr/lib/snapd/snapd
+root         206  0.0  0.0  17976  8192 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-logind
+root         211  0.0  0.1 1756096 17968 ?       Ssl  18:24   0:00 /usr/libexec/wsl-pro-service -vv
+root         229  0.0  0.0   3160  1144 hvc0     Ss+  18:24   0:00 /sbin/agetty -o -p -- \u --noclear --keep-baud - 115200,38400,9600 vt220
+root         241  0.0  0.0   3116  1188 tty1     Ss+  18:24   0:00 /sbin/agetty -o -p -- \u --noclear - linux
+root         243  0.0  0.3 2392588 51440 ?       Ssl  18:24   0:04 /usr/bin/containerd
+syslog       244  0.0  0.0 222508  5224 ?        Ssl  18:24   0:00 /usr/sbin/rsyslogd -n -iNONE
+root         257  0.0  0.1 107020 22496 ?        Ssl  18:24   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+postgres     305  0.0  0.1 220224 30556 ?        Ss   18:24   0:00 /usr/lib/postgresql/16/bin/postgres -D /var/lib/postgresql/16/main -c config_file=/etc/postgresql/16/main/postgresql.conf
+postgres     331  0.0  0.0 220360  5908 ?        Ss   18:24   0:00 postgres: 16/main: checkpointer 
+postgres     332  0.0  0.0 220376  5964 ?        Ss   18:24   0:00 postgres: 16/main: background writer 
+root         342  0.0  0.5 2641052 88388 ?       Ssl  18:24   0:00 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+postgres     437  0.0  0.0 220224 10168 ?        Ss   18:24   0:00 postgres: 16/main: walwriter 
+postgres     438  0.0  0.0 221816  8060 ?        Ss   18:24   0:00 postgres: 16/main: autovacuum launcher 
+postgres     439  0.0  0.0 221800  6620 ?        Ss   18:24   0:00 postgres: 16/main: logical replication launcher 
+root         635  0.0  0.0   6816  4656 pts/1    Ss   18:24   0:00 /bin/login -f
+root         656  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root         657  0.0  0.0   2784   220 ?        S    18:24   0:00 /init
+ryan         658  0.0  0.0   2800  1064 pts/0    Ss+  18:24   0:00 sh -c "$VSCODE_WSL_EXT_LOCATION/scripts/wslServer.sh" e54c774e0add60467559eb0d1e229c6452cf8447 stable code-server .vscode-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+ryan         660  0.0  0.0   2800  1116 pts/0    S+   18:24   0:00 sh /mnt/c/Users/ryand/.vscode/extensions/ms-vscode-remote.remote-wsl-0.88.5/scripts/wslServer.sh e54c774e0add60467559eb0d1e229c6452cf8447 stable code-server .vscode-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+ryan         699  0.0  0.0  20436 11336 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd --user
+ryan         700  0.0  0.0  21144  1724 ?        S    18:24   0:00 (sd-pam)
+ryan         713  0.0  0.0   6072  5216 pts/1    S+   18:24   0:00 -bash
+ryan         794  0.0  0.0   2800  1024 pts/0    S+   18:24   0:00 sh /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/bin/code-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+ryan         798  0.6  1.0 11875936 166220 pts/0 Sl+  18:24   1:10 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/server-main.js --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+root        1005  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root        1006  0.0  0.0   2784   220 ?        S    18:24   0:01 /init
+ryan        1007  0.0  0.3 1002448 60112 pts/2   Ssl+ 18:24   0:04 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node -e const net = require('net'); process.stdin.pause(); const client = net.createConnection({ host: '127.0.0.1', port: 38879 }, () => { client.pipe(process.stdout); process.stdin.pipe(client); }); client.on('close', function (hadError) { console.error(hadError ? 'Remote close with error' : 'Remote close'); process.exit(hadError ? 1 : 0); }); client.on('error', function (err) { process.stderr.write(err && (err.stack || err.message) || String(err)); });
+root        1014  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root        1015  0.0  0.0   2784   220 ?        S    18:24   0:07 /init
+ryan        1016  0.1  0.3 1000080 58184 pts/3   Ssl+ 18:24   0:21 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node -e const net = require('net'); process.stdin.pause(); const client = net.createConnection({ host: '127.0.0.1', port: 38879 }, () => { client.pipe(process.stdout); process.stdin.pipe(client); }); client.on('close', function (hadError) { console.error(hadError ? 'Remote close with error' : 'Remote close'); process.exit(hadError ? 1 : 0); }); client.on('error', function (err) { process.stderr.write(err && (err.stack || err.message) || String(err)); });
+ryan        1023  0.2  0.9 11940328 161832 pts/0 Sl+  18:24   0:33 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=fileWatcher
+ryan        1035  4.1  8.2 99220852 1340952 pts/0 Sl+ 18:24   7:45 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node --dns-result-order=ipv4first /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=extensionHost --transformURIs --useHostProxy=true
+ryan        1069  0.1  0.4 11629276 78300 pts/0  Sl+  18:24   0:13 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=ptyHost --logsPath /home/ryan/.vscode-server/data/logs/20250525T183832
+root        1095  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root        1097  0.0  0.0   2784   220 ?        S    18:24   0:00 /init
+ryan        1101  0.0  0.0   2800  1176 pts/5    Ss+  18:24   0:00 /bin/sh -c cd '/home/ryan/PrometheanProxy' && /bin/sh
+ryan        1102  0.0  0.0   2800  1768 pts/5    S+   18:24   0:00 /bin/sh
+ryan        1112  0.0  0.3 992268 49772 pts/5    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-remote-containers/dist/vscode-remote-containers-server-0.401.0.js
+ryan        1340  0.0  0.0   2804  1096 pts/5    S+   18:24   0:00 /bin/sh
+ryan        1353  0.0  0.3 993232 58652 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-azuretools.vscode-docker-1.29.4/dist/dockerfile-language-server-nodejs/lib/server.js --node-ipc --node-ipc --clientProcessId=1035
+ryan        1359  0.0  0.2 991980 48528 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-azuretools.vscode-docker-1.29.4/dist/compose-language-service/lib/server.js --node-ipc --node-ipc --clientProcessId=1035
+ryan        1424  0.0  0.0   6188  5340 pts/6    Ss+  18:24   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan        1479  2.1  1.5 305748 251980 pts/0   Sl+  18:24   3:58 /home/ryan/.vscode-server/extensions/ms-vscode.cpptools-1.22.11-linux-x64/bin/cpptools
+ryan        1500  0.0  0.3 995824 58096 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clientProcessId=1035
+ryan        1514  0.0  0.0   7552  6760 pts/7    Ss   18:24   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan        1759  0.0  0.5 1025504 88884 pts/0   Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/github.vscode-github-actions-0.27.1/dist/server-node.js --node-ipc --clientProcessId=1035
+ryan        2286  6.2  7.9 13898464 1299980 pts/0 Sl+ 18:24  11:43 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-python.vscode-pylance-2024.12.1/dist/server.bundle.js --cancellationReceive=file:4af9594a66ecea825756227fabc49f472f393708dd --node-ipc --clientProcessId=1035
+ryan       36239  0.0  1.4 11829004 241816 pts/0 Sl+  18:35   0:08 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/visualstudioexptteam.intellicode-api-usage-examples-0.2.9/dist/server/server.js --node-ipc --clientProcessId=1035
+ryan       36247  0.4  0.4 442644 71456 pts/0    Sl+  18:35   0:48 /bin/python3 /home/ryan/.vscode-server/extensions/ms-python.flake8-2024.0.0/bundled/tool/lsp_server.py
+polkitd    37820  0.0  0.0 308160  7192 ?        Ssl  18:44   0:00 /usr/lib/polkit-1/polkitd --no-debug
+ryan       42344  0.0  0.0   7920  6528 pts/8    Ss   19:02   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan       58419  0.0  0.0   7532  6716 pts/9    Ss+  19:44   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan       60815  0.0  0.6 4273460 99468 pts/0   Sl+  19:50   0:01 /home/ryan/.vscode-server/extensions/ms-vscode.cpptools-1.22.11-linux-x64/bin/cpptools-srv 1479 {1F70D8C9-23FC-4F9A-B619-90805BD3609C}
+ryan      131912  0.4  0.2 790092 46296 pts/7    Sl+  21:32   0:00 python3 server.py
+ryan      131967  0.0  0.0  91416  6460 pts/8    Sl+  21:32   0:00 ./Executable-debug.elf
+ryan      134564  0.0  0.0   2800  1092 pts/0    S+   21:33   0:00 /bin/sh -c "/home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/base/node/cpuUsage.sh" 42344 131967
+ryan      134565  0.0  0.0   4752  3444 pts/0    S+   21:33   0:00 /bin/bash /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/base/node/cpuUsage.sh 42344 131967
+ryan      134569  0.0  0.0   3124  1032 pts/0    S+   21:33   0:00 sleep 1
+ryan      134570  0.0  0.0   2804  1172 pts/8    S+   21:33   0:00 sh -c -- ps aux
+ryan      134571  0.0  0.0   8468  4324 pts/8    R+   21:33   0:00 ps aux
+
+2025-05-25 21:33:12 INFO [Server] Emitted command response for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899, command ID: 81f924bc-099d-4f40-bcef-d4b432cac46d, command: list_processes, response: USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0  21788 13100 ?        Ss   18:24   0:00 /sbin/init
+root           2  0.0  0.0   2776  1928 ?        Sl   18:24   0:00 /init
+root           7  0.0  0.0   3392   296 ?        Sl   18:24   0:04 plan9 --control-socket 7 --log-level 4 --server-fd 8 --pipe-fd 10 --log-truncate
+root          53  0.0  0.0  66844 15976 ?        S<s  18:24   0:00 /usr/lib/systemd/systemd-journald
+root          80  0.0  0.0  24916  6704 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-udevd
+root         106  0.0  0.0 152936   180 ?        Ssl  18:24   0:00 snapfuse /var/lib/snapd/snaps/core_17200.snap /snap/core/17200 -o ro,nodev,allow_other,suid
+root         107  0.0  0.0 302596  8836 ?        Ssl  18:24   0:00 snapfuse /var/lib/snapd/snaps/core_17210.snap /snap/core/17210 -o ro,nodev,allow_other,suid
+systemd+     179  0.0  0.0  21452 11920 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-resolved
+systemd+     180  0.0  0.0  91020  6584 ?        Ssl  18:24   0:00 /usr/lib/systemd/systemd-timesyncd
+root         190  0.0  0.0   4236  2628 ?        Ss   18:24   0:00 /usr/sbin/cron -f -P
+message+     191  0.0  0.0   9624  5220 ?        Ss   18:24   0:00 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+redis        199  0.0  0.0  62348 16040 ?        Ssl  18:24   0:09 /usr/bin/redis-server 127.0.0.1:6379
+root         205  0.0  0.3 2510040 52748 ?       Ssl  18:24   0:01 /usr/lib/snapd/snapd
+root         206  0.0  0.0  17976  8192 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd-logind
+root         211  0.0  0.1 1756096 17968 ?       Ssl  18:24   0:00 /usr/libexec/wsl-pro-service -vv
+root         229  0.0  0.0   3160  1144 hvc0     Ss+  18:24   0:00 /sbin/agetty -o -p -- \u --noclear --keep-baud - 115200,38400,9600 vt220
+root         241  0.0  0.0   3116  1188 tty1     Ss+  18:24   0:00 /sbin/agetty -o -p -- \u --noclear - linux
+root         243  0.0  0.3 2392588 51440 ?       Ssl  18:24   0:04 /usr/bin/containerd
+syslog       244  0.0  0.0 222508  5224 ?        Ssl  18:24   0:00 /usr/sbin/rsyslogd -n -iNONE
+root         257  0.0  0.1 107020 22496 ?        Ssl  18:24   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+postgres     305  0.0  0.1 220224 30556 ?        Ss   18:24   0:00 /usr/lib/postgresql/16/bin/postgres -D /var/lib/postgresql/16/main -c config_file=/etc/postgresql/16/main/postgresql.conf
+postgres     331  0.0  0.0 220360  5908 ?        Ss   18:24   0:00 postgres: 16/main: checkpointer 
+postgres     332  0.0  0.0 220376  5964 ?        Ss   18:24   0:00 postgres: 16/main: background writer 
+root         342  0.0  0.5 2641052 88388 ?       Ssl  18:24   0:00 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+postgres     437  0.0  0.0 220224 10168 ?        Ss   18:24   0:00 postgres: 16/main: walwriter 
+postgres     438  0.0  0.0 221816  8060 ?        Ss   18:24   0:00 postgres: 16/main: autovacuum launcher 
+postgres     439  0.0  0.0 221800  6620 ?        Ss   18:24   0:00 postgres: 16/main: logical replication launcher 
+root         635  0.0  0.0   6816  4656 pts/1    Ss   18:24   0:00 /bin/login -f
+root         656  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root         657  0.0  0.0   2784   220 ?        S    18:24   0:00 /init
+ryan         658  0.0  0.0   2800  1064 pts/0    Ss+  18:24   0:00 sh -c "$VSCODE_WSL_EXT_LOCATION/scripts/wslServer.sh" e54c774e0add60467559eb0d1e229c6452cf8447 stable code-server .vscode-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+ryan         660  0.0  0.0   2800  1116 pts/0    S+   18:24   0:00 sh /mnt/c/Users/ryand/.vscode/extensions/ms-vscode-remote.remote-wsl-0.88.5/scripts/wslServer.sh e54c774e0add60467559eb0d1e229c6452cf8447 stable code-server .vscode-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+ryan         699  0.0  0.0  20436 11336 ?        Ss   18:24   0:00 /usr/lib/systemd/systemd --user
+ryan         700  0.0  0.0  21144  1724 ?        S    18:24   0:00 (sd-pam)
+ryan         713  0.0  0.0   6072  5216 pts/1    S+   18:24   0:00 -bash
+ryan         794  0.0  0.0   2800  1024 pts/0    S+   18:24   0:00 sh /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/bin/code-server --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+ryan         798  0.6  1.0 11875936 166220 pts/0 Sl+  18:24   1:10 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/server-main.js --host=127.0.0.1 --port=0 --connection-token=4020290797-3057063822-3922349003-2507720390 --use-host-proxy --without-browser-env-var --disable-websocket-compression --accept-server-license-terms --telemetry-level=all
+root        1005  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root        1006  0.0  0.0   2784   220 ?        S    18:24   0:01 /init
+ryan        1007  0.0  0.3 1002448 60112 pts/2   Ssl+ 18:24   0:04 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node -e const net = require('net'); process.stdin.pause(); const client = net.createConnection({ host: '127.0.0.1', port: 38879 }, () => { client.pipe(process.stdout); process.stdin.pipe(client); }); client.on('close', function (hadError) { console.error(hadError ? 'Remote close with error' : 'Remote close'); process.exit(hadError ? 1 : 0); }); client.on('error', function (err) { process.stderr.write(err && (err.stack || err.message) || String(err)); });
+root        1014  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root        1015  0.0  0.0   2784   220 ?        S    18:24   0:07 /init
+ryan        1016  0.1  0.3 1000080 58184 pts/3   Ssl+ 18:24   0:21 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node -e const net = require('net'); process.stdin.pause(); const client = net.createConnection({ host: '127.0.0.1', port: 38879 }, () => { client.pipe(process.stdout); process.stdin.pipe(client); }); client.on('close', function (hadError) { console.error(hadError ? 'Remote close with error' : 'Remote close'); process.exit(hadError ? 1 : 0); }); client.on('error', function (err) { process.stderr.write(err && (err.stack || err.message) || String(err)); });
+ryan        1023  0.2  0.9 11940328 161832 pts/0 Sl+  18:24   0:33 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=fileWatcher
+ryan        1035  4.1  8.2 99220852 1340952 pts/0 Sl+ 18:24   7:45 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node --dns-result-order=ipv4first /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=extensionHost --transformURIs --useHostProxy=true
+ryan        1069  0.1  0.4 11629276 78300 pts/0  Sl+  18:24   0:13 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/bootstrap-fork --type=ptyHost --logsPath /home/ryan/.vscode-server/data/logs/20250525T183832
+root        1095  0.0  0.0   2784   212 ?        Ss   18:24   0:00 /init
+root        1097  0.0  0.0   2784   220 ?        S    18:24   0:00 /init
+ryan        1101  0.0  0.0   2800  1176 pts/5    Ss+  18:24   0:00 /bin/sh -c cd '/home/ryan/PrometheanProxy' && /bin/sh
+ryan        1102  0.0  0.0   2800  1768 pts/5    S+   18:24   0:00 /bin/sh
+ryan        1112  0.0  0.3 992268 49772 pts/5    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-remote-containers/dist/vscode-remote-containers-server-0.401.0.js
+ryan        1340  0.0  0.0   2804  1096 pts/5    S+   18:24   0:00 /bin/sh
+ryan        1353  0.0  0.3 993232 58652 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-azuretools.vscode-docker-1.29.4/dist/dockerfile-language-server-nodejs/lib/server.js --node-ipc --node-ipc --clientProcessId=1035
+ryan        1359  0.0  0.2 991980 48528 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-azuretools.vscode-docker-1.29.4/dist/compose-language-service/lib/server.js --node-ipc --node-ipc --clientProcessId=1035
+ryan        1424  0.0  0.0   6188  5340 pts/6    Ss+  18:24   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan        1479  2.1  1.5 305748 251980 pts/0   Sl+  18:24   3:58 /home/ryan/.vscode-server/extensions/ms-vscode.cpptools-1.22.11-linux-x64/bin/cpptools
+ryan        1500  0.0  0.3 995824 58096 pts/0    Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clientProcessId=1035
+ryan        1514  0.0  0.0   7552  6760 pts/7    Ss   18:24   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan        1759  0.0  0.5 1025504 88884 pts/0   Sl+  18:24   0:00 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/github.vscode-github-actions-0.27.1/dist/server-node.js --node-ipc --clientProcessId=1035
+ryan        2286  6.2  7.9 13898464 1299980 pts/0 Sl+ 18:24  11:43 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/ms-python.vscode-pylance-2024.12.1/dist/server.bundle.js --cancellationReceive=file:4af9594a66ecea825756227fabc49f472f393708dd --node-ipc --clientProcessId=1035
+ryan       36239  0.0  1.4 11829004 241816 pts/0 Sl+  18:35   0:08 /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/node /home/ryan/.vscode-server/extensions/visualstudioexptteam.intellicode-api-usage-examples-0.2.9/dist/server/server.js --node-ipc --clientProcessId=1035
+ryan       36247  0.4  0.4 442644 71456 pts/0    Sl+  18:35   0:48 /bin/python3 /home/ryan/.vscode-server/extensions/ms-python.flake8-2024.0.0/bundled/tool/lsp_server.py
+polkitd    37820  0.0  0.0 308160  7192 ?        Ssl  18:44   0:00 /usr/lib/polkit-1/polkitd --no-debug
+ryan       42344  0.0  0.0   7920  6528 pts/8    Ss   19:02   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan       58419  0.0  0.0   7532  6716 pts/9    Ss+  19:44   0:00 /bin/bash --init-file /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+ryan       60815  0.0  0.6 4273460 99468 pts/0   Sl+  19:50   0:01 /home/ryan/.vscode-server/extensions/ms-vscode.cpptools-1.22.11-linux-x64/bin/cpptools-srv 1479 {1F70D8C9-23FC-4F9A-B619-90805BD3609C}
+ryan      131912  0.4  0.2 790092 46296 pts/7    Sl+  21:32   0:00 python3 server.py
+ryan      131967  0.0  0.0  91416  6460 pts/8    Sl+  21:32   0:00 ./Executable-debug.elf
+ryan      134564  0.0  0.0   2800  1092 pts/0    S+   21:33   0:00 /bin/sh -c "/home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/base/node/cpuUsage.sh" 42344 131967
+ryan      134565  0.0  0.0   4752  3444 pts/0    S+   21:33   0:00 /bin/bash /home/ryan/.vscode-server/bin/e54c774e0add60467559eb0d1e229c6452cf8447/out/vs/base/node/cpuUsage.sh 42344 131967
+ryan      134569  0.0  0.0   3124  1032 pts/0    S+   21:33   0:00 sleep 1
+ryan      134570  0.0  0.0   2804  1172 pts/8    S+   21:33   0:00 sh -c -- ps aux
+ryan      134571  0.0  0.0   8468  4324 pts/8    R+   21:33   0:00 ps aux
+
+2025-05-25 21:33:13 INFO [Server] Beacon call-in received from register/ratings
+2025-05-25 21:33:13 INFO [Server] Beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 updated with timer: 5, jitter: 2, next beacon time: Sun May 25 21:33:18 2025
+2025-05-25 21:33:13 INFO [Server] Emitted countdown update for UUID: c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899 with timer: 5 and jitter: 2
+2025-05-25 21:33:13 DEBUG [Server] Preparing commands for beacon c78a3af0-c1d8-4c1c-8ec0-b2046e4c0899
+2025-05-25 21:33:13 WARNING [Server] KeyboardInterrupt received, exiting MultiHandler

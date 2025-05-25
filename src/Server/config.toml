@@ -25,6 +25,12 @@ debugPrint = true
 interval = 5
 jitter = 2
 
+[logging]
+log_file = "server.log"
+# log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+level = "DEBUG"
+fmt = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+datefmt  = "%Y-%m-%d %H:%M:%S"
 
 [MultiHandlerCommands]
 help = """List of available commands: 
