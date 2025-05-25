@@ -3,12 +3,15 @@ from .content_handler import JsonFiles
 
 
 class FileManagerClass:
-    def __init__(self):
+    def __init__(self, config, uuid) -> None:
         self.directoryTraversalFile = {}
+        self.config = config
 
     def list_files(self, data, target_path) -> None:
         if self.directoryTraversalFile == {}:
-            self.directoryTraversalFile = JsonFiles(config['server']['ImplantData'] + f"/{self.uuid}/directory_traversal.json")
+            self.directoryTraversalFile = JsonFiles("./directory_traversal.json")
+
+            # self.directoryTraversalFile = JsonFiles(self.config['server']['ImplantData'] + f"/{self.uuid}/directory_traversal.json")
 
         """
         Traverses the loaded directory data (JSON) to find the contents

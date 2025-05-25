@@ -132,7 +132,7 @@ class MultiHandlerCommands:
         """
         available_commands = WordCompleter(['shell', 'close', 'processes',
         'sysinfo', 'close', 'checkfiles', 'download', 'upload', 'services',
-        'netstat', 'diskusage', 'listdir', directoryTraversal', 'takePhoto'])
+        'netstat', 'diskusage', 'listdir', directoryTraversal', 'takePhoto', viewFile])
         """
         logger.info(f"Using beacon with UserID: {UserID} and IPAddress: {IPAddress}")
         beaconClass = beacon_list.get(UserID)
@@ -169,6 +169,7 @@ class MultiHandlerCommands:
                 UserID),
             "takephoto": lambda: beaconClass.takePhoto(UserID),
             "listFiles": lambda: beaconClass.list_files(UserID),
+            "viewfile": lambda: beaconClass.list_files(UserID)
         }
 
         while True:

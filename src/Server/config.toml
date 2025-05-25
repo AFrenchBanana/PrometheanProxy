@@ -31,6 +31,8 @@ log_file = "server.log"
 level = "DEBUG"
 fmt = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 datefmt  = "%Y-%m-%d %H:%M:%S"
+max_size = 1048576 # MB
+
 
 [MultiHandlerCommands]
 help = """List of available commands: 

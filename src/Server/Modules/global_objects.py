@@ -28,7 +28,8 @@ logger = Logger(
     log_file=config["logging"]["log_file"],
     level=config["logging"]["level"],
     fmt=config["logging"]["fmt"],
-    datefmt=config["logging"]["datefmt"]
+    datefmt=config["logging"]["datefmt"],
+    max_size=config["logging"]["max_size"]
 )
 
 

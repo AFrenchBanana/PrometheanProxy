@@ -34,7 +34,7 @@ class Beacon:
         logger.debug(f"Creating beacon with UUID: {uuid}")    
         self.uuid = uuid
         self.database = DatabaseClass(config)
-        self.file_manager = FileManagerClass()
+        self.file_manager = FileManagerClass(config, uuid)
         self.uuid = uuid
         self.address = address
         logger.debug(f"Beacon address: {address}")
@@ -141,7 +141,12 @@ class Beacon:
         return
     
     def list_files(self, userID) -> None:
-        self.file_manager.list_files(userID)
+        data = input("Enter the path to list files: ")
+        if not data:
+            print("No path provided. Listing files in current directory.")
+            data = "."
+        logger.debug(f"Listing files for userID: {userID} at path: {data}")
+        self.file_manager.list_files(userID, data)
         logger.debug(f"List files for userID: {userID}")
 
     def list_db_commands(self, userID) -> None:
