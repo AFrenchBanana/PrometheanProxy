@@ -7,8 +7,9 @@ from flask import (Flask,
 from flask_socketio import SocketIO, join_room
 from Modules.global_objects import (
     beacon_list,
-    command_list,
-    add_beacon_command_list)
+    command_list)
+from Modules.beacon import add_beacon_command_list, remove_beacon_list
+
 import logging
 
 app = Flask(__name__)

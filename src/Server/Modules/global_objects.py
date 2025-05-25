@@ -7,51 +7,17 @@ Contains error-handled send and receive functions that
 can handle bytes and strings.
 """
 
-import json
+from .sessions_commands import Session
 from .content_handler import TomlFiles
 import struct
 from tqdm import tqdm
 from typing import Tuple
 import ssl
 import os
-import uuid
 
 beacon_list = {}
 command_list = {}
 sessions_list = {}
-
-
-class session:
-    def __init__(self, address, details, hostname, operating_system, mode):
-        self.address = address
-        self.details = details
-        self.hostname = hostname
-        self.operating_system = operating_system
-        self.mode = mode
-
-
-class beacon:
-    def __init__(self, uuid, address, hostname, operating_system,
-                 last_beacon, timer, jitter):
-        self.uuid = uuid
-        self.address = address
-        self.hostname = hostname
-        self.operating_system = operating_system
-        self.last_beacon = last_beacon
-        self.next_beacon = str(last_beacon) + str(timer)
-        self.timer = timer
-        self.jitter = jitter
-
-
-class beacon_command:
-    def __init__(self, command_uuid, beacon_uuid, command, command_output,
-                 executed, command_data):
-        self.command_uuid = command_uuid
-        self.beacon_uuid = beacon_uuid
-        self.command = command
-        self.command_output = command_output
-        self.executed = executed
-        self.command_data = command_data
 
 
 try:
@@ -71,26 +37,8 @@ def add_connection_list(conn: ssl.SSLSocket,
     """
     Adds connection details to the global connections dictionary.
     """
-    new_session = session(r_address, conn, host, operating_system, mode)
+    new_session = Session(r_address, conn, host, operating_system, mode)
     sessions_list[user_id] = new_session
-
-
-def add_beacon_list(uuid: str, r_address: str, hostname: str,
-                    operating_system: str, last_beacon, timer,
-                    jitter) -> None:
-    new_beacon = beacon(
-        uuid, r_address, hostname, operating_system, last_beacon, timer, jitter
-    )
-    beacon_list[uuid] = new_beacon
-
-
-def add_beacon_command_list(beacon_uuid: str, command_uuid: str,
-                            command: str, command_data: json = {}) -> None:
-    if not command_uuid or command_uuid == "":
-        command_uuid = str(uuid.uuid4())
-    new_command = beacon_command(command_uuid, beacon_uuid,
-                                 command, "", False, command_data)
-    command_list[command_uuid] = new_command
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:
@@ -103,16 +51,6 @@ def remove_connection_list(r_address: Tuple[str, int]) -> None:
             break
     else:
         print(f"Connection {r_address} not found in sessions list")
-
-
-def remove_beacon_list(uuid: str) -> None:
-    """
-    Removes beacon from the global beacon dictionary.
-    """
-    if uuid in beacon_list:
-        beacon_list.pop(uuid)
-    else:
-        print(f"Beacon {uuid} not found in beacon list")
 
 
 def send_data(conn: ssl.SSLSocket, data: any) -> None:

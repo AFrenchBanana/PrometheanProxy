@@ -1,14 +1,10 @@
-import json
 import os
-from global_objects import config
-from content_handler import JsonFiles
+from .content_handler import JsonFiles
 
 
 class FileManagerClass:
-    def __init__(self, uuid):
-        self.uuid = uuid
+    def __init__(self):
         self.directoryTraversalFile = {}
-
 
     def list_files(self, data, target_path) -> None:
         if self.directoryTraversalFile == {}:
@@ -47,8 +43,7 @@ class FileManagerClass:
             else: # For Unix roots like /
                 # The split logic might already handle this, but ensure it's correct
                 pass
-
-
+            
         current_node = data
         found_path = True
 
@@ -94,6 +89,3 @@ class FileManagerClass:
             }
         else:
             return None
-
-            
-

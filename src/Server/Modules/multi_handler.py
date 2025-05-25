@@ -42,7 +42,7 @@ class MultiHandler:
         """
         self.multihandlercommands = MultiHandlerCommands()
         self.Authentication = Authentication()
-        self.database = DatabaseClass()
+        self.database = DatabaseClass(config)
         colorama.init(autoreset=True)
         if config['packetsniffer']['active']:
             sniffer = PacketSniffer()
@@ -113,7 +113,7 @@ class MultiHandler:
         are inserted to the database table addresses
         Ideally run as a deamon thread to allow any connections to input.
         """
-        threadDB = DatabaseClass()
+        threadDB = DatabaseClass(config)
         while True:
             conn, r_address = SSL_Socket.accept()
             send_data(conn, self.Authentication.get_authentication_string())

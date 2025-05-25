@@ -1,10 +1,10 @@
 from ServerDatabase.database import DatabaseClass
-from .global_objects import (
-    send_data,
-    receive_data,
-    remove_connection_list,
-    send_data_loadingbar,
-)
+# from .global_objects import (
+#     send_data,
+#     receive_data,
+#     remove_connection_list,
+#     send_data_loadingbar,
+# )
 from datetime import datetime
 from tqdm import tqdm
 from typing import Tuple
@@ -14,10 +14,14 @@ import colorama
 import ssl
 
 
-class SessionCommandsClass:
+class Session:
     """Handles commands within a session"""
-
-    def __init__(self) -> None:
+    def __init__(self, address, details, hostname, operating_system, mode):
+        self.address = address
+        self.details = details
+        self.hostname = hostname
+        self.operating_system = operating_system
+        self.mode = mode
         self.database = DatabaseClass()  # laods database class
         colorama.init(autoreset=True)  # resets colorama after each function
 

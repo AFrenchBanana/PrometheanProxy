@@ -9,6 +9,7 @@ import sys
 import threading
 import random
 import os
+import traceback
 
 from Modules.multi_handler import MultiHandler
 from Modules.global_objects import config
@@ -26,13 +27,22 @@ if __name__ == '__main__':
         threading.Thread(
             target=beaconSocketIO.run,
             args=(beaconControl,),
-            kwargs={'port': config["server"]["webPort"],
-                    'debug': False, 'use_reloader': False},
+            kwargs={
+                'port': config["server"]["webPort"],
+                'debug': not config['server']['quiet_mode'],
+                'use_reloader': False
+            },
             daemon=True).start()
         threading.Thread(
             target=webSocketIO.run,
-            args=(app,), kwargs={'port': 9000, 'debug': False,
-                                 'use_reloader': False}, daemon=True).start()
+            args=(app,),
+            kwargs={
+                'port': 9000,
+                'debug': not config['server']['quiet_mode'],
+                'use_reloader': False
+            },
+            daemon=True
+        ).start()
         multi_handler.startsocket()
         if not config['server']['quiet_mode']:
             colors = [colorama.Fore.CYAN, colorama.Fore.RED,
@@ -43,8 +53,11 @@ if __name__ == '__main__':
         else:
             print(colorama.Back.RED + "Quiet Mode On")
         print(colorama.Back.GREEN + "Type Help for available commands")
-        multi_handler.multi_handler(config)  # starst the milti handler
-    except Exception as e:  # handles keyboard interrupt
+        multi_handler.multi_handler(config) 
+    except Exception as e: 
         print(colorama.Fore.RED + f"Error: {e}")
+        if not config['server']['quiet_mode']:
+            print(colorama.Fore.RED + "Traceback:")
+            traceback.print_exc()
         print("\n use exit next time")
         sys.exit()

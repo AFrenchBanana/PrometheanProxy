@@ -4,8 +4,8 @@ import time
 import logging
 from flask_socketio import SocketIO
 from Modules.global_objects import (
-    beacon_list, add_beacon_list, command_list, config)
-
+    beacon_list, command_list, config)
+from Modules.beacon import add_beacon_list
 
 beaconControl = Flask(__name__)
 socketio = SocketIO(beaconControl, cors_allowed_origins="*")
@@ -39,7 +39,8 @@ def connectionRequest(part1, part2, ad_param, version):
         add_beacon_list(userID, address, name,
                         os, time.asctime(),
                         config['beacon']["interval"],
-                        config['beacon']['jitter'])
+                        config['beacon']['jitter'],
+                        config)
         socketio.emit('new_connection', {'uuid': userID, 'name': name, 'os': os, 'address': address, "interval": config['beacon']["interval"], "jitter": config['beacon']['jitter']}) # noqa
         return {"timer": config['beacon']["interval"],
                 "uuid": userID, "jitter": config['beacon']['jitter']}, 200
