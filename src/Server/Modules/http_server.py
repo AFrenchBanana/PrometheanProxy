@@ -174,22 +174,29 @@ def response(path1, version):
                 if not os.path.exists(os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}")):
                     logger.info(f"Creating directory for beacon UUID: {command.beacon_uuid}")
                     os.makedirs(os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}"))
+                    socketio.emit("directory_traversal", {
+                        'uuid': command.beacon_uuid,
+                        'command_id': command.command_uuid,
+                        'command': command.command,
+                        'response': output
+                    }
+                    )
                 with open(os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}/directory_traversal.json"), "w") as f:
                     logger.info(f"Writing directory traversal output to file for beacon UUID: {command.beacon_uuid}")
                     f.write(output)
             else:
                 print(
                     f"Command {command.beacon_uuid} ",
-                    "responded with:"
+                    "responded with: output"
                 )
-            logger.info(f"Command {command.beacon_uuid} responded with output: {output}")
-            print(output)
-            socketio.emit('command_response', {
+                socketio.emit('command_response', {
                 'uuid': command.beacon_uuid,
-                'command_id': command.command_uuid,  # Added this line
+                'command_id': command.command_uuid,
                 'command': command.command,
                 'response': output
                 })
+            logger.info(f"Command {command.beacon_uuid} responded with output: {output}")
+           
             logger.info(f"Emitted command response for UUID: {command.beacon_uuid}, command ID: {command.command_uuid}, command: {command.command}, response: {output}") # noqa
     if not found:
         return '', 500

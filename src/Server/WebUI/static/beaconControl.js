@@ -309,7 +309,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for command_response to update Results tab
     socket.on('command_response', (data) => {
         console.log('Received command_response:', data); // Added for debugging
-
+        if (data.command === 'directory_traversal' && data.uuid === window.uuid) {
+            try {
+                const json = JSON.parse(data.response);
+                const treeContainer = document.getElementById('dir-tree');
+                // clear out old tree
+                treeContainer.innerHTML = '';
+                // rebuild
+                treeContainer.appendChild(buildTree(json));
+            } catch (e) {
+                console.error('Failed to parse directory_traversal JSON:', e);
+            }
+        }
         // Ensure the UUID matches the current beacon's UUID
         if (data.uuid === window.uuid) {
             const resultsInfo = document.getElementById('results-info');
@@ -586,6 +597,136 @@ function submitTask() {
         });
     });
 }
+
+document.getElementById('directory-btn').addEventListener('click', e => {
+  showInfo('directory-info', e);
+  fetchDirectoryListing();    // only here
+});
+
+function fetchDirectoryListing(path = '.') {
+  const treeC = document.getElementById('dir-tree');
+  treeC.innerHTML = '<p class="text-center">Loading…</p>';
+
+  fetch(`/api/v1/beacons?dirTraversal=${window.uuid}&path=${encodeURIComponent(path)}`)
+    .then(r => r.json())
+    .then(json => {
+      treeC.innerHTML = '';
+      // if empty object
+      if (!json || Object.keys(json).length === 0) {
+        treeC.innerHTML =
+          '<div class="text-center text-muted mt-3">No directory listing</div>';
+        return;
+      }
+      treeC.appendChild(buildTree(json));
+    })
+    .catch(err => {
+      treeC.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+    });
+}
+
+
+// recursively build a Bootstrap‐styled vertical tree
+function buildTree(obj) {
+    const ul = document.createElement('ul');
+    ul.className = 'list-group list-group-flush';
+
+    for (let key of Object.keys(obj)) {
+        const value = obj[key];
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.dataset.name = key.toLowerCase();
+
+        // determine if this node is a folder (branch)
+        const isBranch = value && typeof value === 'object' && Object.keys(value).length > 0;
+
+        // pre-build the child UL so the toggle handler can reference it
+        let childUl;
+        if (isBranch) {
+            childUl = buildTree(value);
+            childUl.style.display = 'none';
+            childUl.classList.add('ml-4');
+        }
+
+        // header wrapper
+        const header = document.createElement('div');
+        header.className = 'd-flex align-items-center';
+
+        // icon element (keep document icons logic)
+        const icon = document.createElement('span');
+        let iconText = '';
+        if (isBranch) {
+            iconText = '📁';
+        } else {
+            const ext = key.split('.').pop().toLowerCase();
+            if (['png','jpg','jpeg','gif','bmp','svg'].includes(ext)) {
+                iconText = '🖼️';
+            } else if (['pdf'].includes(ext)) {
+                iconText = '📕';
+            } else if (['doc','docx'].includes(ext)) {
+                iconText = '📄';
+            } else if (['xls','xlsx','csv'].includes(ext)) {
+                iconText = '📊';
+            } else if (['mp3','wav','ogg'].includes(ext)) {
+                iconText = '🎵';
+            } else if (['mp4','avi','mov','mkv'].includes(ext)) {
+                iconText = '🎞️';
+            } else {
+                iconText = '📃';
+            }
+        }
+        icon.textContent = iconText;
+        icon.className = isBranch ? 'folder-icon' : 'file-icon';
+        header.appendChild(icon);
+
+        // toggle arrow
+        const toggle = document.createElement('span');
+        toggle.className = 'toggle';
+        toggle.textContent = isBranch ? '▸' : ' ';
+        if (isBranch) {
+            toggle.onclick = () => {
+                const open = toggle.textContent === '▾';
+                toggle.textContent = open ? '▸' : '▾';
+                childUl.style.display = open ? 'none' : 'block';
+            };
+        }
+        header.appendChild(toggle);
+
+        // node name
+        const name = document.createElement('span');
+        name.className = 'node-name';
+        name.textContent = key;
+        header.appendChild(name);
+
+        li.appendChild(header);
+
+        // append children if branch
+        if (isBranch) {
+            li.appendChild(childUl);
+        }
+
+        ul.appendChild(li);
+    }
+
+    return ul;
+}
+
+// debounce & filter tree
+let searchTimeout;
+document.getElementById('dir-search')
+  .addEventListener('input', e => {
+    clearTimeout(searchTimeout);
+    const term = e.target.value.toLowerCase();
+    searchTimeout = setTimeout(() => {
+      document.querySelectorAll('#dir-tree li').forEach(li => {
+        const nm = li.dataset.name;
+        const selfMatch = nm.includes(term);
+        const childMatch = Array.from(li.querySelectorAll('li'))
+                                .some(c=>c.dataset.name.includes(term));
+        li.style.display = (term===''||selfMatch||childMatch)?'':'none';
+      });
+    }, 200);
+  });
+
 
 // Expose necessary functions and variables to the global scope
 window.beaconTimers = beaconTimers;

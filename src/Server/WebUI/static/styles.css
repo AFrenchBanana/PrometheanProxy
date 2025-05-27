@@ -664,3 +664,208 @@ body.dark-mode .toggle-label:hover {
     opacity: 0;
     visibility: hidden;
 }
+
+#directory-info .tree ul {
+  list-style: none;
+  padding-left: 1em;
+  margin: 0;
+}
+#directory-info .tree li {
+  position: relative;
+  margin: 0.2em 0;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+#directory-info .toggle {
+  cursor: pointer;
+  display: inline-block;
+  width: 1em;
+}
+#directory-info .node-name {
+  margin-left: 0.2em;
+}
+/* collapsed hides its child UL */
+#directory-info .tree li.collapsed > ul {
+  display: none;
+}
+/* Optional: highlight on hover */
+#directory-info .tree li:hover > .node-name {
+  background: rgba(0,123,255,0.1);
+  border-radius: 3px;
+}
+
+/* Search input max-width */
+#directory-info #dir-search {
+  max-width: 400px;
+  margin: auto;
+}
+
+#directory-info .tree {
+  border: 1px solid #dee2e6;
+  border-radius: .25rem;
+  background: #f8f9fa;
+  padding: .5rem;
+}
+/* list */
+#directory-info .tree ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+/* items */
+#directory-info .tree .list-group-item {
+  display: block;
+  border: none;
+  padding: .25rem .5rem;
+}
+#directory-info .tree .list-group-item:hover {
+  background: #e9ecef;
+}
+/* icons */
+#directory-info .folder-icon,
+#directory-info .file-icon {
+  margin-right: .5rem;
+  font-size: 1.2rem;
+}
+/* toggle arrow */
+#directory-info .toggle {
+  width: 1em;
+  margin-right: .25rem;
+  user-select: none;
+}
+/* indent subtree */
+#directory-info .ml-4 {
+  margin-left: 1.5rem !important;
+}
+
+/* ==========================================================================
+   Directory Tree & File Explorer
+   ========================================================================== */
+.tree {
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.9rem;
+}
+.tree ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+.tree .list-group-item {
+  border: none;
+  padding: 0.2rem 0.5rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.tree .folder-icon, .tree .file-icon {
+  font-size: 1rem;
+  width: 1.5rem;
+  text-align: center;
+}
+.tree .folder-icon {
+  color: #f0ad4e;  /* bootstrap warning */
+}
+.tree .file-icon {
+  color: #6c757d;  /* bootstrap secondary */
+}
+.tree .toggle {
+  cursor: pointer;
+  user-select: none;
+  width: 1rem;
+  display: inline-block;
+  text-align: center;
+  transition: transform 0.2s ease-in-out;
+}
+.tree .toggle.rotated {
+  transform: rotate(90deg);
+}
+.tree li:hover {
+  background-color: rgba(0,0,0,0.03);
+}
+
+/* ==========================================================================
+   Search Overlay Spinner
+   ========================================================================== */
+.search-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 0.25rem;
+}
+
+/* ==========================================================================
+   Result Count
+   ========================================================================== */
+#search-results-count {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* ==========================================================================
+   Highlight Animation for Table Rows
+   ========================================================================== */
+@keyframes highlightFade {
+  0%   { background-color: #d4edda; }
+  100% { background-color: transparent; }
+}
+.highlight {
+  animation: highlightFade 2s ease-out;
+}
+
+/* ==========================================================================
+   Slide Animations for Info Panels
+   ========================================================================== */
+@keyframes slideInLeft {
+  from   { transform: translateX(-100%); opacity: 0; }
+  to     { transform: translateX(0);       opacity: 1; }
+}
+@keyframes slideOutLeft {
+  from   { transform: translateX(0);       opacity: 1; }
+  to     { transform: translateX(-100%);   opacity: 0; }
+}
+@keyframes slideInRight {
+  from   { transform: translateX(100%);  opacity: 0; }
+  to     { transform: translateX(0);     opacity: 1; }
+}
+@keyframes slideOutRight {
+  from   { transform: translateX(0);     opacity: 1; }
+  to     { transform: translateX(100%);  opacity: 0; }
+}
+.slide-in-left  { animation: slideInLeft  0.4s forwards; }
+.slide-out-left { animation: slideOutLeft 0.4s forwards; }
+.slide-in-right { animation: slideInRight 0.4s forwards; }
+.slide-out-right{ animation: slideOutRight 0.4s forwards; }
+
+/* ==========================================================================
+   Dark Mode Overrides
+   ========================================================================== */
+body.dark-mode {
+  background-color: #343a40;
+  color: #f8f9fa;
+}
+body.dark-mode .list-group-item {
+  background-color: #454d55;
+  color: #f8f9fa;
+}
+body.dark-mode .table {
+  background-color: #454d55;
+  color: #f8f9fa;
+}
+body.dark-mode .table thead th {
+  border-bottom: 2px solid #6c757d;
+}
+body.dark-mode .alert {
+  background-color: #6c757d;
+  color: #f8f9fa;
+}
+
+/* ==========================================================================
+   Miscellaneous
+   ========================================================================== */
+.toggle-switch .toggle-label {
+  cursor: pointer;
+}

