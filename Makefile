@@ -17,13 +17,27 @@ LINUX_PREFIX = $(VCPKG_PATH)/installed/x64-linux
 WINDOWS_PREFIX = $(VCPKG_PATH)/installed/x64-mingw-static
 
 venv:
-	python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt
+	python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt && ./src/Client/Client_C++/dep/vcpkg/bootstrap-vcpkg.sh
 
 lint:
 	. venv/bin/activate && flake8 src/Server && flake8 tests/
 
 test:
 	. venv/bin/activate && PYTHONPATH=src/Server python3 -m unittest tests/*.py
+
+server: venv
+	. venv/bin/activate && pyinstaller \
+	--onefile \
+	--name PrometheanProxy \
+	src/Server/server.py \
+	--paths src \
+	--hidden-import=engineio.async_drivers.threading \
+	--hidden-import=engineio.async_drivers.asyncio \
+	--hidden-import=socketio.async_drivers.threading \
+	--hidden-import=socketio.async_drivers.asyncio \
+	--distpath bin \
+	--workpath bin/work \
+	--clean -y && rm -rf bin/work && rm -rf PrometheanProxy.spec
 
 linux: linux-release linux-debug
 
@@ -62,7 +76,7 @@ windows-debug: vcpkg-dep-windows
 		../$(SOURCE_DIR) && make && mv MyExecutable.exe ../$(OUTPUT_WINDOWS_DEBUG)
 	rm -rf $(BUILD_DIR_WIN)
 
-all: all-release all-debug
+all: all-release all-debug server
 
 all-release: linux-release windows-release
 
@@ -83,4 +97,4 @@ vcpkg-dep-linux:
 	cd $(VCPKG_PATH) && ./vcpkg install curl:x64-linux jsoncpp:x64-linux
 
 
-.PHONY: venv lint test linux linux-release linux-debug windows windows-release windows-debug all all-release all-debug clean vcpkg-dep vcpkg-dep-windows vcpkg-dep-linux
+.PHONY: venv lint test server linux linux-release linux-debug windows windows-release windows-debug all all-release all-debug clean vcpkg-dep vcpkg-dep-windows vcpkg-dep-linux

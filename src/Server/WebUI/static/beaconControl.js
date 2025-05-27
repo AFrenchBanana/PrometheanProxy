@@ -442,7 +442,7 @@ const taskDescriptions = {
     'diskusage': 'Check disk usage on the target system.',
     'netstat': 'Display network statistics and connections.',
     'session': 'Switch the beacon to session mode.',
-    'directorytraversal': 'Perform directory traversal operations on the target system.',
+    'directory_traversal': 'Perform directory traversal operations on the target system.',
     'takephoto': 'Capture a photo using the target system’s camera.'
 };
 

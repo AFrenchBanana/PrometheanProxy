@@ -9,23 +9,36 @@ can handle bytes and strings.
 
 from .content_handler import TomlFiles
 from .logging import LoggingClass as Logger
+from .initial_setup import generate_config_file
+from tomlkit.exceptions import InvalidCharInStringError
+
 import os
+
 
 beacon_list = {}
 command_list = {}
 sessions_list = {}
 
+config_dir=  os.path.expanduser("~/.PrometheanProxy/")
+config_file_path = os.path.join(config_dir, "config.toml")
 
 try:
-    with TomlFiles("config.toml") as f:
+    with TomlFiles(config_file_path) as f:
         config = f
 except FileNotFoundError:
-    with TomlFiles("src/Server/config.toml") as f:
+    generate_config_file()
+    with TomlFiles(config_file_path) as f:
+        config = f
+except InvalidCharInStringError:
+    os.remove(config_file_path)
+    print("Invalid character found in config file. Regenerating config file.")
+    generate_config_file()
+    with TomlFiles(config_file_path) as f:
         config = f
 
 logger = Logger(
     name="Server",
-    log_file=config["logging"]["log_file"],
+    log_file= os.path.join(config_dir, config["logging"]["log_file"]),
     level=config["logging"]["level"],
     fmt=config["logging"]["fmt"],
     datefmt=config["logging"]["datefmt"],

@@ -56,7 +56,7 @@ class MultiHandler:
         If these don't exist, a self-signed key and certificate is made.
         """
         logger.info("Checking for TLS certificates")
-        cert_dir = config['server']['TLSCertificateDir']
+        cert_dir = os.path.expanduser(f"~/.PrometheanProxy/{config['server']['TLSCertificateDir']}")
         tls_key = config['server']['TLSkey']
         tls_cert = config['server']['TLSCertificate']
         
@@ -84,26 +84,40 @@ class MultiHandler:
         starts a TLS socket and threads the accept connection to allow
         multiple connections
         """
-        logger.info("Starting socket server")
-        global SSL_Socket, socket_clear
-        self.address = (config['server']['listenaddress'],
-                        config['server']['port'])
-        logger.debug(f"Socket address: {self.address}")
-        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        logger.debug("Creating SSL context")
-        cert_dir = config['server']['TLSCertificateDir']
-        tls_key = config['server']['TLSkey']
-        tls_cert = config['server']['TLSCertificate']
-        logger.debug(f"Certificate directory: {cert_dir}, Key: {tls_key}, Cert: {tls_cert}")
-        context.load_cert_chain(
-            certfile=os.path.join(cert_dir, tls_cert),
-            keyfile=os.path.join(cert_dir, tls_key))
-        logger.debug("SSL context loaded with certificate and key")
-        socket_clear = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        logger.debug("Creating clear socket")
-        SSL_Socket = context.wrap_socket(socket_clear, server_side=True)
-        logger.debug("Wrapping socket with SSL context")
-        # tries to bind the socket to an address
+        try:
+            logger.info("Starting socket server")
+            global SSL_Socket, socket_clear
+            self.address = (config['server']['listenaddress'],
+                            config['server']['port'])
+            logger.debug(f"Socket address: {self.address}")
+            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            logger.debug("Creating SSL context")
+            cert_dir = os.path.expanduser(f"~/.PrometheanProxy/{config['server']['TLSCertificateDir']}")
+            tls_key = config['server']['TLSkey']
+            tls_cert = config['server']['TLSCertificate']
+            logger.debug(f"Certificate directory: {cert_dir}, Key: {tls_key}, Cert: {tls_cert}")
+            context.load_cert_chain(
+                certfile=os.path.join(cert_dir, tls_cert),
+                keyfile=os.path.join(cert_dir, tls_key))
+            logger.debug("SSL context loaded with certificate and key")
+            socket_clear = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+            logger.debug("Creating clear socket")
+            SSL_Socket = context.wrap_socket(socket_clear, server_side=True)
+            logger.debug("Wrapping socket with SSL context")
+        except FileNotFoundError:
+            logger.error("TLS certificate or key file not found")
+            sys.exit(
+                colorama.Fore.RED +
+                "TLS certificate or key file not found. " +
+                "Please run the server with --create-certificate to generate them.")
+        except ssl.SSLError as e:
+            logger.critical(f"SSL error: {e}")
+            print(colorama.Fore.RED + "SSL error: " + str(e))
+            sys.exit(1)
+        except Exception as e:
+            logger.critical(f"Unexpected error: {e}")
+            print(colorama.Fore.RED + "Unexpected error: " + str(e))
+            sys.exit(1)
         try:
             SSL_Socket.bind(self.address)
             logger.info(f"Socket bound to {self.address[0]}:{self.address[1]}")
@@ -189,7 +203,7 @@ class MultiHandler:
                                                "close", "closeall",
                                                "configbeacon",
                                                "command", "hashfiles",
-                                               "config", "help", "exit",]))
+                                               "config", "configBeacon", "logs", "help", "exit",]))
                 command = input("MultiHandler: ").lower()
                 logger.debug(f"Received command: {command}")
                 if command == "exit":  # closes the server down
@@ -239,7 +253,8 @@ class MultiHandler:
                         self.multihandlercommands.close_all_connections(),
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
                     "config": config_menu,
-                    "configBeacon": beacon_config_menu
+                    "configBeacon": beacon_config_menu,
+                    "logs": self.multihandlercommands.view_logs,
                 }
 
                 try:

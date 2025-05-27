@@ -2,12 +2,12 @@
 listenaddress = "0.0.0.0"
 webPort = 8000
 port = 2000
-TLSCertificateDir = "./Certificates/"
+TLSCertificateDir = "~/Certificates/"
 TLSCertificate = "cert.pem"
 TLSkey = "key.pem"
 GUI = false 
 quiet_mode = false
-implant_directory = "./ImplantData/"
+implant_directory = "~/ImplantData/"
 
 [authentication]
 #key length for the random auth string
@@ -17,8 +17,8 @@ keylength = 111
 active = false
 listenaddress = "0.0.0.0"
 port = 11001
-TLSCertificate = "./Certificates/cert.pem"
-TLSkey = "./Certificates/key.pem"
+TLSCertificate = "~/Certificates/cert.pem"
+TLSkey = "~/Certificates/key.pem"
 debugPrint = true
 
 [beacon]
@@ -75,7 +75,7 @@ Execute local system commands:
 
 [database]
 # where the database file will be created/ used
-file = "./ServerDatabase/database.db"
+file = "~/ServerDatabase/database.db"
 # add data True will insert data to the database, false will not
 addData = true
 

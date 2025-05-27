@@ -466,3 +466,30 @@ class MultiHandlerCommands:
                 "Hashes", f'"{file}","{hashedFile}"'
             )
         return
+    
+    def view_logs(self) -> None:
+        """
+        View the logs stored in the log file
+        """
+        logger.info("Viewing logs")
+        try:
+            count = int(input("How many lines do you want to view? (Default 100) "))
+        except ValueError:
+            logger.error("Invalid input for log count, defaulting to 100")
+            count = 100        
+        if not count:
+            count = 100
+        logger.info(f"Viewing last {count} lines of logs")
+        if count < 0:
+            print(colorama.Fore.RED + "Count cannot be negative")
+            return
+        readline.set_completer(
+            lambda text, state: tab_completion(
+                text, state, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]))
+        level = input("Enter log level to filter by (DEBUG, INFO, WARNING, ERROR, CRITICAL) or press Enter for all: ").upper()
+        logs = logger.view(count, level)
+        logger.info(f"Retrieved {len(logs)} log messages at level {level}")
+        for log in logs:
+            print(colorama.Fore.WHITE + log)
+        logger.info("Displayed log messages to user")
+        return

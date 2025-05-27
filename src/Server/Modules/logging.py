@@ -1,86 +1,155 @@
 import logging
 import os
-from logging import Logger as PyLogger
+import sys
+from logging import Logger as PyLogger, getLevelName
 from logging import handlers
 
+# Import colorama and initialize it
+import colorama
+from colorama import Fore, Style
+
+# --- Custom Formatter using Colorama ---
+class ColoramaFormatter(logging.Formatter):
+    """
+    A custom log formatter that adds color to console output using colorama.
+    """
+    def __init__(self, fmt: str, datefmt: str):
+        super().__init__(fmt, datefmt)
+        # Define colors for each log level
+        self.FORMATS = {
+            logging.DEBUG: Fore.CYAN,
+            logging.INFO: Fore.GREEN,
+            logging.WARNING: Fore.YELLOW,
+            logging.ERROR: Fore.RED,
+            logging.CRITICAL: Fore.RED + Style.BRIGHT,
+        }
+
+    def format(self, record):
+        # Get the color for the current log level
+        color = self.FORMATS.get(record.levelno, "")
+        
+        # Let the parent class do the actual formatting
+        output = super().format(record)
+        
+        # Prepend the color code. Style.RESET_ALL is handled by colorama.init()
+        return color + output
+
+# --- Main Logging Class ---
 class LoggingClass:
     """
-    Wrapper around Python's logging module with file size-based rotation.
-    Usage:
-        # Log file will rotate when it reaches 1MB (1,000,000 bytes)
-        # and keep one backup file.
-        log = LoggingClass(name="app", log_file="app.log", level="DEBUG", max_length=1_000_000)
-        log.info("Started")
-    """
+    Wrapper around Python's logging module with file rotation,
+    in-memory viewing, and colored console output via colorama.
 
+    Usage:
+        # Log to console with colors
+        log_console = LoggingClass(name="console_app", level="DEBUG")
+        log_console.info("This info message will be green.")
+        log_console.warning("This warning will be yellow.")
+        
+        # Log to a file (no colors are written to the file)
+        log_file = LoggingClass(name="file_app", log_file="app.log")
+        log_file.error("This error is written plainly to app.log.")
+
+        # View recent logs (defaults to INFO level and above)
+        print("\n--- Viewing recent logs (default level is INFO) ---")
+        for message in log_console.view(count=5):
+            # The view method also returns colored output if the logger targets the console
+            print(message)
+    """
     def __init__(
         self,
         name: str,
         log_file: str = None,
         level: str = "INFO",
-        fmt: str = "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        fmt: str = "%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
         datefmt: str = "%Y-%m-%d %H:%M:%S",
-        max_size: int = 1048576 # Default to 1MB (1024 * 1024 bytes)
+        max_size: int = 1048576,  # 1MB
+        memory_capacity: int = 1000
     ):
-        """
-        Initializes the LoggingClass.
-
-        Args:
-            name (str): The name of the logger.
-            log_file (str, optional): The path to the log file. If None, logs go to console. Defaults to None.
-            level (str, optional): The logging level (e.g., "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"). Defaults to "INFO".
-            fmt (str, optional): The format string for log messages. Defaults to "%(asctime)s %(levelname)s [%(name)s] %(message)s".
-            datefmt (str, optional): The date format string. Defaults to "%Y-%m-%d %H:%M:%S".
-            max_length (int, optional): The maximum size of the log file in bytes before rotation.
-                                        Defaults to 1MB (1048576 bytes).
-        """
+        # Initialize colorama to make ANSI codes work on all platforms
+        # autoreset=True ensures that the color is reset after each print statement
+        colorama.init(autoreset=True)
+        
         self.logger: PyLogger = logging.getLogger(name)
         self.logger.setLevel(level.upper())
+        self.memory_handler = None
 
-        # Prevent adding multiple handlers if the logger is retrieved multiple times
-        # This is important for preventing duplicate log messages.
         if not self.logger.handlers:
-            formatter = logging.Formatter(fmt, datefmt)
+            # Choose formatter: ColoramaFormatter for interactive consoles, standard for files
+            if log_file or not sys.stdout.isatty():
+                formatter = logging.Formatter(fmt, datefmt)
+            else:
+                formatter = ColoramaFormatter(fmt, datefmt)
 
+            # Determine the target handler (file or console)
             if log_file:
                 dirpath = os.path.dirname(log_file)
                 if dirpath:
                     os.makedirs(dirpath, exist_ok=True)
-
-                # Use RotatingFileHandler for log rotation
-                # maxBytes: The maximum size of the file before rotation (in bytes)
-                # backupCount: The number of backup files to keep. 1 means current + one .1 file.
-                file_hdl = handlers.RotatingFileHandler(
-                    log_file,
-                    maxBytes=max_size,
-                    backupCount=1 # Keep one old log file (e.g., app.log.1)
+                target_handler = handlers.RotatingFileHandler(
+                    log_file, maxBytes=max_size, backupCount=1
                 )
-                file_hdl.setLevel(level.upper())
-                file_hdl.setFormatter(formatter)
-                self.logger.addHandler(file_hdl)
             else:
-                # If no log_file is specified, log to console
-                console_hdl = logging.StreamHandler()
-                console_hdl.setLevel(level.upper())
-                console_hdl.setFormatter(formatter)
-                self.logger.addHandler(console_hdl)
+                target_handler = logging.StreamHandler()
 
-    def debug(self, msg: str, *args, **kwargs):
-        """Logs a message with DEBUG level."""
-        self.logger.debug(msg, *args, **kwargs)
+            target_handler.setFormatter(formatter)
 
-    def info(self, msg: str, *args, **kwargs):
-        """Logs a message with INFO level."""
-        self.logger.info(msg, *args, **kwargs)
+            # Configure the MemoryHandler to store recent logs
+            self.memory_handler = handlers.MemoryHandler(
+                capacity=memory_capacity,
+                flushLevel=logging.ERROR,
+                target=target_handler
+            )
+            # The formatter on the memory handler is used by the view() method
+            self.memory_handler.setFormatter(formatter)
 
-    def warning(self, msg: str, *args, **kwargs):
-        """Logs a message with WARNING level."""
-        self.logger.warning(msg, *args, **kwargs)
+            self.logger.addHandler(self.memory_handler)
 
-    def error(self, msg: str, *args, **kwargs):
-        """Logs a message with ERROR level."""
-        self.logger.error(msg, *args, **kwargs)
+    def __getattr__(self, name):
+        """Pass logging methods (debug, info, etc.) directly to the logger instance."""
+        if name in ['debug', 'info', 'warning', 'error', 'critical', 'exception']:
+            return getattr(self.logger, name)
+        self.logger.warning(
+            f"Attempted to access an invalid logging method: {name}. "
+            "Returning a no-op function."
+        )
+        
+    def view(self, count: int, level: str = None) -> list[str]:
+        """
+        Returns the last 'count' log messages from memory.
+        Defaults to the INFO level if 'level' is not specified.
 
-    def critical(self, msg: str, *args, **kwargs):
-        """Logs a message with CRITICAL level."""
-        self.logger.critical(msg, *args, **kwargs)
+        Args:
+            count (int): The maximum number of log messages to retrieve.
+            level (str, optional): The minimum logging level to filter by.
+                                   Defaults to "INFO" if None or invalid.
+
+        Returns:
+            list[str]: A list of formatted (and possibly colored) log messages.
+        """
+
+        if not self.memory_handler:
+            self.logger.error("Memory handler is not configured. Cannot view logs.")
+            return ["Logger not configured with a memory handler."]
+        
+        # **FIX**: Default to "INFO" if level is None or an empty string
+        log_level_str = (level or "INFO").upper()
+        numeric_level = getLevelName(log_level_str)
+        logging
+        # If the provided level string was invalid, default to INFO
+        if not isinstance(numeric_level, int):
+            print(f"{Fore.YELLOW}Warning: Invalid log level '{level}' for view(). Defaulting to 'INFO'.")
+            numeric_level = getLevelName("INFO")
+        matching_records = [
+            self.memory_handler.formatter.format(record)
+            for record in self.memory_handler.buffer
+            if record.levelno >= numeric_level
+        ]
+
+        return matching_records[-count:]
+
+    def flush(self):
+        """Manually flushes the logs from memory to the target handler."""
+        self.logger.debug("Flushing memory handler logs to target handler.")
+        if self.memory_handler:
+            self.memory_handler.flush()

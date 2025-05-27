@@ -1,4 +1,5 @@
 import sqlite3
+import os
 from Modules.global_objects import logger
 
 class DatabaseClass:
@@ -16,8 +17,11 @@ class DatabaseClass:
         calls the initialise_database function.
         Function needs the path to the db file to use."""
         try:
-            self.dbconnection = (
-                sqlite3.connect(f"{self.config['database']['file']}"))
+            dbPath = os.path.expanduser(f"{self.config['database']['file']}")
+            if not os.path.exists(dbPath):
+                logger.debug(f"DatabaseClass: Database file {dbPath} does not exist, creating it")
+                os.makedirs(os.path.dirname(dbPath), exist_ok=True)
+            self.dbconnection = sqlite3.connect(dbPath)
             self.cursor = self.dbconnection.cursor()
             logger.debug("DatabaseClass: Database connection established")
         except sqlite3.Error as err:
