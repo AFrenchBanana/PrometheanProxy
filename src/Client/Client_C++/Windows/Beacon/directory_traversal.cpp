@@ -60,8 +60,7 @@ void getDirectoryContents(const std::string& path, Json::Value& result) {
                 fileDetails["created"] = filetimeToISO8601(findFileData.ftCreationTime);
                 
                 // 3. Add other info like attributes
-                fileDetails["attributes"] = findFileData.dwFileAttributes;
-
+                fileDetails["attributes"] = static_cast<Json::UInt>(findFileData.dwFileAttributes);
                 // 4. Assign the details object as the value for the file's key
                 result[fileOrDir] = fileDetails;
             }

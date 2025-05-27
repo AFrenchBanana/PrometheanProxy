@@ -190,10 +190,10 @@ def response(path1, version):
                     "responded with: output"
                 )
                 socketio.emit('command_response', {
-                'uuid': command.beacon_uuid,
-                'command_id': command.command_uuid,
-                'command': command.command,
-                'response': output
+                    'uuid': command.beacon_uuid,
+                    'command_id': command.command_uuid,
+                    'command': command.command,
+                    'response': output
                 })
             logger.info(f"Command {command.beacon_uuid} responded with output: {output}")
            

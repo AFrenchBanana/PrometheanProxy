@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom Styles -->
     <link rel="stylesheet" href="../static/styles.css">
-    <!-- Socket.IO -->
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
-    <!-- Command Response Banner -->
     <div id="command-response-banner" class="alert alert-success d-none" role="alert">
         Command Response Received
     </div>
     
-    <!-- Dark Mode Toggle -->
     <div class="dark-mode-toggle" style="position: fixed; top: 1rem; right: 1rem;">
         <div class="toggle-switch">
             <input type="checkbox" id="darkModeSwitch" class="toggle-input">
@@ -31,7 +25,6 @@
         <button onclick="window.location.href='/'" class="btn btn-primary mb-3">Back</button>
         <h1>Beacon Details</h1>
 
-        <!-- Loading Spinner & Message -->
         <div id="loading-spinner" class="text-center spinner">
             <div class="spinner-border" role="status">
                 <span class="sr-only">Loading...</span>
@@ -39,7 +32,6 @@
         </div>
         <div id="loading-message" class="loading-message d-none">Waiting for beacon...</div>
 
-        <!-- Beacon Table -->
         <div id="beacon-table-container">
             <table class="table">
                 <thead>
@@ -58,7 +50,6 @@
             </table>
         </div>
 
-        <!-- Tab Buttons -->
         <div class="text-center mt-3">
             <button id="task-btn"      class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="left">Task</button>
             <button id="results-btn"   class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Results</button>
@@ -66,9 +57,7 @@
             <button id="media-btn"     class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Media</button>
         </div>
 
-        <!-- Info Box -->
         <div id="info-box" class="info-box mt-3">
-            <!-- Task Info -->
             <div id="task-info" class="info-content">
                 <h2>Task Information</h2>
                 <div class="form-group mt-4">
@@ -106,7 +95,6 @@
                 </div>
             </div>
 
-            <!-- Results Info -->
             <div id="results-info" class="info-content d-none">
                 <h2>Command Results</h2>
                 <table class="table">
@@ -125,23 +113,21 @@
                 </table>
             </div>
 
-           <div id="directory-info" class="info-content d-none">
-            <h2>Directory Listing</h2>
-            <div class="form-group">
-                <input type="text" id="dir-search" class="form-control mb-2"
-                    placeholder="Search folders/files…">
-            </div>
-            <div id="dir-tree" class="tree" style="max-height:400px;overflow:auto"></div>
+            <div id="directory-info" class="info-content d-none">
+                <h2>Directory Listing</h2>
+                <div class="form-group">
+                    <input type="text" id="dir-search" class="form-control" placeholder="Search folders/files…">
+                    <div id="search-results-summary" class="text-muted small mt-1"></div>
+                </div>
+                <div id="dir-tree" class="tree" style="max-height:400px;overflow:auto"></div>
             </div>
             
             <script>
             window.uuid = "{{ uuid }}";
             document.addEventListener('DOMContentLoaded', () => {
-                // auto-load on refresh
                 fetchDirectoryListing();
             });
             </script>
-            <!-- Media Info -->
             <div id="media-info" class="info-content d-none">
                 <h2>Media</h2>
                 <table class="table">
@@ -158,13 +144,28 @@
         </div>
     </div>
 
-    <!-- Expose UUID to JS -->
+    <div class="modal fade" id="fileInfoModal" tabindex="-1" role="dialog" aria-labelledby="fileInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fileInfoModalLabel">File Information</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="fileInfoBody">
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.uuid = "{{ uuid }}";
     </script>
-    <!-- Client-Side Logic -->
     <script src="../static/beaconControl.js"></script>
-    <!-- Dark Mode Toggle Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const darkModeSwitch = document.getElementById('darkModeSwitch');
@@ -184,5 +185,8 @@
             });
         });
     </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
