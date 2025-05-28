@@ -1,0 +1,185 @@
+import os
+
+
+def generate_config_file():
+    """
+    Generates a configuration file with predefined settings if it doesn't exist.
+    The file will be created in the user's home directory under ~/.PrometheanProxy/config.toml.
+    """
+
+    # Use triple double quotes for the main config_content f-string
+    # and then triple double quotes for the ASCII art within it.
+    config_content = f"""[server]
+listenaddress = "0.0.0.0"
+webPort = 8000
+port = 2000
+TLSCertificateDir = "Certificates/"
+TLSCertificate = "cert.pem"
+TLSkey = "key.pem"
+GUI = false
+quiet_mode = false
+implant_directory = "ImplantData/"
+
+[authentication]
+#key length for the random auth string
+keylength = 111
+
+[packetsniffer]
+active = false
+listenaddress = "0.0.0.0"
+port = 11001
+TLSCertificate = "Certificates/cert.pem"
+TLSkey = "Certificates/key.pem"
+debugPrint = true
+
+[beacon]
+interval = 5
+jitter = 2
+
+[logging]
+log_file = "server.log"
+# log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+level = "DEBUG"
+fmt = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+datefmt = "%Y-%m-%d %H:%M:%S"
+max_size = 1048576 # MB
+
+
+[MultiHandlerCommands]
+help = '''List of available commands:
+-------------------------------------c
+list - show available sessions
+sessions - connect to a session
+close - close a client connections
+closeall - close all connections
+hashfiles - make a list of reference hashes
+exit - exits server
+config - shows current config variables
+Execute local system commands:
+    Availble commands:
+        "ls", "cat", "pwd", "ping", "curl", "whoami", "clear"
+    If you need to use other commands, start with \\
+    e.g \\\\grep
+'''
+
+[SessionModules]
+help = '''List of available commands:
+-------------------------------------
+shell - interactive shell
+close - close session
+Download - Get a File from the target
+Upload - put a file on the target
+sysinfo - get a systeminfo snapshot from the target
+processes - get a list of running process on the target
+services - List running service (Linux only)
+checkfiles - Compare binaries against known hashes in the database
+diskusage - List space free on the disk
+listdir - list a directory without using binaries
+netstat - List netstat connections
+exit - exits session and returns to multi-handler
+Execute local system commands:
+    Availble commands:
+        "ls", "cat", "pwd", "ping", "curl", "whoami", "clear"
+    If you need to use other commands, start with \\
+    e.g \\\\grep
+'''
+
+[database]
+# where the database file will be created/ used
+file = "./ServerDatabase/database.db"
+# add data True will insert data to the database, false will not
+addData = true
+
+# This is where you can add new tables to the database.
+[[tables]]
+name = "Addresses"
+schema = "IP text, Port integer, Hostname text, OS text, Date text"
+
+[[tables]]
+name = "Shell"
+schema = "IP text, Date text, Command text, Response Text"
+
+[[tables]]
+name = "Processes"
+schema = "IP text , Processes text, Time text"
+
+[[tables]]
+name = "Services"
+schema = "IP text, Services text, Time text"
+
+[[tables]]
+name = "Netstat"
+schema = "IP text, Netstat text, Time text"
+
+[[tables]]
+name = "SystemInfo"
+schema = "IP Text, SystemInfo text, Time text"
+
+[[tables]]
+name = "Hashes"
+schema = "Filename text, Hash text"
+
+[[tables]]
+name = "Disk"
+schema = "IP text, Disk Usage, Time text"
+
+
+
+[ASCII]
+art1 = '''
+    ___       _ _           ___           
+    / _ \__ __ ___  _ __ ___   ___| |_| |__   ___  __ _ _ __   / _ \__ __ _____  ___   _ 
+    / /_)/ '__/ _ \| '_ ` _ \ / _ \ __| '_ \ / _ \/ _` | '_ \ / /_)/ '__/ _ \ \/ / | | |
+    / ___/| | | (_) | | | | | |   __/ |_| | | |   __/ (_| | | | / ___/| | | (_) >  <| |_| |
+    \/   |_|  \___/|_| |_| |_|\___|\__|_| |_|\___|\__,_|_| |_|\/   |_|  \___/_/\_\\__ , |
+                                                                                 |___/ 
+'''
+
+art2 = '''
+.oPYo.  .oPYo. .oPYo. o     o .oPYo. ooooo  o     o .oPYo.         .oo o     o    .oPYo.  .oPYo. .oPYo.  o     o  o  o 
+ 8   8  8 `8 8   8 8b   d8 8.     8   8     8 8.         .P 8 8b   8    8   8  8 `8 8   8  `b d'  `b d' 
+o8YooP' o8YooP' 8   8 8`b d'8 `boo    8  o8oooo8 `boo       .P  8 8`b  8  o8YooP' o8YooP' 8   8   `bd'    `b' 
+ 8      8 `b 8   8 8 `o' 8 .P        8    8   8 .P         oPooo8 8 `b 8    8      8 `b 8   8   .PY.      8  
+ 8      8   8 8   8 8    8 8          8    8   8 8           .P   8 8  `b8    8      8   8 8   8  .P  Y.      8  
+ 8      8   8 `YooP' 8    8 `YooP'   8    8   8 `YooP' .P     8 8   `8    8      8   8 `YooP' .P  Y.      8  
+:..::::::..:::..:.....:..::::..:.....:::..:::..:::..:.....:..:::::....:::..:::..::::::..:::..:.....:..::::..:::..::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+'''
+
+art3 = '''
+    ________  _______  _______     _______     _______  ________  _______     _______  _______     _______       ________  _______  _______     ________  ________ 
+  ╱        ╲╱╱        ╲╱        ╲╲╱        ╲╲╱╱        ╲╱        ╲╱  ╱ ╲╲╱╱        ╲╱        ╲╲╱╱  ╱ ╲      ╱        ╲╱╱        ╲╱        ╲╲╱  ╱ ╲╱  ╱ ╲
+  ╱          ╱╱          ╱          ╱╱          ╱╱╱          ╱          _╱          ╱╱╱          ╱          ╱╱          ╱   ╱          _╱╱          ╱          ╱╱_          _╱          ╱
+╱╱         __╱          _╱          ╱          ╱          _╱╱          ╱╱          ╱          _╱          ╱          ╱╱         __╱          _╱          ╱          ╱╲__   ╱╱ 
+╲╲_____╱ ╲____╱___╱╲________╱╲__╱__╱__╱╲________╱ ╲_____╱╱ ╲___╱____╱╲________╱╲___╱____╱╲__╱_____╱    ╲╲_____╱ ╲____╱___╱╲________╱╲___╱___╱╱    ╲____╱╱ 
+'''
+
+art4 = '''
+ (  (        )   * )        )  (  (        )   )   ) 
+)\ ))\ ) ( /(  ( `   * )  /( )\\())(    )\  )\()) (()/(()/( )\()))\()) )\()) 
+(()/(()/( )\()) )\))(  ( ` ) /( )\())(    )\  )\()) (()/(()/( )\()))\()) )\()) 
+ /(_))(_)|(_)\\ )\\  (_()) _((_|(_))\\ _ )\\ _((_) (/(_))(_)|(_)\\((_\\ ((_\\ 
+(_))(_))     ((_)(_()((_|(_)(_(_()) _((_|(_))\\ _ )\\ _((_) (_))(_))     ((_)_((_)_ ((_) 
+| _ \\ _ \\ / _ \\|  \\/  | __|_ _|| || | __(_)_\\(_) \\| | | _ \\ _ \\ / _ \\ \\/ | \\ / / 
+| _/ /| (_) | |\\/| | _| | |  | __ | _| / _ \\ | .` | | _/ /| (_) >  < \\ V / 
+|_| |_|_\\ \\___/|_|  |_|___| |_|  |_||_|___/_/ \\_\\|_|\\_| |_| |_|_\\ \\___/_/\\_\\ |_|                                                                                
+'''
+
+art5 = '''
+'########::'########:::'#######::'##::::'##:'########:'########:'##::::'##:'########::::'###::::'##::: ##::::'########::'########:::'#######::'##::::'##:'##:::'##:
+ ########: ##.... ##:'##.... ##: ###::'###: ##.....::... ##..:: ##:::: ##: ##.....::::'## ##::: ###:: ##:::: ##.... ##: ##.... ##:'##.... ##:. ##::'##::. ##:'##::
+ ##:::: ##: ##:::: ##: ##:::: ##: ####'####: ##:::::::::: ##:::: ##:::: ##: ##::::::::'##:. ##:: ####: ##:::: ##:::: ##: ##:::: ##: ##:::: ##::. ##'##::::. ####:::
+ ########:: ########:: ##:::: ##: ## ### ##: ######:::::: ##:::: #########: ######:::'##:::. ##: ## ## ##:::: ########:: ########:: ##:::: ##:::. ###::::::. ##::::
+ ##.....::: ##.. ##::: ##:::: ##: ##. #: ##: ##...::::::: ##:::: ##.... ##: ##...:::: #########: ##. ####:::: ##.....::: ##.. ##::: ##:::: ##::: ## ##:::::: ##::::
+ ##:::::::: ##::. ##:: ##:::: ##: ##:.:: ##: ##:::::::::: ##:::: ##:::: ##: ##::::::: ##.... ##: ##:. ###:::: ##:::::::: ##::. ##:: ##:::: ##:: ##:. ##::::: ##::::
+ ##:::::::: ##:::. ##:. #######:: ##:::: ##: ########:::: ##:::: ##:::: ##: ########: ##:::: ##: ##::. ##:::: ##:::::::: ##:::. ##:. #######:: ##:::. ##:::: ##::::
+..:::::::::..:::::..:::.......:::..:::::..::........:::::..:::::..:::::..::........::..:::::..::..::::..:::::..:::::::::..:::::..:::.......:::..:::::..:::.:::::
+'''
+"""  # noqa: F541
+
+    config_dir = os.path.expanduser("~/.PrometheanProxy/")
+    config_file_path = os.path.join(config_dir, "config.toml")
+    os.makedirs(os.path.dirname(config_dir), exist_ok=True)
+    with open(config_file_path, 'w', encoding='utf-8') as f:
+        f.write(config_content)
+    print("Default configuration file created at ~/.PrometheanProxy/config.toml")

@@ -12,3 +12,5 @@ test.*
 venv*
 build*/
 bin/
+server.log
+PrometheanProxy.spec
