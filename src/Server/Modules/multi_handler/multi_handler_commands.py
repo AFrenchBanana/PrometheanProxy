@@ -5,10 +5,10 @@ connection and address variables fed in from the specified socket.
 this allows for multiple connections to be interacted with.
 """
 
-from .session import send_data, receive_data, remove_connection_list
+from ..session.session import send_data, receive_data, remove_connection_list
 from ServerDatabase.database import DatabaseClass
-from .beacon import add_beacon_command_list, remove_beacon_list
-from .global_objects import (
+from ..beacon.beacon import add_beacon_command_list, remove_beacon_list
+from ..global_objects import (
     sessions_list,
     tab_completion,
     beacon_list,

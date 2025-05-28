@@ -54,7 +54,7 @@
             <button id="task-btn"      class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="left">Task</button>
             <button id="results-btn"   class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Results</button>
             <button id="directory-btn" class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="left">Directory Listing</button>
-            <button id="media-btn"     class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Media</button>
+            <button id="config-btn"     class="btn btn-secondary m-2 btn-lg same-size-btn dark-mode-btn" data-direction="right">Config</button>
         </div>
 
         <div id="info-box" class="info-box mt-3">
@@ -122,12 +122,32 @@
                 <div id="dir-tree" class="tree" style="max-height:400px;overflow:auto"></div>
             </div>
             
-            <script>
+
+           <div id="config-info" class="info-content d-none">
+                <div class="config-form-container">
+                    <h2>Beacon Configuration</h2>
+                   <form id="configForm">
+                    <div class="form-group">
+                        <label for="callbackRate">Callback Rate (seconds):</label>
+                        <input type="number" id="callbackRate" name="callbackRate" placeholder="Enter callback rate" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jitter">Jitter (seconds):</label>
+                        <input type="number" id="jitter" name="jitter" placeholder="Enter jitter" min="0" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </form>
+                </div>
+            </div>
+            
+         <script>
             window.uuid = "{{ uuid }}";
+
             document.addEventListener('DOMContentLoaded', () => {
                 fetchDirectoryListing();
+                populateConfigForm(window.uuid); // Call the function from beaconControl.js
             });
-            </script>
+        </script>
             <div id="media-info" class="info-content d-none">
                 <h2>Media</h2>
                 <table class="table">

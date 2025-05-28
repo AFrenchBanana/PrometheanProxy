@@ -1,6 +1,6 @@
 from ServerDatabase.database import DatabaseClass
-from .file_manager import FileManagerClass
-from .global_objects import (
+from ..utils.file_manager import FileManagerClass
+from ..global_objects import (
     command_list,
     beacon_list,
     logger

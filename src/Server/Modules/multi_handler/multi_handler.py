@@ -15,12 +15,12 @@ import colorama
 import readline
 
 from datetime import datetime
-from .authentication import Authentication
+from ..utils.authentication import Authentication
 from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
 from ServerDatabase.database import DatabaseClass
-from .session import add_connection_list, receive_data, send_data
-from .global_objects import (
+from ..session.session import add_connection_list, receive_data, send_data
+from ..global_objects import (
     sessions_list,
     beacon_list,
     execute_local_commands,
@@ -28,7 +28,7 @@ from .global_objects import (
     tab_completion,
     logger
 )
-from Modules.config_configuration import config_menu, beacon_config_menu
+from Modules.utils.config_configuration import config_menu, beacon_config_menu
 
 
 class MultiHandler:

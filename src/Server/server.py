@@ -14,9 +14,9 @@ import io
 import time
 
 
-from Modules.multi_handler import MultiHandler
+from Modules.multi_handler.multi_handler import MultiHandler
 from Modules.global_objects import config, logger
-from Modules.beacon_server.server import start_beacon_server
+from Modules.beacon.beacon_server.server import start_beacon_server
 from WebUI.http import app, socketio as webSocketIO
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)

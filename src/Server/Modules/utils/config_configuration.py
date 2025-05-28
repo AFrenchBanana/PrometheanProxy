@@ -2,10 +2,10 @@ import readline
 from tabulate import tabulate
 
 from .content_handler import TomlFiles
-from .global_objects import tab_completion
+from ..global_objects import tab_completion
 import ipaddress
 
-from .global_objects import config as loadedConfig, logger
+from ..global_objects import config as loadedConfig, logger
 
 CONFIG_FILE_PATH = 'config.toml'
 

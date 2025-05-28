@@ -1,5 +1,5 @@
 from ServerDatabase.database import DatabaseClass
-from .global_objects import (
+from ..global_objects import (
     sessions_list,
     logger
 )

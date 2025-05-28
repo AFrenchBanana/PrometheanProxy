@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <string>
 #include "logging.hpp"
-
+#include "config.hpp"
 
 std::string compressString(const std::string& str) {
     z_stream zs;
@@ -38,4 +38,22 @@ std::string compressString(const std::string& str) {
     }
     logger.log("Compression completed successfully, output size: " + std::to_string(outstring.size()));
     return outstring;
+}
+
+
+std::string updateBeaconConfig(int callback, int jitter) {
+    logger.log("Updating beacon configuration with callback: " + std::to_string(callback) + " and jitter: " + std::to_string(jitter));
+    
+    if (callback < 0 || jitter < 0) {
+        logger.error("Invalid callback or jitter value");
+        logger.warn("Callback and jitter must be non-negative integers.");
+        return "Invalid callback or jitter value";
+    }
+
+    std::string config = "Callback: " + std::to_string(callback) + ", Jitter: " + std::to_string(jitter);
+    logger.log("Beacon configuration updated: " + config);
+    JITTER = jitter;
+    TIMER = callback;
+
+    return std::string("Beacon configuration updated: ") + config;
 }

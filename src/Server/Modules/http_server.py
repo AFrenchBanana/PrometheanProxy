@@ -8,7 +8,7 @@ import json
 from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacon_list, command_list, config, logger)
-from Modules.beacon import add_beacon_list
+from Server.Modules.beacon.beacon import add_beacon_list
 
 # --- Flask App Initialization ---
 beaconControl = Flask(__name__)
