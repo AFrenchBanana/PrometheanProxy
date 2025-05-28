@@ -7,9 +7,9 @@ Contains error-handled send and receive functions that
 can handle bytes and strings.
 """
 
-from .content_handler import TomlFiles
-from .logging import LoggingClass as Logger
-from .initial_setup import generate_config_file
+from .utils.content_handler import TomlFiles
+from .utils.logging import LoggingClass as Logger
+from .utils.initial_setup import generate_config_file
 from tomlkit.exceptions import InvalidCharInStringError
 
 import os

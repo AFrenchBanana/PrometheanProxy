@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import mock_open, patch
 from tomlkit import parse, dumps
-from src.Server.Modules.content_handler import TomlFiles
+from Server.Modules.utils.content_handler import TomlFiles
 
 
 class TestTomlFiles(unittest.TestCase):

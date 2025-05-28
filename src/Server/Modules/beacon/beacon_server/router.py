@@ -1,6 +1,6 @@
 
 import re
-from Modules.beacon_server.handlers import connection_handler, beacon_handler, response_handler
+from Modules.beacon.beacon_server.handlers import connection_handler, beacon_handler, response_handler
 
 
 ROUTES = {

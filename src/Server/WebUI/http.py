@@ -10,7 +10,7 @@ from Modules.global_objects import (
     beacon_list,
     command_list,
     logger)
-from Modules.beacon import add_beacon_command_list
+from Modules.beacon.beacon import add_beacon_command_list
 
 
 app = Flask(__name__)
@@ -53,6 +53,55 @@ def api_beacons():
             'response': payload
         }, room=uuid)
         return jsonify({"status": "Command added"}), 200
+    
+
+    if request.method == 'POST' and request.args.get('update'):
+        uuid = request.args.get('update')
+        if not uuid:
+            return jsonify({"error": "Missing 'update' parameter"}), 400
+            
+        logger.info(f"Update API called for beacon {uuid}")
+        data = request.get_json(silent=True) or {}
+
+        command_id = data.get('command_id')
+        timer = data.get('timer')
+        jitter = data.get('jitter')
+
+        if not command_id:
+            logger.error("Missing command_id in POST data for update.")
+            return jsonify({"error": "Missing command_id"}), 400
+
+        if not (timer is not None and jitter is not None):
+            logger.error("Missing timer or jitter in POST data.")
+            return jsonify({"error": "Missing timer or jitter"}), 400
+            
+        if timer < 0 or jitter < 0:
+            logger.error("Timer or jitter cannot be negative.")
+            return jsonify({"error": "Timer and jitter must be non-negative"}), 400
+            
+        beacon_obj = beacon_list.get(uuid)
+        if not beacon_obj:
+            logger.error(f"Beacon with UUID {uuid} not found.")
+            return jsonify({"error": "Beacon not found"}), 404
+            
+        beacon_obj.timer = timer
+        beacon_obj.jitter = jitter
+        
+        logger.info(f"Adding update command {command_id} to beacon {uuid} with timer={timer} and jitter={jitter}")
+        add_beacon_command_list(uuid, command_id, "update", {
+            "timer": timer,
+            "jitter": jitter
+        })
+
+        socketio.emit('beacon_update', {
+            'uuid': uuid,
+            'command_id': command_id,
+            'timer': timer,
+            'jitter': jitter
+        }, room=uuid)
+        
+        return jsonify({"message": "Beacon configuration updated successfully"}), 200
+
 
     # GET /api/v1/beacons?...
     if request.method == 'GET':
@@ -71,8 +120,39 @@ def api_beacons():
                 })
             logger.info(f"Returning history for beacon {uuid}")
             return jsonify({"history": history_data}), 200
+        
+        # 2) Directory traversal command
+        elif request.args.get('directory_traversal'):
+            """
+            Serves the cached directory traversal JSON file for a given beacon UUID.
+            """
+            uuid = request.args['directory_traversal']
+            logger.info(f"Directory traversal API called for beacon {uuid}")
+            if not uuid:
+                logger.error("UUID not provided in request for directory traversal.")
+                return jsonify({"error": "UUID is required"}), 400
+            if request.remote_addr != '127.0.0.1':
+                return jsonify({"error": "Access denied"}), 403
 
-        # 2) List all beacons (default GET action)
+            logger.info(f"Request received for cached directory traversal for UUID: {uuid}")
+            tree_file = os.path.expanduser(f"~/.PrometheanProxy/{uuid}/directory_traversal.json")
+
+            if not os.path.isfile(tree_file):
+                logger.warning(f"No directory traversal cache file found for UUID: {uuid}")
+                # Return an empty object if the file doesn't exist yet
+                return jsonify({})
+
+            try:
+                with open(tree_file, 'r') as f:
+                    data = f.read()
+                response = make_response(data)
+                response.mimetype = 'application/json'
+                return response
+            except Exception as e:
+                logger.error(f"Error reading dirTraversal JSON for {uuid}: {e}")
+                return jsonify({"error": f"Error reading cache file: {e}"}), 500
+        
+        # 3) List all beacons (default GET action)
         beacons_grouped = {}
         for b_id, beacon in beacon_list.items():
             beacons_grouped[b_id] = {
@@ -86,7 +166,8 @@ def api_beacons():
             }
         logger.info("Returning all beacons")
         return jsonify({"beacons": beacons_grouped}), 200
-
+    
+        
     # Fallback for other methods
     return jsonify({"error": "Method not allowed"}), 405
 
@@ -113,33 +194,6 @@ def api_beacon(uuid):
     else:
         logger.error(f"Beacon not found for UUID: {uuid}")
         return jsonify({"error": "Beacon not found"}), 404
-
-
-@app.route('/api/v1/beacons/<uuid>/directory_traversal', methods=['GET'])
-def get_directory_traversal(uuid):
-    """
-    Serves the cached directory traversal JSON file for a given beacon UUID.
-    """
-    if request.remote_addr != '127.0.0.1':
-        return jsonify({"error": "Access denied"}), 403
-
-    logger.info(f"Request received for cached directory traversal for UUID: {uuid}")
-    tree_file = os.path.expanduser(f"~/.PrometheanProxy/{uuid}/directory_traversal.json")
-
-    if not os.path.isfile(tree_file):
-        logger.warning(f"No directory traversal cache file found for UUID: {uuid}")
-        # Return an empty object if the file doesn't exist yet
-        return jsonify({})
-
-    try:
-        with open(tree_file, 'r') as f:
-            data = f.read()
-        response = make_response(data)
-        response.mimetype = 'application/json'
-        return response
-    except Exception as e:
-        logger.error(f"Error reading dirTraversal JSON for {uuid}: {e}")
-        return jsonify({"error": f"Error reading cache file: {e}"}), 500
 
 
 @app.route('/beacons')

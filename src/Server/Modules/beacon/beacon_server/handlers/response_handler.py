@@ -3,8 +3,8 @@ import os
 from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import command_list, logger
-from Modules.beacon_server.socket_manager import socketio
-from Modules.beacon_server.utils import process_request_data
+from Modules.beacon.beacon_server.socket_manager import socketio
+from Modules.beacon.beacon_server.utils import process_request_data
 
 
 def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
@@ -42,6 +42,7 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
 
     if command.command == "directory_traversal":
         socketio_event = "directory_traversal"
+        command.command_output = "Response received, view in the Directory Listing tab."
         dir_path = os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}")
         os.makedirs(dir_path, exist_ok=True)
         with open(os.path.join(dir_path, "directory_traversal.json"), "w") as f:

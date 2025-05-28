@@ -9,7 +9,7 @@ the returned string
 from hashlib import sha512
 import string
 import random
-from .global_objects import config, logger
+from ..global_objects import config, logger
 
 
 class Authentication:
