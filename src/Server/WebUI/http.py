@@ -1,5 +1,4 @@
 import os
-import json
 from flask import (Flask,
                    render_template,
                    jsonify,
@@ -11,7 +10,7 @@ from Modules.global_objects import (
     beacon_list,
     command_list,
     logger)
-from Modules.beacon import add_beacon_command_list, remove_beacon_list
+from Modules.beacon import add_beacon_command_list
 
 
 app = Flask(__name__)
@@ -39,7 +38,7 @@ def api_beacons():
         logger.info(f"Command API called for beacon {uuid}")
         data = request.get_json(silent=True) or {}
         cmd_id = data.get('command_id')
-        task   = data.get('task')
+        task = data.get('task')
         payload = data.get('data')
         if not (cmd_id and task):
             logger.error("Missing command_id or task in POST data.")
@@ -67,7 +66,7 @@ def api_beacons():
                 history_data.append({
                     "command_id": cmd.command_uuid,
                     "command": cmd.command,
-                    "data": cmd.command_data, # Added for context in history
+                    "data": cmd.command_data,  # Added for context in history
                     "response": cmd.command_output
                 })
             logger.info(f"Returning history for beacon {uuid}")
@@ -90,6 +89,7 @@ def api_beacons():
 
     # Fallback for other methods
     return jsonify({"error": "Method not allowed"}), 405
+
 
 @app.route('/api/v1/beacons/<uuid>')
 def api_beacon(uuid):
@@ -114,9 +114,7 @@ def api_beacon(uuid):
         logger.error(f"Beacon not found for UUID: {uuid}")
         return jsonify({"error": "Beacon not found"}), 404
 
-# =====================================================================
-# NEW DEDICATED ROUTE FOR DIRECTORY TRAVERSAL
-# =====================================================================
+
 @app.route('/api/v1/beacons/<uuid>/directory_traversal', methods=['GET'])
 def get_directory_traversal(uuid):
     """
@@ -124,7 +122,7 @@ def get_directory_traversal(uuid):
     """
     if request.remote_addr != '127.0.0.1':
         return jsonify({"error": "Access denied"}), 403
-        
+
     logger.info(f"Request received for cached directory traversal for UUID: {uuid}")
     tree_file = os.path.expanduser(f"~/.PrometheanProxy/{uuid}/directory_traversal.json")
 
@@ -135,7 +133,6 @@ def get_directory_traversal(uuid):
 
     try:
         with open(tree_file, 'r') as f:
-            # Use make_response to correctly handle pre-formatted JSON strings
             data = f.read()
         response = make_response(data)
         response.mimetype = 'application/json'
@@ -143,7 +140,7 @@ def get_directory_traversal(uuid):
     except Exception as e:
         logger.error(f"Error reading dirTraversal JSON for {uuid}: {e}")
         return jsonify({"error": f"Error reading cache file: {e}"}), 500
-# =====================================================================
+
 
 @app.route('/beacons')
 def beacon():

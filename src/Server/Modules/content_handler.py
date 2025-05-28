@@ -33,6 +33,7 @@ class TomlFiles:
         with open(self.filename, 'wt', encoding='utf-8') as f:
             f.write(dumps(self.data))
 
+
 class JsonFiles:
     """Loads a JSON file and provides methods for updating and saving."""
 
@@ -45,7 +46,7 @@ class JsonFiles:
         return self.data
 
     def __exit__(self, tipe, value, traceback):
-        pass 
+        pass
 
     def update_config(self, key: str, new_value: str | bool | int) -> None:
         """Updates the value at the specified key."""

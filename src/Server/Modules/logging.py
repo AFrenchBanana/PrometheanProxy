@@ -8,7 +8,7 @@ from logging import handlers
 import colorama
 from colorama import Fore, Style
 
-# --- Custom Formatter using Colorama ---
+
 class ColoramaFormatter(logging.Formatter):
     """
     A custom log formatter that adds color to console output using colorama.
@@ -27,14 +27,13 @@ class ColoramaFormatter(logging.Formatter):
     def format(self, record):
         # Get the color for the current log level
         color = self.FORMATS.get(record.levelno, "")
-        
+
         # Let the parent class do the actual formatting
         output = super().format(record)
-        
         # Prepend the color code. Style.RESET_ALL is handled by colorama.init()
         return color + output
 
-# --- Main Logging Class ---
+
 class LoggingClass:
     """
     Wrapper around Python's logging module with file rotation,
@@ -45,7 +44,6 @@ class LoggingClass:
         log_console = LoggingClass(name="console_app", level="DEBUG")
         log_console.info("This info message will be green.")
         log_console.warning("This warning will be yellow.")
-        
         # Log to a file (no colors are written to the file)
         log_file = LoggingClass(name="file_app", log_file="app.log")
         log_file.error("This error is written plainly to app.log.")
@@ -69,7 +67,7 @@ class LoggingClass:
         # Initialize colorama to make ANSI codes work on all platforms
         # autoreset=True ensures that the color is reset after each print statement
         colorama.init(autoreset=True)
-        
+
         self.logger: PyLogger = logging.getLogger(name)
         self.logger.setLevel(level.upper())
         self.memory_handler = None
@@ -113,7 +111,7 @@ class LoggingClass:
             f"Attempted to access an invalid logging method: {name}. "
             "Returning a no-op function."
         )
-        
+
     def view(self, count: int, level: str = None) -> list[str]:
         """
         Returns the last 'count' log messages from memory.
@@ -131,7 +129,7 @@ class LoggingClass:
         if not self.memory_handler:
             self.logger.error("Memory handler is not configured. Cannot view logs.")
             return ["Logger not configured with a memory handler."]
-        
+
         # **FIX**: Default to "INFO" if level is None or an empty string
         log_level_str = (level or "INFO").upper()
         numeric_level = getLevelName(log_level_str)

@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Document loaded');
 
     // Initialize WebSocket connection
-    const socket = io('http://127.0.0.1:8000');
+    const socket = io('http://127.0.0.1:9001');
 
     // Log WebSocket connection details
     socket.on('connect', () => {

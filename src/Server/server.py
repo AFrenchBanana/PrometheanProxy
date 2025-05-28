@@ -1,53 +1,69 @@
 #!/usr/bin/python3
 
 """
-initial file that starts the socket and multi handler
+Initial file that starts the socket and multi handler.
 """
 import readline
 import colorama
 import sys
 import threading
 import random
-import os
 import traceback
+import logging
+import io
+import time
+
 
 from Modules.multi_handler import MultiHandler
 from Modules.global_objects import config, logger
-from Modules.http_server import beaconControl, socketio as beaconSocketIO
+from Modules.beacon_server.server import start_beacon_server
 from WebUI.http import app, socketio as webSocketIO
 
-readline.parse_and_bind('tab: complete')
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger('socketio').setLevel(logging.ERROR)
+logging.getLogger('engineio').setLevel(logging.ERROR)
 
-os.environ['FLASK_ENV'] = 'production'
+readline.parse_and_bind('tab: complete')
 
 if __name__ == '__main__':
     logger.info("Starting server...")
     try:
-        logger.debug("Server: Initializing colorama")
         multi_handler = MultiHandler()
         multi_handler.create_certificate()
-        logger.debug("Server: Starting socket and web server threads")
+
+        logger.debug("Server: Starting beacon server and web UI server threads")
+
+        # --- Beacon Server Thread ---
         threading.Thread(
-            target=beaconSocketIO.run,
-            args=(beaconControl,),
-            kwargs={
-                'port': config["server"]["webPort"],
-                'debug': not config['server']['quiet_mode'],
-                'use_reloader': False
-            },
-            daemon=True).start()
+            target=start_beacon_server,
+            args=(config,),
+            daemon=True
+        ).start()
+
+        # --- WebUI Server Thread ---
+        webui_kwargs = {
+            'host': '0.0.0.0',
+            'port': 9000,
+            'debug': not config['server']['quiet_mode'],
+            'use_reloader': False,
+            'allow_unsafe_werkzeug': True
+        }
+        old_stdout = sys.stdout  # horrible hack to suppress output
+        sys.stdout = io.StringIO()
+
         threading.Thread(
             target=webSocketIO.run,
             args=(app,),
-            kwargs={
-                'port': 9000,
-                'debug': not config['server']['quiet_mode'],
-                'use_reloader': False
-            },
+            kwargs=webui_kwargs,
             daemon=True
         ).start()
+
+        time.sleep(0.5)
+        sys.stdout = old_stdout
+
         multi_handler.startsocket()
-        logger.debug("Server: Socket and web server threads started successfully")
+        logger.debug("Server: Background server threads started successfully")
+
         if not config['server']['quiet_mode']:
             colors = [colorama.Fore.CYAN, colorama.Fore.RED,
                       colorama.Fore.GREEN, colorama.Fore.YELLOW,
@@ -57,14 +73,16 @@ if __name__ == '__main__':
             print(random.choice(colors) + config['ASCII'][art_key])
         else:
             print(colorama.Back.RED + "Quiet Mode On")
+
         print(colorama.Back.GREEN + "Type Help for available commands")
-        multi_handler.multi_handler(config) 
-    except Exception as e: 
+        multi_handler.multi_handler(config)
+
+    except Exception as e:
         logger.error(f"Server: Error occurred - {e}")
         print(colorama.Fore.RED + f"Error: {e}")
         if not config['server']['quiet_mode']:
             print(colorama.Fore.RED + "Traceback:")
             traceback.print_exc()
-        print("\n use exit next time")
+        print("\nUse 'exit' or 'quit' next time.")
         logger.critical("Server: Exiting due to error")
         sys.exit()

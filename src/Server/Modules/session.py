@@ -33,7 +33,7 @@ class Session:
         colorama.init(autoreset=True)
         logger.info(
             f"New session created: {self.address[0]}:{self.address[1]} " +
-            f"({self.hostname}, {self.operating_system}, {self.mode})")        
+            f"({self.hostname}, {self.operating_system}, {self.mode})")
         print("New Session")
 
     def close_connection(self, conn: ssl.SSLSocket,
@@ -69,7 +69,7 @@ class Session:
                 f"Removed {r_address[0]}:{r_address[1]} from sessions list")
 
             conn.close()  # closes conneciton
-            logger.info(   
+            logger.info(
                 f"Closed connection {r_address[0]}:{r_address[1]}")
             print(colorama.Back.GREEN + "Closed")  # user message
         else:
@@ -96,7 +96,7 @@ class Session:
         while True:
             command = input(
                 f"{username}@{r_address[0]}:{r_address[1]}-[{cwd}]: ")
-            logger.info(    
+            logger.info(
                 f"Command entered: {command} from {r_address[0]}:{r_address[1]}")
             if not command.strip():
                 continue
@@ -127,7 +127,7 @@ class Session:
         processes = receive_data(conn)
         logger.info(
             f"Received processes list from {r_address[0]}:{r_address[1]}")
-        
+
         self.database.insert_entry(
             "Processes",
             f'"{r_address[0]}","{processes}",' +
@@ -140,14 +140,12 @@ class Session:
         """gets the systeminfo of the client"""
         logger.info(
             f"Getting system info for {r_address[0]}:{r_address[1]}")
-        
         send_data(
             conn,
             "systeminfo")  # sends the system info command to start the process
         data = receive_data(conn)  # recives data
         logger.info(
             f"Received system info from {r_address[0]}:{r_address[1]}")
-        
         print(data)  # prints the results
         self.database.insert_entry(
             "SystemInfo", f'"{r_address[0]}","{data}",' +
@@ -235,11 +233,11 @@ class Session:
         # gets the basename of the file to write too
         filename = os.path.basename(filename)
         data = receive_data(conn)  # recieves file data
-        logger.info(    
+        logger.info(
             f"Received file data for {filename} from client")
         if data == "Error":  # if the data is error, print an error message
             print(colorama.Back.RED + receive_data(conn))
-            logger.error(   
+            logger.error(
                 f"Error downloading file: {filename}")
         else:
             if isinstance(
@@ -290,7 +288,7 @@ class Session:
             logger.error(
                 f"File not found: {filename}")
             print(colorama.Back.RED + "File doesn't exist")
-            send_data(conn, "break")  
+            send_data(conn, "break")
             logger.info(
                 "Upload cancelled due to file not found error")
             return

@@ -19,7 +19,7 @@ beacon_list = {}
 command_list = {}
 sessions_list = {}
 
-config_dir=  os.path.expanduser("~/.PrometheanProxy/")
+config_dir = os.path.expanduser("~/.PrometheanProxy/")
 config_file_path = os.path.join(config_dir, "config.toml")
 
 try:
@@ -38,7 +38,7 @@ except InvalidCharInStringError:
 
 logger = Logger(
     name="Server",
-    log_file= os.path.join(config_dir, config["logging"]["log_file"]),
+    log_file=os.path.join(config_dir, config["logging"]["log_file"]),
     level=config["logging"]["level"],
     fmt=config["logging"]["fmt"],
     datefmt=config["logging"]["datefmt"],

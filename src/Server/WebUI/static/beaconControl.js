@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // =================================================================================
 
 function initializeWebSocket() {
-    const socket = io('http://127.0.0.1:8000');
+    const socket = io('http://127.0.0.1:9001');
 
     socket.on('connect', () => {
         console.log('WebSocket connected');

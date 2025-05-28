@@ -5,9 +5,9 @@ connection and address variables fed in from the specified socket.
 this allows for multiple connections to be interacted with.
 """
 
-from .session import Session, send_data, receive_data, remove_connection_list
+from .session import send_data, receive_data, remove_connection_list
 from ServerDatabase.database import DatabaseClass
-from .beacon import Beacon, add_beacon_command_list, remove_beacon_list
+from .beacon import add_beacon_command_list, remove_beacon_list
 from .global_objects import (
     sessions_list,
     tab_completion,
@@ -143,7 +143,7 @@ class MultiHandlerCommands:
         else:
             logger.error(f"No beacon found with UUID: {UserID}")
             print(f"No beacon found with UUID: {UserID}")
-                    
+
         def handle_session():
             logger.info(f"Changing beacon {UserID} to session mode")
             print(colorama.Fore.GREEN +
@@ -154,7 +154,7 @@ class MultiHandlerCommands:
             remove_beacon_list(beaconClass.uuid)
             logger.info(f"Removed beacon {beaconClass.uuid} from beacon list")  # noqa
             return
- 
+
         command_handlers = {
             "shell": lambda: beaconClass.shell(UserID, IPAddress),
             "listdir": lambda: beaconClass.list_dir(UserID, IPAddress),
@@ -188,7 +188,7 @@ class MultiHandlerCommands:
             logger.info(f"Command input is {command}")
             if command == "exit":  # exits back to multihandler menu
                 break
-            try:  
+            try:
                 logger.info(f"Executing command: {command}")
                 handler = command_handlers.get(command)
                 if handler:
@@ -202,7 +202,7 @@ class MultiHandlerCommands:
             except (KeyError, SyntaxError, AttributeError, NameError):
                 if not self.config['server']['quiet_mode']:
                     print(colorama.Fore.RED + "Traceback:")
-                    traceback.print_exc()       
+                    traceback.print_exc()
         return
 
     def listconnections(self) -> None:
@@ -466,7 +466,7 @@ class MultiHandlerCommands:
                 "Hashes", f'"{file}","{hashedFile}"'
             )
         return
-    
+
     def view_logs(self) -> None:
         """
         View the logs stored in the log file
@@ -476,7 +476,7 @@ class MultiHandlerCommands:
             count = int(input("How many lines do you want to view? (Default 100) "))
         except ValueError:
             logger.error("Invalid input for log count, defaulting to 100")
-            count = 100        
+            count = 100
         if not count:
             count = 100
         logger.info(f"Viewing last {count} lines of logs")

@@ -34,19 +34,19 @@ class FileManagerClass:
             head, tail = os.path.split(head)
             if tail:
                 path_components.insert(0, tail)
-            else: # Handle root drive like C:
+            else:  # Handle root drive like C:
                 path_components.insert(0, head)
                 break
 
         # Handle root drive specifically if it's the first component
         if os.path.splitdrive(normalized_path)[0]:
             drive = os.path.splitdrive(normalized_path)[0]
-            if drive.endswith(':'): # For Windows drives like C:
-                path_components[0] = drive # Replace the first component with the full drive name
-            else: # For Unix roots like /
+            if drive.endswith(':'):  # For Windows drives like C:
+                path_components[0] = drive  # Replace the first component with the full drive name
+            else:  # For Unix roots like /
                 # The split logic might already handle this, but ensure it's correct
                 pass
-            
+
         current_node = data
         found_path = True
 
@@ -70,7 +70,6 @@ class FileManagerClass:
             # So, we start matching from the second component.
             # This is a simplification based on the C++ output structure.
             start_index = 1
-
 
         for i in range(start_index, len(path_components)):
             component = path_components[i]

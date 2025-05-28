@@ -59,7 +59,7 @@ class MultiHandler:
         cert_dir = os.path.expanduser(f"~/.PrometheanProxy/{config['server']['TLSCertificateDir']}")
         tls_key = config['server']['TLSkey']
         tls_cert = config['server']['TLSCertificate']
-        
+
         key_path = os.path.join(cert_dir, tls_key)
         cert_path = os.path.join(cert_dir, tls_cert)
         logger.debug(f"Key path: {key_path}, Cert path: {cert_path}")

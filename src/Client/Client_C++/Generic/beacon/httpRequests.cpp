@@ -9,8 +9,10 @@
 #include <ctime>
 #include <sstream>
 
+
 #include "../config.hpp"
 #include "../logging.hpp"
+#include "../generic_funcs.hpp"
 #include "urlObfuscation.hpp"
 
 #ifdef __unix__
@@ -113,9 +115,32 @@ int retryRequest(const std::string& url, int attempts, int sleepTime) {
     return -1;
 }
 
-std::tuple<int, std::string> postRequest(const std::string& url, const std::string& jsonData) {
+std::tuple<int, std::string> postRequest(const std::string& url, const std::string& data, bool compress_data = false) {
     logger.log("Performing POST request to: " + url);
-    logger.log("POST data: " + jsonData);
+    
+    std::string final_data = data;
+    bool is_compressed = false;
+    
+    if (compress_data) {
+        try {
+            final_data = compressString(data);
+            is_compressed = true;
+            logger.log("Data compressed successfully. Original size: " + 
+                      std::to_string(data.size()) + " bytes, Compressed size: " + 
+                      std::to_string(final_data.size()) + " bytes");
+        } catch (const std::exception& e) {
+            logger.error("Compression failed: " + std::string(e.what()) + ". Sending uncompressed data.");
+            final_data = data;
+            is_compressed = false;
+        }
+    }
+    
+    if (!is_compressed) {
+        logger.log("POST data: " + final_data);
+    } else {
+        logger.log("POST data: [compressed, " + std::to_string(final_data.size()) + " bytes]");
+    }
+    
     CURL* curl;
     CURLcode res;
     long response_code = 0;
@@ -125,10 +150,16 @@ std::tuple<int, std::string> postRequest(const std::string& url, const std::stri
     curl = curl_easy_init();
     if (curl) {
         struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Content-Type: application/json");
+        if (is_compressed) {
+            headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
+            headers = curl_slist_append(headers, "Content-Encoding: deflate");
+        } else {
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+        }
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, final_data.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, final_data.size());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);

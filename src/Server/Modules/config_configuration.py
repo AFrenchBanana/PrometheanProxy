@@ -124,8 +124,8 @@ def edit_config() -> bool:
             elif subkey == ("listenaddress" and not
                             ipaddress.ip_address(new_value)):
                 print("Invalid value. Please enter a valid IP address")
-                logger.warning( 
-                    "Invalid IP address entered: %s", new_value)    
+                logger.warning(
+                    "Invalid IP address entered: %s", new_value)
             elif (subkey == "port" and not new_value.isdigit() and
                   (int(new_value) < 0 or int(new_value) > 65535)):
                 print("Invalid value. Please enter a valid port number")

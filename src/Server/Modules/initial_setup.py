@@ -1,17 +1,6 @@
 import os
 
 
-
-def generate_config_file():
-    """
-    Generates a configuration file with predefined settings if it doesn't exist.
-
-    Args:
-        file_path (str): The path where the configuration file should be created.
-                         Defaults to "config.ini".
-    """
- 
- 
 def generate_config_file():
     """
     Generates a configuration file with predefined settings if it doesn't exist.
@@ -173,8 +162,7 @@ art4 = '''
 (_))(_))     ((_)(_()((_|(_)(_(_()) _((_|(_))\\ _ )\\ _((_) (_))(_))     ((_)_((_)_ ((_) 
 | _ \\ _ \\ / _ \\|  \\/  | __|_ _|| || | __(_)_\\(_) \\| | | _ \\ _ \\ / _ \\ \\/ | \\ / / 
 | _/ /| (_) | |\\/| | _| | |  | __ | _| / _ \\ | .` | | _/ /| (_) >  < \\ V / 
-|_| |_|_\\ \\___/|_|  |_|___| |_|  |_||_|___/_/ \\_\\|_|\\_| |_| |_|_\\ \\___/_/\\_\\ |_| 
-                                                                               
+|_| |_|_\\ \\___/|_|  |_|___| |_|  |_||_|___/_/ \\_\\|_|\\_| |_| |_|_\\ \\___/_/\\_\\ |_|                                                                                
 '''
 
 art5 = '''
@@ -187,9 +175,9 @@ art5 = '''
  ##:::::::: ##:::. ##:. #######:: ##:::: ##: ########:::: ##:::: ##:::: ##: ########: ##:::: ##: ##::. ##:::: ##:::::::: ##:::. ##:. #######:: ##:::. ##:::: ##::::
 ..:::::::::..:::::..:::.......:::..:::::..::........:::::..:::::..:::::..::........::..:::::..::..::::..:::::..:::::::::..:::::..:::.......:::..:::::..:::.:::::
 '''
-"""
+"""  # noqa: F541
 
-    config_dir=  os.path.expanduser("~/.PrometheanProxy/")
+    config_dir = os.path.expanduser("~/.PrometheanProxy/")
     config_file_path = os.path.join(config_dir, "config.toml")
     os.makedirs(os.path.dirname(config_dir), exist_ok=True)
     with open(config_file_path, 'w', encoding='utf-8') as f:

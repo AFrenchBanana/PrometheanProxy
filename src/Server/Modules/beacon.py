@@ -30,8 +30,8 @@ class Beacon:
     """Handles commands within a session"""
 
     def __init__(self, uuid, address, hostname, operating_system,
-                 last_beacon, timer, jitter, config):   
-        logger.debug(f"Creating beacon with UUID: {uuid}")    
+                 last_beacon, timer, jitter, config):
+        logger.debug(f"Creating beacon with UUID: {uuid}")
         self.uuid = uuid
         self.database = DatabaseClass(config)
         self.file_manager = FileManagerClass(config, uuid)
@@ -139,7 +139,7 @@ class Beacon:
         add_beacon_command_list(userID, None, "snap", "")
         logger.debug(f"Take photo command added to command list for userID: {userID}")
         return
-    
+
     def list_files(self, userID) -> None:
         data = input("Enter the path to list files: ")
         if not data:

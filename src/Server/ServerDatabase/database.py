@@ -2,6 +2,7 @@ import sqlite3
 import os
 from Modules.global_objects import logger
 
+
 class DatabaseClass:
     """class that handles the database within the project"""
 
