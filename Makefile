@@ -1,53 +1,85 @@
-# Variables
-CLIENT_SOURCE_DIR = src/Client/
+HMAC_KEY ?= $(shell cat $(HOME)/.PrometheanProxy/Certificates/hmac.key)
+
+# Source and Output Directories
+CLIENT_SOURCE_DIR = src/Client
+SERVER_SOURCE_DIR = src/Server
 OUTPUT_DIR = bin
-OUTPUT_LINUX_RELEASE = $(OUTPUT_DIR)/Executable.elf
-OUTPUT_LINUX_DEBUG = $(OUTPUT_DIR)/Executable-debug.elf
-OUTPUT_WINDOWS_RELEASE = $(OUTPUT_DIR)/Executable.exe
-OUTPUT_WINDOWS_DEBUG = $(OUTPUT_DIR)/Executable-debug.exe
-BUILD_DIR = build
-BUILD_DIR_WIN = build-windows
-BUILD_DIR_LIN = build
+
+# Define Go build flags
+GO_BUILD_FLAGS = -ldflags="-s -w" # Strips debug info and symbols for smaller release builds
+GO_BUILD_FLAGS_DEBUG = -tags=debug
+
+# Define output targets
+OUTPUT_LINUX_RELEASE = $(OUTPUT_DIR)/promethean-client-linux-amd64
+OUTPUT_LINUX_DEBUG = $(OUTPUT_DIR)/promethean-client-linux-amd64-debug
+OUTPUT_WINDOWS_RELEASE = $(OUTPUT_DIR)/promethean-client-windows-amd64.exe
+OUTPUT_WINDOWS_DEBUG = $(OUTPUT_DIR)/promethean-client-windows-amd64-debug.exe
+
+.PHONY: all venv lint test clean server build linux windows run-client check-hmac-key
+
+all: build server
 
 venv:
 	python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt
 
-lint:
-	. venv/bin/activate && flake8 src/Server && flake8 tests/
+lint: venv
+	. venv/bin/activate && flake8 $(SERVER_SOURCE_DIR) && flake8 tests/
 
-test:
-	. venv/bin/activate && PYTHONPATH=src/Server python3 -m unittest tests/*.py
+test: venv
+	. venv/bin/activate && PYTHONPATH=$(SERVER_SOURCE_DIR) python3 -m unittest tests/*.py
+
+clean:
+	rm -rf venv bin build src/Server/__pycache__ src/Client/__pycache__ *.egg-info PrometheanProxy.spec
 
 server: venv
+	@echo "--> Building Python server executable..."
 	. venv/bin/activate && pyinstaller \
 	--onefile \
 	--name PrometheanProxy \
-	src/Server/server.py \
+	--distpath $(OUTPUT_DIR) \
+	--workpath build/pyinstaller_work \
+	--specpath build \
+	--clean -y \
 	--paths src \
 	--hidden-import=engineio.async_drivers.threading \
-	--hidden-import=engineio.async_drivers.asyncio \
-	--hidden-import=socketio.async_drivers.threading \
-	--hidden-import=socketio.async_drivers.asyncio \
-	--distpath bin \
-	--workpath bin/work \
-	--clean -y && rm -rf bin/work && rm -rf PrometheanProxy.spec
+	src/Server/server.py
 
-build-linux-release: 
-	cd $(CLIENT_SOURCE_DIR) && go build -o $(OUTPUT_LINUX_RELEASE) main.go
 
-build-linux-debug: 
-	cd $(CLIENT_SOURCE_DIR) && go build -o $(OUTPUT_LINUX_DEBUG) -tags=debug main.go
 
-build-windows-release: 
-	cd $(CLIENT_SOURCE_DIR) && go build -o $(OUTPUT_WINDOWS_RELEASE) main.go
+$(OUTPUT_LINUX_RELEASE):
+	@echo "--> Building Go client for Linux (Release)..."
+	@mkdir -p $(OUTPUT_DIR)
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go
 
-build-windows-debug: 
-	cd $(CLIENT_SOURCE_DIR) && go build -o $(OUTPUT_WINDOWS_DEBUG) -tags=debug main.go
+$(OUTPUT_LINUX_DEBUG):
+	@echo "--> Building Go client for Linux (Debug)..."
+	@mkdir -p $(OUTPUT_DIR)
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
 
-linux: build-linux-release build-linux-debug
+# Rule for Windows builds.
+$(OUTPUT_WINDOWS_RELEASE):
+	@echo "--> Building Go client for Windows (Release)..."
+	@mkdir -p $(OUTPUT_DIR)
+	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go
 
-windows: build-windows-release build-windows-debug
+$(OUTPUT_WINDOWS_DEBUG):
+	@echo "--> Building Go client for Windows (Debug)..."
+	@mkdir -p $(OUTPUT_DIR)
+	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
 
+linux: $(OUTPUT_LINUX_RELEASE) $(OUTPUT_LINUX_DEBUG)
+windows: $(OUTPUT_WINDOWS_RELEASE) $(OUTPUT_WINDOWS_DEBUG)
 build: linux windows
 
-.PHONY : venv lint test server build-linux-release build-linux-debug build-windows-release build-windows-debug linux windows build
+
+check-hmac-key:
+	@if [ -z "$(HMAC_KEY)" ]; then \
+		echo "!! Error: HMAC key content is empty. Please provide the key content."; \
+		exit 1; \
+	fi
+
+# run-client now passes the key content directly.
+run-client: check-hmac-key
+	@echo "--> Running Go client in debug mode..."
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)"
+

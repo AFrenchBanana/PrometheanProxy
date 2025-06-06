@@ -218,12 +218,7 @@ class MultiHandlerCommands:
             table = []
             logger.info("Creating sessions table")
             for userID, session in sessions_list.items():
-                table.append(
-                    userID,
-                    session.hostname,
-                    session.address,
-                    session.operating_system
-                )
+                table.append((userID, session.hostname, session.address, session.operating_system))
             logger.info("Printing sessions table")
             print(colorama.Fore.WHITE + tabulate(
                 table, headers=["UUID", "Hostname", "Address", "OS"],
