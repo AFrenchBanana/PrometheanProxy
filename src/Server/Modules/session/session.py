@@ -138,12 +138,14 @@ class Session:
     def systeminfo(self, conn: ssl.SSLSocket,
                    r_address: Tuple[str, int]) -> None:
         """gets the systeminfo of the client"""
+        # Reinitialize the database connection in the current thread
+        self.database = DatabaseClass(self.config)
         logger.info(
             f"Getting system info for {r_address[0]}:{r_address[1]}")
         send_data(
             conn,
             "systeminfo")  # sends the system info command to start the process
-        data = receive_data(conn)  # recives data
+        data = receive_data(conn)  # receives data
         logger.info(
             f"Received system info from {r_address[0]}:{r_address[1]}")
         print(data)  # prints the results
@@ -232,7 +234,7 @@ class Session:
             f"Sent filename to client: {filename}")
         # gets the basename of the file to write too
         filename = os.path.basename(filename)
-        data = receive_data(conn)  # recieves file data
+        data = receive_data(conn)  # recives file data
         logger.info(
             f"Received file data for {filename} from client")
         if data == "Error":  # if the data is error, print an error message

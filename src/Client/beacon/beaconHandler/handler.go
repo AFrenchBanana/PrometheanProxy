@@ -52,7 +52,6 @@ func processCommands(commands []httpFuncs.CommandData) ([]httpFuncs.CommandRepor
 		report, session := executeCommand(command)
 		reports = append(reports, report)
 		// Handle any special side-effects after execution.
-		handleSessionSideEffect(command)
 		if session {
 			switchSession = true
 		}

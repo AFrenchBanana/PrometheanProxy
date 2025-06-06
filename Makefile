@@ -49,23 +49,23 @@ server: venv
 $(OUTPUT_LINUX_RELEASE):
 	@echo "--> Building Go client for Linux (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
 
 $(OUTPUT_LINUX_DEBUG):
 	@echo "--> Building Go client for Linux (Debug)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
 
 # Rule for Windows builds.
 $(OUTPUT_WINDOWS_RELEASE):
 	@echo "--> Building Go client for Windows (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go
+	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
 
 $(OUTPUT_WINDOWS_DEBUG):
 	@echo "--> Building Go client for Windows (Debug)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
+	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
 
 linux: $(OUTPUT_LINUX_RELEASE) $(OUTPUT_LINUX_DEBUG)
 windows: $(OUTPUT_WINDOWS_RELEASE) $(OUTPUT_WINDOWS_DEBUG)
@@ -81,5 +81,5 @@ check-hmac-key:
 # run-client now passes the key content directly.
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)"
 

@@ -3,7 +3,6 @@ package beaconhandler
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	httpFuncs "src/Client/beacon/http"
@@ -129,25 +128,4 @@ func handleGenericCommand(command httpFuncs.CommandData) string {
 		}
 	}
 	return fmt.Sprintf("Output for command '%s'", command.Command)
-}
-
-// handleSessionSideEffect initiates a reconnect if a 'session' command was processed.
-func handleSessionSideEffect(command httpFuncs.CommandData) {
-	if command.Command != "session" {
-		return
-	}
-	logger.Warn("Session command processed, initiating reconnect.")
-	// This logic might need adjustment based on how reconnects should affect the agent.
-	// For now, it's assumed to be a fatal operation if it fails.
-	go func() {
-		config.ConfigMutex.RLock()
-		agentID := config.ID
-		jitter := config.Jitter
-		timer := config.Timer
-		config.ConfigMutex.RUnlock()
-		_, _, err := httpFuncs.HTTPReconnect("", agentID, jitter, timer)
-		if err != nil {
-			log.Fatalf("FATAL: Failed to reconnect after session command: %v", err)
-		}
-	}()
 }

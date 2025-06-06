@@ -5,7 +5,7 @@ connection and address variables fed in from the specified socket.
 this allows for multiple connections to be interacted with.
 """
 
-from ..session.session import send_data, receive_data, remove_connection_list
+from ..session.session import send_data, receive_data, remove_connection_list, Session
 from ServerDatabase.database import DatabaseClass
 from ..beacon.beacon import add_beacon_command_list, remove_beacon_list
 from ..global_objects import (
@@ -47,45 +47,45 @@ class MultiHandlerCommands:
         commands on the target can be run as documented in the config
         the functions are stored in the SessionCommands.py file
         """
-        """
-        available_commands = WordCompleter(['shell', 'close', 'processes',
-        'sysinfo', 'close', 'checkfiles', 'download', 'upload', 'services',
-        'netstat', 'diskusage', 'listdir'])
-        """
+        session_obj = sessions_list.get(user_ID)
+        if not session_obj:
+            logger.error(f"Session not found for user ID: {user_ID}")
+            return
+
         def handle_beacon():
             logger.info(f"Handling beacon command for user ID: {user_ID}")
-            for userID, session in beacon_list.items():
-                if session.uuid == user_ID:
-                    beaconClass = beacon_list[userID]
-                    beaconClass.sessioncommands.change_beacon(
-                        conn, r_address, session.uuid)
+            for uid, beacon in beacon_list.items():
+                if uid == user_ID:
+                    beacon.change_beacon(conn, r_address, user_ID)
             return
 
         command_handlers = {
-            "shell": lambda: self.sessioncommands.shell(
+            "shell": lambda: session_obj.shell(
                 conn, r_address),
-            "close": lambda: self.sessioncommands.close_connection(
+            "close": lambda: session_obj.close_connection(
                 conn, r_address),
-            "processes": lambda: self.sessioncommands.list_processes(
+            "processes": lambda: session_obj.list_processes(
                 conn, r_address),
-            "sysinfo": lambda: self.sessioncommands.systeminfo(
+            "sysinfo": lambda: session_obj.systeminfo(
                 conn, r_address),
-            "checkfiles": lambda: self.sessioncommands.checkfiles(
+            "checkfiles": lambda: session_obj.checkfiles(
                 conn),
-            "download": lambda: self.sessioncommands.DownloadFiles(
+            "download": lambda: session_obj.DownloadFiles(
                 conn),
-            "upload": lambda: self.sessioncommands.UploadFiles(
+            "upload": lambda: session_obj.UploadFiles(
                 conn),
-            "services": lambda: self.sessioncommands.list_services(
+            "services": lambda: session_obj.list_services(
                 conn, r_address),
-            "netstat": lambda: self.sessioncommands.netstat(
+            "netstat": lambda: session_obj.netstat(
                 conn, r_address),
-            "diskusage": lambda: self.sessioncommands.diskusage(
+            "diskusage": lambda: session_obj.diskusage(
                 conn, r_address),
-            "listdir": lambda: self.sessioncommands.list_dir(
+            "listdir": lambda: session_obj.list_dir(
                 conn, r_address),
             "beacon": handle_beacon
         }
+
+        
 
         while True:
             # resets colorama after each statement
@@ -151,8 +151,6 @@ class MultiHandlerCommands:
                   " after the next callback")
             add_beacon_command_list(UserID, None, "session", None)
             logger.info(f"Added session command for beacon {UserID}")
-            remove_beacon_list(beaconClass.uuid)
-            logger.info(f"Removed beacon {beaconClass.uuid} from beacon list")  # noqa
             return
 
         command_handlers = {
@@ -276,23 +274,26 @@ class MultiHandlerCommands:
         """allows interaction with individual session,
             passes connection details through to the current_client function"""
         try:
+            keys = list(sessions_list.keys())
             if len(sessions_list) == 1:
                 logger.info("Only one session available, connecting to it")
-                session = list(sessions_list.values())[0]
+                session_id = keys[0]
+                session = sessions_list[session_id]
                 self.current_client_session(
-                    session.conn,
+                    session.details,  # changed from session.conn
                     session.address,
-                    session.uuid
+                    session_id
                 )
             else:
                 logger.info("Multiple sessions available, prompting user for selection")
                 data = int(input("What client? "))
-                logger.info(f"User selected client with ID: {data}")
-                session = list(sessions_list.values())[data]
+                logger.info(f"User selected client with index: {data}")
+                session_id = keys[data]
+                session = sessions_list[session_id]
                 self.current_client_session(
-                    session.conn,
+                    session.details,  # changed from session.conn
                     session.address,
-                    session.uuid
+                    session_id
                 )
         except (IndexError, ValueError):
             logger.error("Invalid client selection or no active sessions")
