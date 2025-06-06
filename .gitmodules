@@ -1,3 +1,0 @@
-[submodule "src/Client/Client_C++/dep/vcpkg"]
-	path = src/Client/Client_C++/dep/vcpkg
-	url = https://github.com/microsoft/vcpkg.git
