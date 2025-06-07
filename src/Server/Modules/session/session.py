@@ -93,6 +93,7 @@ class Session:
         username, cwd = details.split("<sep>")
         logger.info(
             f"Shell details: Username: {username}, CWD: {cwd}")
+        self.database = DatabaseClass(self.config)
         while True:
             command = input(
                 f"{username}@{r_address[0]}:{r_address[1]}-[{cwd}]: ")

