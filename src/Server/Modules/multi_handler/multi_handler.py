@@ -20,7 +20,8 @@ from ..utils.authentication import Authentication
 from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
 from ServerDatabase.database import DatabaseClass
-from ..session.session import add_connection_list, receive_data, send_data
+from ..session.session import add_connection_list
+from ..session.transfer import receive_data, send_data
 from ..global_objects import (
     sessions_list,
     beacon_list,

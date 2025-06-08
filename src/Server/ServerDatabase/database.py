@@ -22,7 +22,9 @@ class DatabaseClass:
             if not os.path.exists(dbPath):
                 logger.debug(f"DatabaseClass: Database file {dbPath} does not exist, creating it")
                 os.makedirs(os.path.dirname(dbPath), exist_ok=True)
-            self.dbconnection = sqlite3.connect(dbPath)
+            self.dbconnection = sqlite3.connect(
+                dbPath,
+                check_same_thread=False)
             self.cursor = self.dbconnection.cursor()
             logger.debug("DatabaseClass: Database connection established")
         except sqlite3.Error as err:
