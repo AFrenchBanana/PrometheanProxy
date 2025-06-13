@@ -31,7 +31,7 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
         logger.info(f"New connection from {data['name']} on {data['os']} at {data['address']} with UUID {userID}")
 
         add_beacon_list(
-            userID, data['address'], data['name'], data['os'], time.asctime(),
+            userID, data['address'], data['name'], data['os'], time.strftime('%Y-%m-%d %H:%M:%S'),
             config['beacon']["interval"], config['beacon']['jitter'], config
         )
 
