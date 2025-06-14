@@ -33,10 +33,6 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     beacon.next_beacon = time.asctime(time.localtime(time.time() + beacon.timer))
     logger.info(f"Beacon {beacon_id} updated. Next check-in: {beacon.next_beacon}")
 
-    socketio.emit('countdown_update', {
-        'uuid': beacon_id, 'timer': beacon.timer, 'jitter': beacon.jitter
-    })
-
     # Check for commands to send
     commands_to_send = []
     for cmd_id, command in command_list.items():
@@ -48,10 +44,7 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                 "data": command.command_data
             })
             command.executed = True
-            socketio.emit('command_sent', {
-                'uuid': beacon_id, 'command_id': cmd_id,
-                'command': command.command, 'data': "Sent to beacon."
-            })
+          
 
     response_data = {"commands": commands_to_send} if commands_to_send else {"none": "none"}
     response_body = json.dumps(response_data).encode('utf-8')

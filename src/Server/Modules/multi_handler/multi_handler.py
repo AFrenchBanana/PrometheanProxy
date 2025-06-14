@@ -13,13 +13,15 @@ import os
 import sys
 import colorama
 import readline
+import json
 
 from datetime import datetime
 from ..utils.authentication import Authentication
 from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
 from ServerDatabase.database import DatabaseClass
-from ..session.session import add_connection_list, receive_data, send_data
+from ..session.session import add_connection_list
+from ..session.transfer import receive_data, send_data
 from ..global_objects import (
     sessions_list,
     beacon_list,
@@ -153,27 +155,29 @@ class MultiHandler:
             send_data(conn, self.Authentication.get_authentication_string())
             logger.debug("Sent authentication string to client")
             if (self.Authentication.test_auth(
-                    receive_data(conn), r_address[1])):
+                    receive_data(conn))):
                 logger.info(f"Authentication successful for {r_address[0]}:{r_address[1]}")
-                hostname = receive_data(conn)
-                logger.debug(f"Received hostname from client: {hostname}")
-                data = receive_data(conn)  # OS and User ID
+                data = receive_data(conn)
                 logger.debug(f"Received data from client: {data}")
-
                 try:
-                    OS, id = data.split(",")
-                except ValueError:
-                    OS = data
+                    data_json = json.loads(data)
+                    hostname = data_json.get("Hostname")
+                    os = data_json.get("OS")
+                    id = data_json.get("ID")
+                except (json.JSONDecodeError, AttributeError) as e:
+                    logger.error(f"Failed to decode JSON data: {e}")
+                    os = None
                     id = None
+                logger.debug(f"Received hostname from client: {hostname}")
                 send_data(conn, str(config['packetsniffer']['active']))
-                logger.debug(f"OS: {OS}, ID: {id}")
+                logger.debug(f"OS: {os}, ID: {id}")
                 if config['packetsniffer']['active']:
                     # send port number
                     send_data(conn, str(config['packetsniffer']['port']))
                     logger.debug("Sent packet sniffer port to client")
                 add_connection_list(conn, r_address, hostname,
-                                    OS, id, "session", config)
-                logger.info(f"Added connection to sessions list: {hostname} ({OS})")
+                                    os, id, "session", config)
+                logger.info(f"Added connection to sessions list: {hostname} ({os})")
                 threadDB.insert_entry(
                     "Addresses",
                     f'"{r_address[0]}", "{r_address[1]}", "{hostname}", ' +

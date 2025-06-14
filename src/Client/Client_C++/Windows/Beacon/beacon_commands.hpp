@@ -1,9 +1,0 @@
-#include <string>
-#include <iostream>
-
-std::string command_handler(const std::string& command, const std::string& command_data, const std::string& uuid);
-std::string executeShellCommand(const char* cmd);
-std::string getSystemInfo();
-std::string getMacAddress();
-std::string listProcesses();
-std::string listDirectory(const std::string& directory);

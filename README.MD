@@ -6,196 +6,119 @@
 \/    |_|  \___/|_| |_| |_|\___|\__|_| |_|\___|\__,_|_| |_\/    |_|  \___/_/\_\\__, |
                                                                                |___/ 
 ```
+[contributors-shield]: https://img.shields.io/github/contributors/AFrenchBanana/PrometheanProxy.svg?style=for-the-badge
+[contributors-url]: https://github.com/AFrenchBanana/PrometheanProxy/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/AFrenchBanana/PrometheanProxy.svg?style=for-the-badge
+[forks-url]: https://github.com/AFrenchBanana/PrometheanProxy/network/members
+[stars-shield]: https://img.shields.io/github/stars/AFrenchBanana/PrometheanProxy.svg?style=for-the-badge
+[stars-url]: https://github.com/AFrenchBanana/PrometheanProxy/stargazers
+[issues-shield]: https://img.shields.io/github/issues/AFrenchBanana/PrometheanProxy.svg?style=for-the-badge
+[issues-url]: https://github.com/AFrenchBanana/PrometheanProxy/issues
+[license-shield]: https://img.shields.io/github/license/AFrenchBanana/PrometheanProxy.svg?style=for-the-badge
+[license-url]: https://github.com/AFrenchBanana/PrometheanProxy/blob/master/LICENSE
 
-**This tool is only to be used with consent from all parties involved**
 
-## Contents
-1. [Features](#features)
-2. [Client Features](#client-features)
-3. [Usage](#usage)
-4. [MultiHandler Menu](#multihandler-menu)
-5. [Session Commands](#session-commands)
-6. [Technical Details](#technical-details)
-7. [Database](#database)
-8. [Server Configuration](#server-configuration)
-9. [Other Technical Details](#other-technical-details)
-10. [Packet Sniffer](#packet-sniffer)
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![Unlicense License][license-shield]][license-url]
+
+
+
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+- [Future Features](#future-features)
+- [Disclaimer](#disclaimer)
+
+## Overview
+PrometheanProxy C2 is a modular, extensible command-and-control framework designed for red team operations, written with a Go-based client and a Python-based server. It enables secure and flexible beaconing, command execution, file transfer, and more. Many features are a work in progress. 
 
 ## Features
+- Multi-platform Go client with beacon and HTTP modules
+- Python-based server supporting:
+  - Beacon handling
+  - Multi-handler command routing
+  - Web UI for session management
+  - Packet sniffing and lateral movement
+  - SQLite-backed server database
+- Modular architecture for easy extension
+- Secure communications and URL obfuscation
 
-Fully working client + socket server with the ability to handle multiple clients and TLS encryption on each socket.
+## Architecture
+### Client (Go)
+- Implements beaconing, HTTP requests, and URL obfuscation
+- Generic command plugins: shell, directory traversal, system info
+- Session management and custom protocol support
 
-The server has full database support, storing returned data from the client as well as a list of known safe hashes to compare against.
+### Server (Python)
+- HTTP and socket servers for beacon callbacks and interactive sessions
+- Multi-handler architecture for different command contexts
+- Embedded Web UI for session monitoring
+- PacketSniffer module for network capture
 
-Partially working client written in C++.
+## Prerequisites
+- Go 1.18+ (for client)
+- Python 3.9+ (for server)
+- pip for Python package management
 
-### Client Features
-Each client is able to provide a number of useful features:
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourorg/PrometheanProxy.git
+   cd PrometheanProxy
+   ```
+2. Install Python dependencies:
+   ```bash
+   make venv
+   ```
+3. Build the Go client:
+   ```bash
+  make run client 
+   ```
 
-1. File upload and file download support.
-2. An interactive shell.
-3. The ability to list running processes and CPU usage (Linux only).
-4. The ability to list services and their state (Linux only).
-5. Hash files and compare the hash against known good binaries.
-6. Packet sniffing with partial packet decoding/write to file **(experimental)** (sudo only).
-7. List connections on the target from netstat (Linux only).
-8. Disk usage statistics.
-9. System info command.
-10. Directory listing.
-11. Authentication to prevent rogue clients from connecting.
+  Change the argument to beacon or session depending on what you need. (You will likey need to run the server first to make the HMAC key) 
 
-All of these features *(except shell)* work without using binaries on the system and purely off reading and formatting files.
+## Configuration
+1. Edit the server configuration in `~/PrometheanProxy/config.toml` to set network interfaces, ports, and paths.
+2. (Optional) Adjust client settings in Go source under `src/Client/generic/config`.
 
 ## Usage
+### Start the Server
+```bash
+python src/Server/server.py 
+```
 
-Before starting the server, please ensure you are happy with the config file configuration. A rundown of each entry can be found in the relevant subsection.
+### Run the Client
+```bash
+./promethean-client
+```
 
-Please ensure the folder structure is correct.
+### Web UI
+Open `http://<server_ip>:<web_ui_port>` in your browser to view active sessions.
 
-To start the server, run the file `server.py` with either `./server.py` or `python3 server.py`.
 
-### MultiHandler Menu
+## Contributing
+Contributions are welcome! Please open issues and submit pull requests in the [GitHub repository](https://github.com/yourorg/PrometheanProxy).
 
-Within the multi-handler menu, typing anything other than a correct command will show you the help menu.
+## License
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-#### Commands
-1. list - This will show all available session commands.
-2. Sessions - Type this to connect to a session.
-3. close - Close 1 session.
-4. closeall - Close all sessions.
-5. hashfiles - Hash local files and store them in the database.
-6. exit - Close the server.
+## Future Features
 
-### Session Commands
-Once in a session, you are able to directly talk to the client. Like the multi-handler menu, anything other than a recognized command will show the help menu.
+- HMAC support on Beacon mode
+- Binary compliation from server
+- Remote module loading / staging 
+- Continued work on web GUI 
 
-#### Commands
-1. shell - Spawn a semi-interactive shell, type exit to return.
-2. close - Close the current session.
-3. download - Download a file from the client to your host.
-4. upload - Upload a file from the server to the client.
-5. sysinfo - List system info on the client.
-6. processes - List processes and CPU usage on the client.
-7. services - List services and their state.
-8. checkfiles - Compare binaries against binaries in the database.
-9. listdir - List a directory.
-10. exit - Return to the multi-handler without closing the session.
-11. netstat - List netstat connections.
-
-None of these commands, apart from `shell`, directly call any binaries. Instead, they read files and do processing to make them readable.
-
-## Technical Details
-
-### Client
-The client will attempt to connect and if it doesn't connect, it waits 5 seconds before trying again.
-
-If the connection drops, it re-establishes the socket and re-attempts to connect, then waits 5 seconds.
-
-### Behind the Scenes
-Once the server is loaded onto the target, the class in the multi-handler menu is loaded and sockets are initialized.
-
-Once everything has been set up, the user is spawned into the multi-handler function.
-
-From here, when they wish to execute a multi_handler command, the command is a function referenced within the multi_handler_commands file.
-
-Once connected to a session, the commands are executed from within the session_commands file.
-
-The global objects contain functions and variables that need to be accessed anywhere to prevent circular importing issues.
-
-There is also a dedicated file to handle the database, authentication, and packet sniffer.
-
-### C2 Beaconing System
-
-The client uses a beaconing system to maintain communication with the server. The client will attempt to connect to the server at regular intervals. If the connection is lost, the client will wait for a specified period before attempting to reconnect. This ensures that the client can re-establish communication with the server even if the connection is temporarily disrupted.
-
-### Database
-The database runs on sqlite3.
-
-Upon initial launch, the server checks if the file exists, and if not, it will create the file. Once this is done, it checks if all the tables exist and will create them if not.
-
-Within the config file, the database location can be changed using the `file` tag.
-
-If `addData` is set to false, no entries will be stored within the database.
-
-Finally, tables and their schemas are stored here. Currently, the tables are:
-1. Addresses
-2. Shell
-3. Processes
-4. Services
-5. Netstat
-6. SystemInfo
-7. Hashes
-8. Disk
-
-### Server Configuration
-The server has a number of configuration options within the config file:
-
-`listenaddress` - By default, this should be set to "0.0.0.0" unless you want to only listen on a specific address.
-
-`listenport` - The port number you wish to listen on.
-
-#### TLS
-The server has the ability to detect and create TLS certificates.
-
-The path to where they are stored should be placed in the options: `TLSCertificate` and `TLSKey`. If this path is not correct and the server doesn't detect these, it will generate them.
-
-Once a client connects, it will share the keys and encrypt the traffic.
-
-#### Authentication
-To prevent rogue clients from connecting, a basic authentication method is implemented.
-
-1. The server generates a random ASCII string (the length is specified with `keylength`) upon client connection.
-2. This string is sent over the socket.
-3. Both sides add the client's port to the end of the string, reverse the entire string, and then hash it with a SHA-512 hash.
-4. The client sends the hash to the server.
-5. The server checks the client's message and if it doesn't match its own, it drops the client.
-
-### Other Technical Details
-Both the client and server are configured to send data in chunks of 4096 bytes, until all the data is sent and on the final *(or first if not bigger than 4096)* packet only sends the required amount of bytes.
-
-This is achieved using struct to send a header packet containing the buffer size and total length.
-
-### Packet Sniffer
-
-**This feature is still experimental**
-
-It is likely to throw more errors and should not be currently used if stability is important.
-
-#### Features
-1. Sudo check.
-2. Packet header decode.
-3. Write to files.
-4. Authentication.
-5. Encryption.
-
-#### Config Options
-`active` - If set to true, the client will activate the packet sniffer.
-
-`listenaddress` - This should be the same as the server unless you only want to listen to 1 client.
-
-`port` - This needs to be a different port from the server port.
-
-TLS keys should be the same as the server (these currently do not autogenerate).
-
-`debugPrint` - If true, the partial decode will show on screen (this will make the multi-handler unusable). If this is set to false, the raw data will write to a file.
-
-#### How It Works
-1. Upon successful authentication from a client, the server will send `active` to tell the client whether this feature is enabled.
-2. If not active, the program continues as normal. If active, the client will then call the listener function.
-3. The server sends the second port number across.
-4. The client will run a sudo check as this feature requires sudo rights.
-5. Without sudo rights, the function is returned, otherwise a raw socket is established.
-6. The client threads this socket and connects to the server's second socket.
-7. Once connected, the server checks if this IP is connected to its other socket, if not, it will drop the connection. This prevents rogue clients from connecting.
-8. All data the client receives is sent to the server.
-9. The server will either write to the file or print to the screen (config dependent).
-
-## CPP Client
-
-The CPP client is a new addition to the PrometheanProxy C2 framework. It is designed to provide the same functionality as the original Python client but with improved performance and stability. The CPP client is still under active development, and new features are being added regularly.
-
-### Current Features
-1. Full integration with the original Python server.
-2. Can be used at the same time as the Python client.
-3. Sysinfo working.
-4. Authentication and SSL implemented.
+## Disclaimer
+**This tool is only to be used with consent from all parties involved.**

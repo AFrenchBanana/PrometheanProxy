@@ -26,7 +26,7 @@ def run_socketio_server(config):
     """Starts the Socket.IO server in the background."""
     host = '0.0.0.0'
     # Use a different port for the WebSocket server
-    socket_port = config['server'].get('socket_port', 9001)
+    socket_port = config['server'].get('socket_port', 9010)
 
     logger.info(f"Starting WebSocket (Socket.IO) server on port {socket_port}")
     socketio.run(socket_flask_app, host=host, port=socket_port, allow_unsafe_werkzeug=True)

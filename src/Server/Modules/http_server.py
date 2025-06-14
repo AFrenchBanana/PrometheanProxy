@@ -8,7 +8,7 @@ import json
 from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacon_list, command_list, config, logger)
-from Server.Modules.beacon.beacon import add_beacon_list
+from Server.Modules.beacon.beacon import add_beacon_list, remove_beacon_list
 
 # --- Flask App Initialization ---
 beaconControl = Flask(__name__)
@@ -219,6 +219,11 @@ def response(path1, version):
 
         with open(os.path.join(dir_path, "directory_traversal.json"), "w") as f:
             f.write(output)
+    
+    if command.command == "session":
+        logger.info(f"Session command response for beacon {command.beacon_uuid}. Updating beacon list.")
+        logger.debug(f"Removing beacon {command.beacon_uuid} from the list.")
+        remove_beacon_list(command.beacon_uuid)
 
     # Emit update to the UI
     socketio.emit(socketio_event, {

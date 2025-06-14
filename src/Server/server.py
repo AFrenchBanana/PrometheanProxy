@@ -17,7 +17,7 @@ import time
 from Modules.multi_handler.multi_handler import MultiHandler
 from Modules.global_objects import config, logger
 from Modules.beacon.beacon_server.server import start_beacon_server
-from WebUI.http import app, socketio as webSocketIO
+from WebUI.index import start_webui_server
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 logging.getLogger('socketio').setLevel(logging.ERROR)
@@ -25,13 +25,14 @@ logging.getLogger('engineio').setLevel(logging.ERROR)
 
 readline.parse_and_bind('tab: complete')
 
-if __name__ == '__main__':
+# Updated the main guard to support multiprocessing.
+if __name__ in {"__main__", "__mp_main__"}:
     logger.info("Starting server...")
     try:
         multi_handler = MultiHandler()
         multi_handler.create_certificate()
 
-        logger.debug("Server: Starting beacon server and web UI server threads")
+        logger.debug("Server: Starting beacon server thread")
 
         # --- Beacon Server Thread ---
         threading.Thread(
@@ -40,26 +41,14 @@ if __name__ == '__main__':
             daemon=True
         ).start()
 
-        # --- WebUI Server Thread ---
-        webui_kwargs = {
-            'host': '0.0.0.0',
-            'port': 9000,
-            'debug': not config['server']['quiet_mode'],
-            'use_reloader': False,
-            'allow_unsafe_werkzeug': True
-        }
-        old_stdout = sys.stdout  # horrible hack to suppress output
-        sys.stdout = io.StringIO()
+        logger.debug("Server: Starting web UI server thread")
 
+        # --- WebUI Server Thread ---
         threading.Thread(
-            target=webSocketIO.run,
-            args=(app,),
-            kwargs=webui_kwargs,
+            target=start_webui_server,
             daemon=True
         ).start()
-
-        time.sleep(0.5)
-        sys.stdout = old_stdout
+        time.sleep(0.1) # All logs are buffered, so we need to wait a bit for the threads to start.
 
         multi_handler.startsocket()
         logger.debug("Server: Background server threads started successfully")
