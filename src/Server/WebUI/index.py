@@ -1,8 +1,7 @@
 from nicegui import ui
 import time
 import traceback
-from Modules.global_objects import beacon_list, logger
-from WebUI.beacon import beacon_page
+from Modules.global_objects import beacon_list, logger, sessions_list
 from WebUI.utils import create_header, dark_mode_enabled
 
 
@@ -94,7 +93,7 @@ def index_page():
                         countdown_str = 'N/A'
                     
                     rows.append({
-                        'uuid': b_id, 'address': beacon.address, 'hostname': beacon.hostname,
+                        'uuid': b_id, 'address': beacon.address[0] + beacon.address[1], 'hostname': beacon.hostname,
                         'operating_system': beacon.operating_system, 'last_beacon': str(beacon.last_beacon),
                         'next_beacon': next_display, 'countdown': countdown_str,
                     })
@@ -118,23 +117,25 @@ def index_page():
                 {'name': 'operating_system', 'label': 'OS', 'field': 'operating_system', 'sortable': True},
             ]
 
-            with ui.element('div').classes('overflow-x-auto w-full flex-grow'):
+            with ui.element('div').classes('overflow-x-a-auto w-full flex-grow'):
                 sessions_table = ui.table(columns=sessions_columns, rows=[], row_key='uuid').classes('min-w-full')
                 sessions_table.props('header-class="bg-indigo-200 dark:bg-indigo-950 text-gray-800 dark:text-white"')
-                sessions_table.on('row-click', lambda e: ui.navigate.to(f"/session/{e.args[1]['uuid']}")) # Assumes a session page
+                sessions_table.on('row-click', lambda e: ui.navigate.to(f"/session/{e.args[1]['uuid']}"))
 
             def update_sessions_table():
                 """Updates the SESSIONS table."""
-                # NOTE: You need a global object for sessions, similar to 'beacon_list'.
-                # We'll use a placeholder for this example.
-                session_list = {} # Replace with your actual session data source
-
-                current_session_count = len(session_list)
+                current_session_count = len(sessions_list)
                 sessions_spinner_row.visible = (current_session_count == 0)
                 sessions_table.visible = (current_session_count > 0)
 
-                # Add logic here to populate session rows from your session_list
-                # rows = [...]
-                # sessions_table.rows = rows
+                rows = []
+                for s_id, session in sessions_list.items():
+                    rows.append({
+                        'uuid': s_id,
+                        'address': session.address[0] + ":" + str(session.address[1]),
+                        'hostname': session.hostname,
+                        'operating_system': session.operating_system,
+                    })
+                sessions_table.rows = rows
                 
             ui.timer(1.0, update_sessions_table, active=True)

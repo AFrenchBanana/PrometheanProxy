@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -101,7 +102,7 @@ func getOwnerAndGroup(info os.FileInfo) (string, string) {
 		if u, err := user.LookupId(uidStr); err == nil {
 			ownerName = u.Username
 		} else {
-			ownerName = uidStr // Fallback to UID if name lookup fails
+			ownerName = uidStr
 		}
 
 		// Get Group
@@ -109,10 +110,29 @@ func getOwnerAndGroup(info os.FileInfo) (string, string) {
 		if g, err := user.LookupGroupId(gidStr); err == nil {
 			groupName = g.Name
 		} else {
-			groupName = gidStr // Fallback to GID
+			groupName = gidStr
 		}
 	}
 	return ownerName, groupName
+}
+
+type inputPayload struct {
+	Path string `json:"path"`
+}
+
+func ListDirectoryBeacon(data string) string {
+
+	var payload inputPayload
+	if err := json.Unmarshal([]byte(data), &payload); err != nil {
+		return fmt.Sprintf("invalid JSON: %v", err)
+	}
+
+	if payload.Path == "" {
+		return fmt.Sprintf("missing or empty 'path' key in input JSON")
+	}
+
+	result := DirOutputAsString(payload.Path)
+	return result
 }
 
 // DirOutputAsString takes a directory path as a string, retrieves its contents,

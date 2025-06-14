@@ -1,14 +1,13 @@
 from nicegui import ui
-import uuid
 import time
-from Modules.global_objects import beacon_list, logger, command_list
+from Modules.global_objects import sessions_list, logger, command_list
 from WebUI.utils import create_header, dark_mode_enabled
 from Modules.beacon.beacon import add_beacon_command_list
 import json
 import os
 
-@ui.page('/beacon/{beaconUUID}')
-def beacon_page(beaconUUID: str):
+@ui.page('/session/{sessionUUID}')
+def session_page(sessionUUID: str):
     ui.dark_mode(dark_mode_enabled)
 
     ui.add_head_html('<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">')
@@ -16,41 +15,37 @@ def beacon_page(beaconUUID: str):
 
     create_header()
 
-    beacon = beacon_list.get(beaconUUID)
+    session = sessions_list.get(sessionUUID)
 
     with ui.column().classes('w-full max-w-5xl mx-auto p-4 flex-grow'):
-        if not beacon:
+        if not session:
             with ui.column().classes('w-full items-center gap-2'):
                 ui.label('Beacon Not Found').classes('text-4xl font-bold mt-8 text-red-500')
-                ui.label(f'No beacon with beaconUUID "{beaconUUID}" could be found. Returning to the main page.').classes('text-lg text-gray-600')
+                ui.label(f'No beacon with beaconUUID "{sessionUUID}" could be found. Returning to the main page.').classes('text-lg text-gray-600')
                 time.sleep(2) 
             ui.navigate.to('/')
             return
 
         with ui.row().classes('w-full items-center justify-between no-wrap'):
             ui.button('Back', on_click=lambda: ui.navigate.to('/')).props('icon=arrow_back color=primary flat')
-            ui.label('Beacon Details').classes('text-2xl font-bold text-gray-800 dark:text-gray-200')
+            ui.label('Session Details').classes('text-2xl font-bold text-gray-800 dark:text-gray-200')
             ui.label().classes('w-16')
 
         columns = [
-            {'name': 'beaconUUID', 'label': 'beaconUUID', 'field': 'beaconUUID', 'align': 'left', 'sortable': True},
-            {'name': 'address', 'label': 'Address', 'field': 'address', 'align': 'left', 'sortable': True},
-            {'name': 'hostname', 'label': 'Hostname', 'field': 'hostname', 'sortable': True},
-            {'name': 'operating_system', 'label': 'OS', 'field': 'operating_system', 'sortable': True},
-            {'name': 'last_beacon', 'label': 'Last Beacon', 'field': 'last_beacon', 'sortable': True},
-            {'name': 'next_beacon', 'label': 'Next Beacon', 'field': 'next_beacon', 'sortable': True},
-            {'name': 'countdown', 'label': 'Expected Next Beacon', 'field': 'countdown', 'sortable': True},
-        ]
+                {'name': 'uuid', 'label': 'UUID', 'field': 'uuid', 'align': 'left', 'sortable': True},
+                {'name': 'address', 'label': 'Address', 'field': 'address', 'align': 'left', 'sortable': True},
+                {'name': 'hostname', 'label': 'Hostname', 'field': 'hostname', 'sortable': True},
+                {'name': 'operating_system', 'label': 'OS', 'field': 'operating_system', 'sortable': True},
+            ]
         rows = [{
-            'beaconUUID': beacon.uuid,
-            'address': beacon.address,
-            'hostname': beacon.hostname,
-            'os': beacon.operating_system,
-            'last_beacon': beacon.last_beacon,
-            'next_beacon': beacon.next_beacon,
-            'countdown': "NEed to add init"
+            'sessionUUID': session.uuid,
+            'address': session.address,
+            'hostname': session.hostname,
+            'os': session.operating_system,
+            'last_beacon': session.last_beacon,
+            'next_beacon': session.next_beacon,
         }]
-        ui.table(columns=columns, rows=rows, row_key='beaconUUID').classes('mt-4 w-full').props('flat bordered')
+        ui.table(columns=columns, rows=rows, row_key='sessionUUID').classes('mt-4 w-full').props('flat bordered')
 
         with ui.tabs().classes('w-full mt-6') as tabs:
             ui.tab('task', 'Task')
@@ -113,10 +108,7 @@ def beacon_page(beaconUUID: str):
                             data[name] = widget.value
                         payload = data if data else None
                         add_beacon_command_list(
-                            beacon.uuid,
-                            str(uuid.uuid4()),
-                            task_select.value,
-                            payload
+                            
                         )
                         ui.notify(f'Task "{task_select.value}" submitted.', type='positive', position='top')
                     # Submit button
@@ -139,7 +131,7 @@ def beacon_page(beaconUUID: str):
                     result_rows = []
                     completed_now = 0
                     for command in sorted(command_list.values(), key=lambda c: getattr(c, 'timestamp', 0)):
-                        if command.beacon_uuid != beacon.uuid:
+                        if command.session_uuid != sessionUUID.uuid:
                             continue
                         
                         if command.command_output is not None:
