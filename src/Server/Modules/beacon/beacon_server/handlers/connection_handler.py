@@ -35,12 +35,6 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
             config['beacon']["interval"], config['beacon']['jitter'], config
         )
 
-        socketio.emit('new_connection', {
-            'uuid': userID, 'name': data['name'], 'os': data['os'],
-            'address': data['address'], "interval": config['beacon']["interval"],
-            "jitter": config['beacon']['jitter']
-        })
-
         response_body = json.dumps({
             "timer": config['beacon']["interval"],
             "uuid": userID, "jitter": config['beacon']['jitter']

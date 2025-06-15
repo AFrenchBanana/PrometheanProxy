@@ -15,6 +15,9 @@ OUTPUT_LINUX_DEBUG = $(OUTPUT_DIR)/promethean-client-linux-amd64-debug
 OUTPUT_WINDOWS_RELEASE = $(OUTPUT_DIR)/promethean-client-windows-amd64.exe
 OUTPUT_WINDOWS_DEBUG = $(OUTPUT_DIR)/promethean-client-windows-amd64-debug.exe
 
+# Add plugin build target for systeminfo
+PLUGIN_SYSTEMINFO = $(OUTPUT_DIR)/system_info
+
 .PHONY: all venv lint test clean server build linux windows run-client check-hmac-key
 
 all: build server
@@ -46,26 +49,34 @@ server: venv
 
 
 
-$(OUTPUT_LINUX_RELEASE):
+$(OUTPUT_LINUX_RELEASE): $(PLUGIN_SYSTEMINFO)
 	@echo "--> Building Go client for Linux (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@  main.go 
 
-$(OUTPUT_LINUX_DEBUG):
+$(OUTPUT_LINUX_DEBUG): $(PLUGIN_SYSTEMINFO)
 	@echo "--> Building Go client for Linux (Debug)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
-
-# Rule for Windows builds.
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go 
+	
 $(OUTPUT_WINDOWS_RELEASE):
 	@echo "--> Building Go client for Windows (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go 
 
 $(OUTPUT_WINDOWS_DEBUG):
 	@echo "--> Building Go client for Windows (Debug)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
+
+# Include plugin build in overall build
+build: linux windows $(PLUGIN_SYSTEMINFO)
+
+$(PLUGIN_SYSTEMINFO):
+	@echo "--> Building Go plugin for systeminfo..."
+	@mkdir -p $(OUTPUT_DIR)
+	cd plugins/systeminfo/ && \
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="-s -w" -o ../../bin/system_info.so main.go
 
 linux: $(OUTPUT_LINUX_RELEASE) $(OUTPUT_LINUX_DEBUG)
 windows: $(OUTPUT_WINDOWS_RELEASE) $(OUTPUT_WINDOWS_DEBUG)
@@ -78,8 +89,11 @@ check-hmac-key:
 		exit 1; \
 	fi
 
+hmac-key:
+	@echo "HMAC Key: $(HMAC_KEY)"
+
 # run-client now passes the key content directly.
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)"
 

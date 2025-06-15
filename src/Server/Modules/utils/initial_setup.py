@@ -19,6 +19,8 @@ TLSkey = "key.pem"
 GUI = false
 quiet_mode = false
 implant_directory = "ImplantData/"
+module_location = "../../bin/plugins/"
+
 
 [authentication]
 #key length for the random auth string

