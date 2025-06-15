@@ -6,8 +6,8 @@ SERVER_SOURCE_DIR = src/Server
 OUTPUT_DIR = bin
 
 # Define Go build flags
-GO_BUILD_FLAGS = -ldflags="-s -w" # Strips debug info and symbols for smaller release builds
-GO_BUILD_FLAGS_DEBUG = -tags=debug
+GO_BUILD_FLAGS = -ldflags="-s -w -X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
+GO_BUILD_FLAGS_DEBUG = -tags=debug -ldflags="-X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
 
 # Define output targets
 OUTPUT_LINUX_RELEASE = $(OUTPUT_DIR)/promethean-client-linux-amd64
@@ -15,10 +15,19 @@ OUTPUT_LINUX_DEBUG = $(OUTPUT_DIR)/promethean-client-linux-amd64-debug
 OUTPUT_WINDOWS_RELEASE = $(OUTPUT_DIR)/promethean-client-windows-amd64.exe
 OUTPUT_WINDOWS_DEBUG = $(OUTPUT_DIR)/promethean-client-windows-amd64-debug.exe
 
-# Add plugin build target for systeminfo
-PLUGIN_SYSTEMINFO = $(OUTPUT_DIR)/system_info
+# Discover Go plugins dynamically
+PLUGIN_DIRS := $(filter-out template,$(notdir $(shell find plugins/* -maxdepth 0 -type d)))
+PLUGIN_OUT_DIR_LINUX := $(OUTPUT_DIR)/plugins/linux/release
+PLUGIN_OUT_DIR_WINDOWS := $(OUTPUT_DIR)/plugins/windows/release
+PLUGIN_OUT_DIR_LINUX_DEBUG := $(OUTPUT_DIR)/plugins/linux/debug
+PLUGIN_OUT_DIR_WINDOWS_DEBUG := $(OUTPUT_DIR)/plugins/windows/debug
 
-.PHONY: all venv lint test clean server build linux windows run-client check-hmac-key
+PLUGIN_PLUGINS_LINUX := $(addprefix $(PLUGIN_OUT_DIR_LINUX)/,$(addsuffix .so,$(PLUGIN_DIRS)))
+PLUGIN_PLUGINS_WINDOWS := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS)/,$(addsuffix .dll,$(PLUGIN_DIRS)))
+PLUGIN_PLUGINS_LINUX_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_LINUX_DEBUG)/,$(addsuffix -debug.so,$(PLUGIN_DIRS)))
+PLUGIN_PLUGINS_WINDOWS_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/,$(addsuffix -debug.dll,$(PLUGIN_DIRS)))
+
+.PHONY: all venv lint test clean server build linux windows run-client check-hmac-key plugins
 
 all: build server
 
@@ -32,7 +41,7 @@ test: venv
 	. venv/bin/activate && PYTHONPATH=$(SERVER_SOURCE_DIR) python3 -m unittest tests/*.py
 
 clean:
-	rm -rf venv bin build src/Server/__pycache__ src/Client/__pycache__ *.egg-info PrometheanProxy.spec
+	rm -rf bin build  *.egg-info PrometheanProxy.spec
 
 server: venv
 	@echo "--> Building Python server executable..."
@@ -69,19 +78,41 @@ $(OUTPUT_WINDOWS_DEBUG):
 	@mkdir -p $(OUTPUT_DIR)
 	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
 
-# Include plugin build in overall build
-build: linux windows $(PLUGIN_SYSTEMINFO)
+# Include plugins in overall build
+plugins: plugins-linux plugins-windows 
 
-$(PLUGIN_SYSTEMINFO):
-	@echo "--> Building Go plugin for systeminfo..."
-	@mkdir -p $(OUTPUT_DIR)
-	cd plugins/systeminfo/ && \
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="-s -w" -o ../../bin/system_info.so main.go
+plugins-linux: $(PLUGIN_PLUGINS_LINUX) $(PLUGIN_PLUGINS_LINUX_DEBUG)
+plugins-windows: $(PLUGIN_PLUGINS_WINDOWS) $(PLUGIN_PLUGINS_WINDOWS_DEBUG)
+
+build: linux windows plugins
+
+$(PLUGIN_OUT_DIR_LINUX)/%.so:
+	@echo "--> Building Go plugin for $* (Linux)..."
+	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX)
+	cd plugins/$*/ && \
+		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX)/$*.so main.go
+
+$(PLUGIN_OUT_DIR_WINDOWS)/%.dll:
+	@echo "--> Building Go plugin for $* (Windows)..."
+	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS)
+	cd plugins/$*/ && \
+		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS)/$*.dll main.go
+
+$(PLUGIN_OUT_DIR_LINUX_DEBUG)/%-debug.so:
+	@echo "--> Building Go plugin for $* (Linux, Debug)..."
+	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG)
+	cd plugins/$*/ && \
+		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG)/$*-debug.so main.go
+
+$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/%-debug.dll:
+	@echo "--> Building Go plugin for $* (Windows, Debug)..."
+	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)
+	cd plugins/$*/ && \
+		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/$*-debug.dll main.go
+
 
 linux: $(OUTPUT_LINUX_RELEASE) $(OUTPUT_LINUX_DEBUG)
 windows: $(OUTPUT_WINDOWS_RELEASE) $(OUTPUT_WINDOWS_DEBUG)
-build: linux windows
-
 
 check-hmac-key:
 	@if [ -z "$(HMAC_KEY)" ]; then \
@@ -92,8 +123,7 @@ check-hmac-key:
 hmac-key:
 	@echo "HMAC Key: $(HMAC_KEY)"
 
-# run-client now passes the key content directly.
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)"
 

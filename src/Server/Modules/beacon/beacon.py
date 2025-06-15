@@ -154,10 +154,13 @@ class Beacon:
         self.file_manager.list_files(userID, data)
         logger.debug(f"List files for userID: {userID}")
         
-    def load_module(self, userID) -> None:
+    def load_module_beacon(self, userID) -> None:
         command_location = self.config['server']['module_location']
         try:
-            files = [f for f in os.listdir(command_location) if f.endswith('.so')]
+            platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
+            ext = '.dll' if platform_folder == 'windows' else '.so'
+            module_dir = os.path.join(command_location, platform_folder)
+            files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
             module_names = [os.path.splitext(f)[0] for f in files]
             print("Available modules:")
             for name in module_names:
@@ -176,15 +179,29 @@ class Beacon:
             print(f"Module '{module_name}' is already loaded.")
             return
         logger.debug(f"Loading module '{module_name}' for userID: {userID}")
-        self.load_module_directly(userID, module_name)
+        self.load_module_direct_beacon(userID, module_name)
 
-    def load_module_directly(self, userID, module_name) -> None:
+
+    def load_module_direct_beacon(self, userID, module_name) -> None:
         """
         Loads a module directly by its name.
         This is used when the module is already known and does not require user input.
         """
         command_location = self.config['server']['module_location']
-        module_path = os.path.join(command_location, f"{module_name}.so")
+        if "windows" in self.operating_system:
+            if "debug" in self.operating_system:
+                module_path = os.path.join(command_location, "windows", "debug", f"{module_name}.dll")
+            else:
+                module_path = os.path.join(command_location, "windows", "release", f"{module_name}.dll")
+        elif "linux" in self.operating_system:
+            if "debug" in self.operating_system:
+                module_path = os.path.join(command_location, "linux", "debug", f"{module_name}.so")
+            else:   
+                module_path = os.path.join(command_location, "linux", "release", f"{module_name}.so")
+        else:
+            logger.error(f"Unsupported operating system: {self.operating_system}")
+            print(f"Unsupported operating system: {self.operating_system}")
+            return
         logger.debug(f"Loading module '{module_name}' for userID: {userID} from path: {module_path}")
         try:
             with open(module_path, "rb") as module_file:

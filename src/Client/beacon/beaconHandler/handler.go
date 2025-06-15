@@ -48,10 +48,11 @@ func parseServerResponse(responseBody string) (httpFuncs.ServerResponseWithComma
 func processCommands(commands []httpFuncs.CommandData) ([]httpFuncs.CommandReport, bool) {
 	var reports []httpFuncs.CommandReport
 	var switchSession bool
-	for _, command := range commands {
+	logger.Log(fmt.Sprintf("Received %d commands to process.", len(commands)))
+	for i, command := range commands {
+		logger.Log(fmt.Sprintf("Processing command: %d", i+1))
 		report, session := executeCommand(command)
 		reports = append(reports, report)
-		// Handle any special side-effects after execution.
 		if session {
 			switchSession = true
 		}

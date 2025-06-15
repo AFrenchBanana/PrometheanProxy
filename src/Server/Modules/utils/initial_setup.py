@@ -114,7 +114,7 @@ name = "Netstat"
 schema = "IP text, Netstat text, Time text"
 
 [[tables]]
-name = "SystemInfo"
+name = "system_info"
 schema = "IP Text, SystemInfo text, Time text"
 
 [[tables]]

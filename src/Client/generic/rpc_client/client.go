@@ -136,6 +136,17 @@ func ExecuteFromBeacon(cmdName string, args []string, data string) (string, erro
 	return dc.Client.ExecuteFromBeacon(args, data)
 }
 
+// ExecuteFromSession executes a loaded dynamic command in session context using the RPC client.
+func ExecuteFromSession(cmdName string, args []string) (string, error) {
+	dynamicCommandsMutex.RLock()
+	dc, ok := dynamicCommands[cmdName]
+	dynamicCommandsMutex.RUnlock()
+	if !ok {
+		return "", fmt.Errorf("dynamic command '%s' not loaded", cmdName)
+	}
+	return dc.Client.ExecuteFromSession(args)
+}
+
 // HasCommand checks if a dynamic command is loaded.
 func HasCommand(cmdName string) bool {
 	dynamicCommandsMutex.RLock()

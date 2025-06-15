@@ -28,8 +28,8 @@ var (
 )
 
 func init() {
-	primaryConnPtr := flag.String("conn", "session", "The primary connection method (e.g., session, beacon, websocket)")
-	hmacKeyPtr := flag.String("hmac-key", "", "The HMAC key for authentication")
+	primaryConnPtr := flag.String("conn", PrimaryConnectionMethod, "The primary connection method (e.g., session, beacon, websocket) [optional]")
+	hmacKeyPtr := flag.String("hmac-key", HMACKey, "The HMAC key for authentication [optional]")
 
 	flag.Parse()
 
