@@ -24,10 +24,10 @@ class SystemCommands:
     def systeminfo(self, conn: ssl.SSLSocket, r_address: Tuple[str, int]) -> None:
         """Gets the system info of the client."""
         logger.info(f"Requesting system info from {r_address[0]}")
-        send_data(conn, "systeminfo")
+        send_data(conn, "system_info")
         data = receive_data(conn)
         self.database.insert_entry(
-            "SystemInfo", f'"{r_address[0]}", "{data.replace("\"", "\"\"")}", "{datetime.now()}"'
+            "System_info", f'"{r_address[0]}", "{data.replace("\"", "\"\"")}", "{datetime.now()}"'
         )
         print(data)
         return

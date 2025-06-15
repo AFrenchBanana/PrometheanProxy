@@ -176,7 +176,7 @@ class MultiHandler:
                     send_data(conn, str(config['packetsniffer']['port']))
                     logger.debug("Sent packet sniffer port to client")
                 add_connection_list(conn, r_address, hostname,
-                                    os, id, "session", config)
+                                    os, id, "session", [], config)
                 logger.info(f"Added connection to sessions list: {hostname} ({os})")
                 threadDB.insert_entry(
                     "Addresses",

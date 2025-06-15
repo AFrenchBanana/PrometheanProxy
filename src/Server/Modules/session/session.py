@@ -21,12 +21,13 @@ class Session(
     """
     Handles commands within a session by composing functionality from various handler classes.
     """
-    def __init__(self, address, details, hostname, operating_system, mode, config):
+    def __init__(self, address, details, hostname, operating_system, mode, modules, config):
         self.address = address
         self.details = details
         self.hostname = hostname
         self.operating_system = operating_system
         self.mode = mode
+        self.loaded_modules = modules
         self.config = config
         self.database = DatabaseClass(config)
         colorama.init(autoreset=True)
@@ -42,11 +43,12 @@ def add_connection_list(
     operating_system: str,
     user_id: str,
     mode: str,
+    modules: list,
     config
 ) -> None:
     """Adds a new session to the global sessions dictionary."""
     logger.info(f"Adding connection {r_address[0]} ({host}) to sessions list.")
-    new_session = Session(r_address, conn, host, operating_system, mode, config)
+    new_session = Session(r_address, conn, host, operating_system, mode, modules, config)
     sessions_list[user_id] = new_session
 
 

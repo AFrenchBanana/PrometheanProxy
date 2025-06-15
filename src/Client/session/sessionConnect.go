@@ -23,7 +23,6 @@ const (
 	ConnectionTimeout = 10
 )
 
-// --- Core Logic ---
 
 // SessionHandler orchestrates the entire session lifecycle.
 func SessionHandler() error {

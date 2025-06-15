@@ -28,7 +28,6 @@ func Beacon() (error, bool) {
 	}
 	config.ConfigMutex.RUnlock()
 
-	// --- Main Beacon Loop ---
 	for {
 		// Get a snapshot of the current config for this iteration.
 		config.ConfigMutex.RLock()

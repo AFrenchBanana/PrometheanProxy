@@ -44,6 +44,8 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                 "data": command.command_data
             })
             command.executed = True
+        if command.command == "module":
+            command.data = "Module Sent" # clears up files held in memory, awful and needs to be fixed
           
 
     response_data = {"commands": commands_to_send} if commands_to_send else {"none": "none"}

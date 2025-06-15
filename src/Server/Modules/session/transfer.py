@@ -48,7 +48,6 @@ def receive_data(conn: ssl.SSLSocket) -> str | bytes:
             total_length -= len(chunk)
             
         logger.debug(f"Received data of size {len(received_data)}")
-        
         try:
             return received_data.decode("utf-8")
         except UnicodeDecodeError:

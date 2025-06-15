@@ -1,4 +1,4 @@
-package commands
+package main
 
 import (
 	"fmt"
@@ -8,13 +8,19 @@ import (
 	"strings"
 	"time"
 
+	Logger "src/Client/generic/logger"
+
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
 
-	"src/Client/generic/logger"
+	"src/Client/dynamic/shared"
+
+	"github.com/hashicorp/go-plugin"
 )
+
+var pluginName = "system_info"
 
 type storageInfo struct {
 	DriveName  string `json:"drive_name"`
@@ -50,79 +56,79 @@ func bytesToGB(b uint64) string {
 // --- Information Gathering Functions ---
 
 func getOSInfo() (string, string, string, string) {
-	logger.Log("Gathering OS information...")
+	Logger.Log("Gathering OS information...")
 	hostInfo, err := host.Info()
-	logger.Log("OS information gathered.")
+	Logger.Log("OS information gathered.")
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Could not get host info: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get host info: %v", err))
 		return runtime.GOOS, "N/A", runtime.GOARCH, "N/A"
 	}
-	logger.Log(fmt.Sprintf("OS: %s, Version: %s, Arch: %s, Kernel: %s",
+	Logger.Log(fmt.Sprintf("OS: %s, Version: %s, Arch: %s, Kernel: %s",
 		hostInfo.Platform, hostInfo.PlatformVersion, hostInfo.KernelArch, hostInfo.KernelVersion))
 	return hostInfo.Platform, hostInfo.PlatformVersion, hostInfo.KernelArch, hostInfo.KernelVersion
 }
 
 func getHostname() string {
-	logger.Log("Gathering hostname...")
+	Logger.Log("Gathering hostname...")
 	hostname, err := os.Hostname()
-	logger.Log("Hostname gathered.")
+	Logger.Log("Hostname gathered.")
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Could not get hostname: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get hostname: %v", err))
 		return "N/A"
 	}
-	logger.Log(fmt.Sprintf("Hostname: %s", hostname))
+	Logger.Log(fmt.Sprintf("Hostname: %s", hostname))
 	return hostname
 }
 
 func getUptime() string {
-	logger.Log("Gathering system uptime...")
+	Logger.Log("Gathering system uptime...")
 	uptime, err := host.Uptime()
-	logger.Log("Uptime gathered.")
+	Logger.Log("Uptime gathered.")
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Could not get uptime: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get uptime: %v", err))
 		return "N/A"
 	}
 	d := time.Duration(uptime) * time.Second
-	logger.Log(fmt.Sprintf("Uptime: %s", d.String()))
+	Logger.Log(fmt.Sprintf("Uptime: %s", d.String()))
 	return d.String()
 }
 
 func getCPUInfo() string {
-	logger.Log("Gathering CPU information...")
+	Logger.Log("Gathering CPU information...")
 	cpuInfos, err := cpu.Info()
 	if err != nil || len(cpuInfos) == 0 {
-		logger.Warn(fmt.Sprintf("Could not get CPU info: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get CPU info: %v", err))
 		return "N/A"
 	}
-	logger.Log(fmt.Sprintf("CPU Model: %s, Cores: %d, Frequency: %.2f MHz",
+	Logger.Log(fmt.Sprintf("CPU Model: %s, Cores: %d, Frequency: %.2f MHz",
 		cpuInfos[0].ModelName, cpuInfos[0].Cores, cpuInfos[0].Mhz))
 	return cpuInfos[0].ModelName
 }
 
 func getMemoryInfo() string {
-	logger.Log("Gathering memory information...")
+	Logger.Log("Gathering memory information...")
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Could not get memory info: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get memory info: %v", err))
 		return "N/A"
 	}
-	logger.Log(fmt.Sprintf("Total Memory: %s, Free Memory: %s, Used Percent: %.2f%%",
+	Logger.Log(fmt.Sprintf("Total Memory: %s, Free Memory: %s, Used Percent: %.2f%%",
 		bytesToGB(vmStat.Total), bytesToGB(vmStat.Free), vmStat.UsedPercent))
 	return fmt.Sprintf("Total: %s, Free: %s, Used: %.2f%%",
 		bytesToGB(vmStat.Total), bytesToGB(vmStat.Free), vmStat.UsedPercent)
 }
 
 func getNetworkInfo() []networkInterface {
-	logger.Log("Gathering network interface information...")
+	Logger.Log("Gathering network interface information...")
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Could not get network interfaces: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get network interfaces: %v", err))
 		return nil
 	}
 
 	var results []networkInterface
 	for _, iface := range interfaces {
-		logger.Log(fmt.Sprintf("Processing interface: %s", iface.Name))
+		Logger.Log(fmt.Sprintf("Processing interface: %s", iface.Name))
 		// Ignore loopback and inactive interfaces
 		if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 {
 			continue
@@ -146,7 +152,7 @@ func getNetworkInfo() []networkInterface {
 				ips = append(ips, ip.String())
 			}
 		}
-		logger.Log(fmt.Sprintf("Interface %s has IPs: %v", iface.Name, ips))
+		Logger.Log(fmt.Sprintf("Interface %s has IPs: %v", iface.Name, ips))
 
 		if len(ips) > 0 {
 			results = append(results, networkInterface{
@@ -156,15 +162,15 @@ func getNetworkInfo() []networkInterface {
 			})
 		}
 	}
-	logger.Log(fmt.Sprintf("Found %d active network interfaces.", len(results)))
+	Logger.Log(fmt.Sprintf("Found %d active network interfaces.", len(results)))
 	return results
 }
 
 func getStorageInfo() []storageInfo {
-	logger.Log("Gathering storage information...")
+	Logger.Log("Gathering storage information...")
 	partitions, err := disk.Partitions(true) // true for all partitions
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Could not get disk partitions: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get disk partitions: %v", err))
 		return nil
 	}
 
@@ -185,12 +191,12 @@ func getStorageInfo() []storageInfo {
 			UsedSpace:  bytesToGB(usage.Used),
 		})
 	}
-	logger.Log(fmt.Sprintf("Found %d storage devices.", len(results)))
+	Logger.Log(fmt.Sprintf("Found %d storage devices.", len(results)))
 	return results
 }
 
 func GetSystemInfo() systemInfo {
-	logger.Log("Gathering complete system information...")
+	Logger.Log("Gathering complete system information...")
 	osName, osVersion, arch, kernel := getOSInfo()
 
 	info := systemInfo{
@@ -205,13 +211,15 @@ func GetSystemInfo() systemInfo {
 		NetworkInterfaces: getNetworkInfo(),
 		Storage:           getStorageInfo(),
 	}
-	logger.Log("System information gathered successfully.")
+	Logger.Log("System information gathered successfully.")
 	return info
 }
 
 func SysInfoString() string {
-	logger.Log("Generating system information string...")
+	Logger.Log("Generating system information string...")
 	info := GetSystemInfo()
+	// Using Sprintf to format the output. For more complex/structured output,
+	// you might marshal the systemInfo struct to JSON.
 	return fmt.Sprintf(
 		"OS:\t\t%s %s\n"+
 			"Arch:\t\t%s\n"+
@@ -220,8 +228,8 @@ func SysInfoString() string {
 			"Uptime:\t\t%s\n"+
 			"CPU:\t\t%s\n"+
 			"Memory:\t\t%s\n"+
-			"Storage:\n\t%v\n"+
-			"Network Interfaces:\n\t%v",
+			"Storage:\n%v\n"+
+			"Network Interfaces:\n%v",
 		info.OsName,
 		info.OsVersion,
 		info.Architecture,
@@ -233,4 +241,41 @@ func SysInfoString() string {
 		info.Storage,
 		info.NetworkInterfaces,
 	)
+}
+
+// --- SysinfoCommand Implementation ---
+
+// SysinfoCommandImpl implements the shared.SysinfoCommand interface.
+type SysinfoCommandImpl struct{}
+
+func (c *SysinfoCommandImpl) Execute(args []string) (string, error) {
+	Logger.Log("SysinfoCommandImpl.Execute called (default context)")
+	return SysInfoString(), nil
+}
+
+func (c *SysinfoCommandImpl) ExecuteFromSession(args []string) (string, error) {
+	Logger.Log("SysinfoCommandImpl.ExecuteFromSession called")
+	output := SysInfoString() // Reuse the core info gathering
+	return fmt.Sprintf("--- System Info (Session Context) ---\n%s\n-------------------------------------", output), nil
+}
+
+func (c *SysinfoCommandImpl) ExecuteFromBeacon(args []string, data string) (string, error) {
+	Logger.Log(fmt.Sprintf("SysinfoCommandImpl.ExecuteFromBeacon called with data: %s", data))
+	data, err := c.Execute(args)
+	if err != nil {
+		Logger.Error(fmt.Sprintf("Error executing system info in beacon context: %v", err))
+		return "", err
+	}
+	Logger.Log(fmt.Sprintf("Beacon data received: %s", data))
+	return fmt.Sprintf("--- System Info (Beacon Context) ---\nBeacon Data: %s\n------------------------------------", data), nil
+}
+
+func main() {
+
+	plugin.Serve(&plugin.ServeConfig{
+		HandshakeConfig: shared.HandshakeConfig,
+		Plugins: map[string]plugin.Plugin{
+			pluginName: &shared.CommandPlugin{Impl: &SysinfoCommandImpl{}},
+		},
+	})
 }
