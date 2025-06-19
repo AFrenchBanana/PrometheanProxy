@@ -220,18 +220,18 @@ class Beacon:
 
     def list_db_commands(self, userID) -> None:
         logger.debug(f"Listing commands for userID: {userID}")
-        for _, beacon_commands in command_list.items():
-            if beacon_commands.beacon_uuid == userID:
-                logger.debug(f"Command found for userID: {userID} - {beacon_commands.command}")
-                logger.debug(f"Command UUID: {beacon_commands.command_uuid}")
-                logger.debug(f"Command Output: {beacon_commands.command_output}")
-                logger.debug(f"Command Executed: {beacon_commands.executed}")
-                print(f"""Command ID: {beacon_commands.command_uuid}
-                    Command: {beacon_commands.command}
-                    Response: {beacon_commands.command_output if beacon_commands.command_output else "Awaiting Response"}""") # noqa
+        output_lines = [
+            f"""Command ID: {cmd.command_uuid}
+    Command: {cmd.command}
+    Response: {cmd.command_output if cmd.command_output else "Awaiting Response"}"""
+            for cmd in command_list.values()
+            if getattr(cmd, "beacon_uuid", None) == userID
+        ]
+        if output_lines:
+            print("\n".join(output_lines))
         return
 
-    def beacon_configueration(self, userID) -> None:
+    def beacon_configuration(self, userID) -> None:
         logger.debug(f"Configuring beacon for userID: {userID}")
         data = {}
         additional_data = "y"

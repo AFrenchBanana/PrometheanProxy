@@ -151,7 +151,7 @@ class InteractionHandler:
             default_commands = ["commands", "shell", "close", "module"]
             if handler:
                 # Only check for module loading for non-default commands
-                if command not in default_commands and command not in default_commands:
+                if command not in default_commands and command not in beaconClass.loaded_modules:
                     logger.warning("Module not loaded, cannot execute command.")
                     print(colorama.Fore.RED + "Module not loaded, cannot execute command.")
                     load = input(

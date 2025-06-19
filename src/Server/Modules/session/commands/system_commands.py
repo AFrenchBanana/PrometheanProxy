@@ -57,7 +57,7 @@ class SystemCommands:
     def diskusage(self, conn: ssl.SSLSocket, r_address: Tuple[str, int]) -> None:
         """Prints the disk usage for the client."""
         logger.info(f"Requesting disk usage from {r_address[0]}")
-        send_data(conn, "disk_usage")
+        send_data(conn, "diskusage")
         results = receive_data(conn)
         self.database.insert_entry(
             "Disk", f'"{r_address[0]}", "{results.replace("\"", "\"\"")}", "{datetime.now()}"'
