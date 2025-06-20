@@ -221,15 +221,13 @@ class Beacon:
 
     def list_db_commands(self, userID) -> None:
         logger.debug(f"Listing commands for userID: {userID}")
-        output_lines = [
-            f"""Command ID: {cmd.command_uuid}
-    Command: {cmd.command}
-    Response: {cmd.command_output if cmd.command_output else "Awaiting Response"}"""
-            for cmd in command_list.values()
-            if getattr(cmd, "beacon_uuid", None) == userID
-        ]
-        if output_lines:
-            print("\n".join(output_lines))
+        found = False
+        for cmd in command_list.values():
+            if getattr(cmd, "beacon_uuid", None) == userID:
+                print(f"Command ID: {cmd.command_uuid}\nCommand: {cmd.command}\nResponse: {cmd.command_output if cmd.command_output else 'Awaiting Response'}")
+                found = True
+        if not found:
+            print("No commands found for this beacon.")
         return
 
     def beacon_configuration(self, userID) -> None:

@@ -49,13 +49,13 @@ class InteractionHandler:
             "beacon": handle_beacon,
             "module": lambda: session_obj.load_module_session(conn, r_address),
         }
+        # Initialize colorama and readline once before entering the loop
+        colorama.init(autoreset=True)
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(
+            lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))  # type: ignore
 
         while True:
-            colorama.init(autoreset=True)
-            readline.parse_and_bind("tab: complete")
-            readline.set_completer(
-                lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))
-            
             command = (input(colorama.Fore.YELLOW +
                              f"{r_address[0]}:{r_address[1]} Command: ")
                        .lower().strip())
@@ -133,13 +133,13 @@ class InteractionHandler:
             "viewfile": lambda: beaconClass.view_file(UserID),
             "module": lambda: beaconClass.load_module_beacon(UserID),
         }
+        # Initialize colorama and readline once before entering the loop
+        colorama.init(autoreset=True)
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(
+            lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))
 
         while True:
-            colorama.init(autoreset=True)
-            readline.parse_and_bind("tab: complete")
-            readline.set_completer(
-                lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))
-
             command = (input(colorama.Fore.YELLOW +
                              f"{UserID} Command: ").lower().strip())
             

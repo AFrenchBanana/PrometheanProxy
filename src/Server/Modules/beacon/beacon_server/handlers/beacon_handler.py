@@ -5,7 +5,6 @@ from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import beacon_list, command_list, logger
-from Modules.beacon.beacon_server.socket_manager import socketio
 
 
 def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):

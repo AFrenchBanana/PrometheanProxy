@@ -9,7 +9,6 @@ from http.server import BaseHTTPRequestHandler
 from Modules.global_objects import config, logger
 from Modules.beacon.beacon import add_beacon_list
 
-from Modules.beacon.beacon_server.socket_manager import socketio
 from Modules.beacon.beacon_server.utils import process_request_data
 
 

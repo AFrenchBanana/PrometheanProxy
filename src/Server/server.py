@@ -20,7 +20,6 @@ from Modules.beacon.beacon_server.server import start_beacon_server
 from WebUI.index import start_webui_server
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
-logging.getLogger('socketio').setLevel(logging.ERROR)
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
 readline.parse_and_bind('tab: complete')

