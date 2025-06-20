@@ -81,27 +81,27 @@ class LoggingClass:
 
             # Determine the target handler (file or console)
             if log_file:
+                # Create and attach a file handler in append mode for file logging
                 dirpath = os.path.dirname(log_file)
                 if dirpath:
                     os.makedirs(dirpath, exist_ok=True)
-                target_handler = handlers.RotatingFileHandler(
-                    log_file, maxBytes=max_size, backupCount=1
-                )
+                file_handler = logging.FileHandler(log_file, mode='a')
+                file_handler.setFormatter(formatter)
+                self.logger.addHandler(file_handler)
             else:
-                target_handler = logging.StreamHandler()
+                # Always attach a console handler for immediate output
+                console_handler = logging.StreamHandler()
+                console_handler.setFormatter(formatter)
+                self.logger.addHandler(console_handler)
 
-            target_handler.setFormatter(formatter)
-
-            # Configure the MemoryHandler to store recent logs
-            self.memory_handler = handlers.MemoryHandler(
-                capacity=memory_capacity,
-                flushLevel=logging.ERROR,
-                target=target_handler
-            )
-            # The formatter on the memory handler is used by the view() method
-            self.memory_handler.setFormatter(formatter)
-
-            self.logger.addHandler(self.memory_handler)
+                # Memory handler used only for view() without auto-flush
+                self.memory_handler = handlers.MemoryHandler(
+                    capacity=memory_capacity,
+                    flushLevel=logging.CRITICAL + 1,  # no auto-flush
+                    target=None
+                )
+                self.memory_handler.setFormatter(formatter)
+                self.logger.addHandler(self.memory_handler)
 
     def __getattr__(self, name):
         """Pass logging methods (debug, info, etc.) directly to the logger instance."""

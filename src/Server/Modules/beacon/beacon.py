@@ -27,7 +27,8 @@ class beacon_command:
         self.command_output = command_output
         self.executed = executed
         self.command_data = command_data
-        logger.debug(f"Command data: {command_data}")
+        if command != "module":
+            logger.debug(f"Command output: {command_output}")
 
 
 class Beacon:
@@ -275,7 +276,8 @@ def add_beacon_command_list(beacon_uuid: str, command_uuid: str,
     logger.debug(f"Adding command for beacon UUID: {beacon_uuid}")
     logger.debug(f"Command UUID: {command_uuid}")
     logger.debug(f"Command: {command}")
-    logger.debug(f"Command data: {command_data}")
+    if command.lower() != "module":
+        logger.debug(f"Command data: {command_data}")
     if not command_uuid or command_uuid == "":
         command_uuid = str(uuid.uuid4())
         logger.debug(f"Generated new command UUID: {command_uuid}")
