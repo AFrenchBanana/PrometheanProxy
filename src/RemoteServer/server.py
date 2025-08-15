@@ -52,7 +52,7 @@ class RemoteServer:
     def get_current_connections(self):
         if self.sslSocket:
             send_data(self.sslSocket, json.dumps({
-                "action": "get_connections",
+                "command": "get_connections",
                 "authorization": self.auth_key
             }).encode('utf-8'))
             response = receive_data(self.sslSocket)

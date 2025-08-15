@@ -10,7 +10,7 @@ var (
 	ID                 string = ""
 	Jitter             int    = 5
 	Timer              int    = 10
-	URLPort            string = "8000"
+	URLPort            string = "8080"
 	SessionAddressPort string = "2000"
 	URL                string = "http://localhost:" + URLPort
 	SessionAddr        string = "localhost:" + SessionAddressPort

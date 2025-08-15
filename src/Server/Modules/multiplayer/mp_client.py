@@ -4,6 +4,7 @@ import ssl
 import secrets 
 
 from ..session.transfer import send_data, receive_data
+from ..global_objects import beacon_list, sessions_list
 
 class Client():
     def __init__(self, conn: ssl.socket, address: tuple, user: str, authenticated: bool):
@@ -42,6 +43,34 @@ class Client():
         while True:
             data = receive_data(self.conn)
             if self.auth_check(data):
-                print(f"Authorized data received from {self.user}: {data}")
-            else:
-                print(f"Unauthorized data received from {self.user}: {data}")
+                try:
+                    command_data = json.loads(data)
+                    command = command_data.get("command")
+                    params = command_data.get("params", {})
+                    command_handlers = {
+                        "status": lambda: send_data(self.conn, json.dumps({"user": self.user, "authenticated": self.is_authenticated}).encode('utf-8')),
+                        "get_connections": lambda: send_data(self.conn, json.dumps({"response": self.get_active_connections()}).encode('utf-8'))
+                    }
+                    handler = command_handlers.get(
+                        command,
+                        lambda: send_data(self.conn, json.dumps({"error": "Unknown command"}).encode('utf-8'))
+                    )
+                    handler()
+                except Exception as e:
+                    print(e)
+                    send_data(self.conn, json.dumps({"error": "Invalid command format"}).encode('utf-8'))
+
+
+    def get_active_connections(self):
+        """
+        Returns a list of active connections.
+        """
+        # This is a placeholder implementation. Replace with actual logic to retrieve active connections.
+        beacons = ""
+        sessions = ""
+        for userID, beacon in beacon_list.items():
+            beacons += userID
+        for userID, session in sessions_list.items():
+            sessions += userID
+
+        return [{"beacons": beacons}, {"sessions": sessions}]
