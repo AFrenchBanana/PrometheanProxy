@@ -17,7 +17,7 @@ import time
 from Modules.multi_handler.multi_handler import MultiHandler
 from Modules.global_objects import config, logger
 from Modules.beacon.beacon_server.server import start_beacon_server
-from WebUI.index import start_webui_server
+from Modules.multiplayer.multiplayer import MultiPlayer
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 logging.getLogger('socketio').setLevel(logging.ERROR)
@@ -25,7 +25,6 @@ logging.getLogger('engineio').setLevel(logging.ERROR)
 
 readline.parse_and_bind('tab: complete')
 
-# Updated the main guard to support multiprocessing.
 if __name__ in {"__main__", "__mp_main__"}:
     logger.info("Starting server...")
     try:
@@ -43,12 +42,7 @@ if __name__ in {"__main__", "__mp_main__"}:
 
         logger.debug("Server: Starting web UI server thread")
 
-        # --- WebUI Server Thread ---
-        threading.Thread(
-            target=start_webui_server,
-            daemon=True
-        ).start()
-        time.sleep(0.1) # All logs are buffered, so we need to wait a bit for the threads to start.
+        time.sleep(0.1) 
 
         multi_handler.startsocket()
         logger.debug("Server: Background server threads started successfully")
@@ -62,6 +56,15 @@ if __name__ in {"__main__", "__mp_main__"}:
             print(random.choice(colors) + config['ASCII'][art_key])
         else:
             print(colorama.Back.RED + "Quiet Mode On")
+
+        if config['server']['multiplayer']:
+            multiplayer = MultiPlayer(config)
+            print(colorama.Fore.GREEN + "Multiplayer mode enabled")
+            logger.info("Server: Multiplayer mode enabled")
+            threading.Thread(target=multiplayer.start(),
+            args=(config,),
+            daemon=True
+        ).start()
 
         print(colorama.Back.GREEN + "Type Help for available commands")
         multi_handler.multi_handler(config)

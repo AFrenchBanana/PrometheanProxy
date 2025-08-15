@@ -125,5 +125,5 @@ hmac-key:
 
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)"
 

@@ -1,11 +1,3 @@
-"""multi handler file
-manages the intial server socket connection, encryption and authentication.
-Checks if SSL certificates are made and can create them if not
-Threading to accept multiple connections and start a packet
-sniffer on each thread if needed.
-Also has the intital multi handler menu the users interacts with.
-"""
-
 import socket
 import ssl
 import threading

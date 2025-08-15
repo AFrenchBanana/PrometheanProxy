@@ -1,12 +1,3 @@
-# Modules/multi_handler/multi_handler_commands.py
-
-"""
-multi handler commands. Functions to complete tasks within
-the multi handler menu. conn and r_address variables are ,
-connection and address variables fed in from the specified socket.
-this allows for multiple connections to be interacted with.
-"""
-
 from ServerDatabase.database import DatabaseClass
 from ..global_objects import logger
 
