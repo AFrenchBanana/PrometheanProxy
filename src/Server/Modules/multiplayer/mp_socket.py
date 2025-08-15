@@ -4,7 +4,11 @@ import colorama
 import ssl
 import os
 import json
-from ..global_objects import logger
+from ..global_objects import logger, multiplayer_connections
+
+from .mp_client import Client
+from ..session.transfer import send_data, receive_data
+
 
 class MP_Socket:
     """
@@ -19,6 +23,7 @@ class MP_Socket:
         if not (isinstance(self.port, int) and 1 <= self.port <= 65535):
             logger.error(f"Invalid port number: {self.port}. Must be between 1 and 65535.")
             raise ValueError("Invalid port number")        
+
 
     def start(self):
         try:
@@ -80,7 +85,13 @@ class MP_Socket:
         logger.info("Accepting connections on socket")
         while True:
             conn, r_address = self.sslSocket.accept()
-            userinfo = json.loads(conn.recv(1024))
+            data = receive_data(conn)
+            try:
+                userinfo = json.loads(data)
+            except Exception as e:
+                logger.warning(f"Failed to decode JSON from {r_address}: {e}")
+                conn.close()
+                continue
             logger.info(f"Connection accepted from {r_address}")
             if not userinfo.get("username") or not userinfo.get("password"):
                 logger.warning("Received connection with empty username or password")
@@ -88,5 +99,29 @@ class MP_Socket:
                 continue
             else:
                 logger.info(f"Received connection from user: {userinfo['username']}")
-                print(userinfo)
+            username = userinfo.get("username")
+            password = userinfo.get("password")
+            if username in multiplayer_connections or username == self.current_user:
+                logger.warning(f"User {username} is already logged in from another connection")
+                print(colorama.Fore.YELLOW, f"User {username} is already logged in from another connection")
+                send_data(conn, "User already logged in")
+                conn.close()
+                continue
+
+            if self.authenticate_user(username, password):
+                logger.info(f"User {username} authenticated successfully from {r_address}")
+                print(colorama.Fore.GREEN, f"User {username} authenticated successfully from {r_address}")
+                mp_client = Client(conn, r_address, username, True)
+                multiplayer_connections[username] = mp_client
+                client_thread = threading.Thread(target=mp_client.start, args=())
+                client_thread.daemon = True
+                client_thread.start()
+                continue
+
+            else:
+                logger.warning(f"Authentication failed for user {username} from {r_address}")
+                print(colorama.Fore.RED, f"Authentication failed for user {username} from {r_address}")
+                send_data(conn, "Authentication failed")
+                conn.close()
+                continue
             

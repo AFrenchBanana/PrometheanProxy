@@ -12,6 +12,8 @@ from ..utils.authentication import Authentication
 from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
 from ServerDatabase.database import DatabaseClass
+from Modules.multiplayer.multiplayer import MultiPlayer
+
 from ..session.session import add_connection_list
 from ..session.transfer import receive_data, send_data
 from ..global_objects import (
@@ -42,6 +44,16 @@ class MultiHandler:
             sniffer = PacketSniffer()
             sniffer.start_raw_socket()
             logger.info("PacketSniffer started")
+
+        if config['server']['multiplayer']:
+            self.isMultiplayer = True
+            self.multiplayer = MultiPlayer(config)
+            print(colorama.Fore.GREEN + "Multiplayer mode enabled")
+            logger.info("Server: Multiplayer mode enabled")
+            threading.Thread(target=self.multiplayer.start(),
+            args=(config,),
+            daemon=True
+        ).start()
 
     def create_certificate(self) -> None:
         """
@@ -196,7 +208,7 @@ class MultiHandler:
                     lambda text, state:
                         tab_completion(text,
                                        state, ["list", "sessions", "beacons",
-                                               "close", "closeall",
+                                               "close", "closeall", "users" if self.multiplayer else None,
                                                "configbeacon",
                                                "command", "hashfiles",
                                                "config", "configBeacon", "logs", "help", "exit",]))
@@ -250,6 +262,7 @@ class MultiHandler:
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
                     "config": config_menu,
                     "configBeacon": beacon_config_menu,
+                    "users": self.multiplayer.userMenu if self.multiplayer else print(colorama.Fore.RED, "Multiplayer mode is not enabled"),
                     "logs": self.multihandlercommands.view_logs,
                 }
 

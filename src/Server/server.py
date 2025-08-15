@@ -17,7 +17,6 @@ import time
 from Modules.multi_handler.multi_handler import MultiHandler
 from Modules.global_objects import config, logger
 from Modules.beacon.beacon_server.server import start_beacon_server
-from Modules.multiplayer.multiplayer import MultiPlayer
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 logging.getLogger('socketio').setLevel(logging.ERROR)
@@ -56,15 +55,6 @@ if __name__ in {"__main__", "__mp_main__"}:
             print(random.choice(colors) + config['ASCII'][art_key])
         else:
             print(colorama.Back.RED + "Quiet Mode On")
-
-        if config['server']['multiplayer']:
-            multiplayer = MultiPlayer(config)
-            print(colorama.Fore.GREEN + "Multiplayer mode enabled")
-            logger.info("Server: Multiplayer mode enabled")
-            threading.Thread(target=multiplayer.start(),
-            args=(config,),
-            daemon=True
-        ).start()
 
         print(colorama.Back.GREEN + "Type Help for available commands")
         multi_handler.multi_handler(config)

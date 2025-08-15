@@ -18,6 +18,8 @@ import os
 beacon_list = {}
 command_list = {}
 sessions_list = {}
+multiplayer_connections = {}
+
 
 config_dir = os.path.expanduser("~/.PrometheanProxy/")
 config_file_path = os.path.join(config_dir, "config.toml")

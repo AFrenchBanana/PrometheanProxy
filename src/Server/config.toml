@@ -117,6 +117,17 @@ name = "Disk"
 schema = "IP text, Disk Usage, Time text"
 
 
+[userDatabase]
+file = "~/ServerDatabase/user.db"
+addData = true
+
+# This is where you can add new tables to the database. 
+[[tables]]
+name = "Users"
+schema = "user text, password text, passwordSalt text, admin bool"
+
+
+
 
 
 
