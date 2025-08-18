@@ -12,7 +12,7 @@ def generate_config_file():
     config_content = f"""[server]
 listenaddress = "0.0.0.0"
 webPort = 8000
-port = 2000
+port = 2001
 TLSCertificateDir = "Certificates/"
 TLSCertificate = "cert.pem"
 TLSkey = "key.pem"

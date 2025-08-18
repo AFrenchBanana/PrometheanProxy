@@ -7,7 +7,7 @@ import json
 from ..global_objects import logger, multiplayer_connections
 
 from .mp_client import Client
-from ..session.transfer import send_data, receive_data
+from ..session.transfer import send_data, receive_data, perform_ecdh_handshake
 
 
 class MP_Socket:
@@ -85,6 +85,15 @@ class MP_Socket:
         logger.info("Accepting connections on socket")
         while True:
             conn, r_address = self.sslSocket.accept()
+            # Establish app-layer ECDH key over SSL, then proceed
+            try:
+                perform_ecdh_handshake(conn, is_server=True)
+            except Exception as e:
+                logger.error(f"ECDH handshake failed from {r_address}: {e}")
+                try:
+                    conn.close()
+                finally:
+                    continue
             data = receive_data(conn)
             try:
                 userinfo = json.loads(data)
