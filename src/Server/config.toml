@@ -10,6 +10,12 @@ quiet_mode = false
 implant_directory = "~/ImplantData/"
 module_location = "../../bin/plugins/"
 
+[multiplayer]
+multiplayer = true
+multiplayerListenAddress = "0.0.0.0"
+multiplayerPort = 2001
+
+
 [authentication]
 #key length for the random auth string
 keylength = 111
@@ -112,6 +118,19 @@ schema = "Filename text, Hash text"
 [[tables]]
 name = "Disk"
 schema = "IP text, Disk Usage, Time text"
+
+
+[userDatabase]
+file = "~/ServerDatabase/user.db"
+addData = true
+
+# This is where you can add new tables to the database. 
+[[tables]]
+name = "Users"
+schema = "user text, password text, passwordSalt text, admin bool"
+
+
+
 
 
 

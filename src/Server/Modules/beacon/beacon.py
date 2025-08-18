@@ -39,7 +39,6 @@ class Beacon:
         self.uuid = uuid
         self.database = DatabaseClass(config)
         self.file_manager = FileManagerClass(config, uuid)
-        self.uuid = uuid
         self.address = address
         logger.debug(f"Beacon address: {address}")
         self.hostname = hostname

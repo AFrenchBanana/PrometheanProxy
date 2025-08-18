@@ -10,8 +10,8 @@ var (
 	ID                 string = ""
 	Jitter             int    = 5
 	Timer              int    = 10
-	URLPort            string = "8000"
-	SessionAddressPort string = "2000"
+	URLPort            string = "8080"
+	SessionAddressPort string = "2002"
 	URL                string = "http://localhost:" + URLPort
 	SessionAddr        string = "localhost:" + SessionAddressPort
 	OsIdentifier       string = runtime.GOOS + " " + runtime.GOARCH + func() string {

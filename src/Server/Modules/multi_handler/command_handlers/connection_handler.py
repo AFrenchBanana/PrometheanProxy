@@ -5,7 +5,7 @@ from ...session.transfer import send_data, receive_data
 from ...session.session import remove_connection_list
 
 from ...beacon.beacon import remove_beacon_list
-from ...global_objects import sessions_list, beacon_list, logger, tab_completion
+from ...global_objects import sessions_list, beacon_list, multiplayer_connections, logger, tab_completion
 
 from tabulate import tabulate
 import colorama
@@ -83,6 +83,13 @@ class ConnectionHandler:
                       tabulate([row], headers=["Host", "OS", "IP", "ID",
                                                "Last Callback", "Status"],
                                tablefmt="grid"))
+        if self.config["server"]["multiplayer"]:
+            if not multiplayer_connections:
+                print(colorama.Fore.RED + "No Active Multiplayer Connections")
+            else:
+                print(colorama.Fore.WHITE + "Active Multiplayer Connections:")
+                for username, client in multiplayer_connections.items():
+                    print(colorama.Fore.WHITE + f"User: {username}, Address: {client.address[0]}")
 
     def sessionconnect(self) -> None:
         """allows interaction with individual session,

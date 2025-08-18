@@ -71,3 +71,4 @@ websockets==15.0.1
 Werkzeug==3.0.4
 wsproto==1.2.0
 yarl==1.20.1
+cryptography==43.0.1
