@@ -19,7 +19,7 @@ class MP_Socket:
         self.config = config
         self.socket = None
         self.sslSocket = None
-        self.port = config['server']['multiplayerPort']
+        self.port = config['multiplayer']['multiplayerPort']
         if not (isinstance(self.port, int) and 1 <= self.port <= 65535):
             logger.error(f"Invalid port number: {self.port}. Must be between 1 and 65535.")
             raise ValueError("Invalid port number")        
@@ -28,12 +28,12 @@ class MP_Socket:
     def start(self):
         try:
             logger.info("Starting socket server")
-            self.address = (self.config['server']['multiplayerListenAddress'],
-                            self.config['server']['multiplayerPort'])
+            self.address = (self.config['multiplayer']['multiplayerListenAddress'],
+                            self.config['multiplayer']['multiplayerPort'])
             logger.debug(f"Socket address: {self.address}")
             context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             logger.debug("Creating SSL context")
-            cert_dir = os.path.expanduser(f"~/.PrometheanProxy/{self.config['server']['TLSCertificateDir']}")
+            cert_dir = os.path.expanduser(self.config['server']['TLSCertificateDir'])
             tls_key = self.config['server']['TLSkey']
             tls_cert = self.config['server']['TLSCertificate']
             logger.debug(f"Certificate directory: {cert_dir}, Key: {tls_key}, Cert: {tls_cert}")

@@ -42,11 +42,11 @@ class MultiHandlerCommands(
         try:
             self.load_plugins()
         except Exception as e:
-            logger.exception(f"Failed to load plugins: {e}")
+            logger.exception(f"Failed to load Plugins: {e}")
         return
 
-    def load_plugins(self, package_name: str = "plugins") -> None:
-        """Discover and instantiate plugin classes under plugins/.
+    def load_plugins(self, package_name: str = "Plugins") -> None:
+        """Discover and instantiate plugin classes under Plugins/.
 
         A plugin is any class in a module under package_name that defines
         at least one of: session(self, session: dict), beacon(self, beacon)

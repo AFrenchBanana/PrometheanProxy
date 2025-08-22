@@ -3,38 +3,38 @@ HMAC_KEY ?= $(shell test -f $(HOME)/.PrometheanProxy/Certificates/hmac.key && ca
 
 # Source and Output Directories
 CLIENT_SOURCE_DIR = src/Client
-server: venv plugins-linux
+SERVER_SOURCE_DIR = src/Server
 OUTPUT_DIR = bin
-	ABS_CONFIG=$$(realpath src/Server/config.toml); \
-	ABS_PLUG_REL=$$(realpath $(PLUGIN_OUT_DIR_LINUX) || echo); \
-	ABS_PLUG_DBG=$$(realpath $(PLUGIN_OUT_DIR_LINUX_DEBUG) || echo); \
-	. venv/bin/activate && pyinstaller \
-	--onefile \
-	--name PrometheanProxy \
-	--distpath $(OUTPUT_DIR) \
-	--workpath build/pyinstaller_work \
-	--specpath build \
-	--clean -y \
-	--paths src \
-	$${ABS_CONFIG:+--add-data $${ABS_CONFIG}:embedded/} \
-	$${ABS_PLUG_REL:+--add-data $${ABS_PLUG_REL}:embedded/plugins/linux/release} \
-	$${ABS_PLUG_DBG:+--add-data $${ABS_PLUG_DBG}:embedded/plugins/linux/debug} \
-	--hidden-import=engineio.async_drivers.threading \
-	src/Server/server.py
+
+# Define Go build flags
+GO_BUILD_FLAGS = -ldflags="-s -w -X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
+GO_BUILD_FLAGS_DEBUG = -tags=debug -ldflags="-X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
+
+# Define output targets
+OUTPUT_LINUX_RELEASE = $(OUTPUT_DIR)/promethean-client-linux-amd64
+OUTPUT_LINUX_DEBUG = $(OUTPUT_DIR)/promethean-client-linux-amd64-debug
+OUTPUT_WINDOWS_RELEASE = $(OUTPUT_DIR)/promethean-client-windows-amd64.exe
+OUTPUT_WINDOWS_DEBUG = $(OUTPUT_DIR)/promethean-client-windows-amd64-debug.exe
+
+# Discover Go plugins dynamically from the server plugin source
+PLUGINS_SRC_DIR := $(SERVER_SOURCE_DIR)/Plugins
+# Only include directories that contain a main.go (skip __pycache__, etc.) and exclude template
 RAW_PLUGIN_DIRS := $(shell for d in $(PLUGINS_SRC_DIR)/*; do \
 	if [ -d $$d ] && [ -f $$d/main.go ]; then basename $$d; fi; \
 done)
 PLUGIN_DIRS := $(filter-out template,$(RAW_PLUGIN_DIRS))
-PLUGIN_OUT_DIR_ROOT := $(SERVER_SOURCE_DIR)/plugins
+
+# Compiled plugin output directories (kept inside repo under Server/Plugins)
+PLUGIN_OUT_DIR_ROOT := $(SERVER_SOURCE_DIR)/Plugins
 PLUGIN_OUT_DIR_LINUX := $(PLUGIN_OUT_DIR_ROOT)/linux/release
 PLUGIN_OUT_DIR_WINDOWS := $(PLUGIN_OUT_DIR_ROOT)/windows/release
 PLUGIN_OUT_DIR_LINUX_DEBUG := $(PLUGIN_OUT_DIR_ROOT)/linux/debug
 PLUGIN_OUT_DIR_WINDOWS_DEBUG := $(PLUGIN_OUT_DIR_ROOT)/windows/debug
 
-PLUGIN_PLUGINS_LINUX := $(addprefix $(PLUGIN_OUT_DIR_LINUX)/,$(addsuffix .so,$(PLUGIN_DIRS)))
-PLUGIN_PLUGINS_WINDOWS := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS)/,$(addsuffix .dll,$(PLUGIN_DIRS)))
-PLUGIN_PLUGINS_LINUX_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_LINUX_DEBUG)/,$(addsuffix -debug.so,$(PLUGIN_DIRS)))
-PLUGIN_PLUGINS_WINDOWS_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/,$(addsuffix -debug.dll,$(PLUGIN_DIRS)))
+PLUGINS_LINUX := $(addprefix $(PLUGIN_OUT_DIR_LINUX)/,$(addsuffix .so,$(PLUGIN_DIRS)))
+PLUGINS_WINDOWS := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS)/,$(addsuffix .dll,$(PLUGIN_DIRS)))
+PLUGINS_LINUX_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_LINUX_DEBUG)/,$(addsuffix -debug.so,$(PLUGIN_DIRS)))
+PLUGINS_WINDOWS_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/,$(addsuffix -debug.dll,$(PLUGIN_DIRS)))
 
 .PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins
 
@@ -50,10 +50,16 @@ test: venv
 	. venv/bin/activate && PYTHONPATH=$(SERVER_SOURCE_DIR) python3 -m unittest tests/*.py
 
 clean:
-	rm -rf bin build dist *.egg-info PrometheanProxy.spec $(PLUGIN_OUT_DIR_ROOT)
+	rm -rf bin build dist *.egg-info PrometheanProxy.spec \
+	$(PLUGIN_OUT_DIR_ROOT)/linux \
+	$(PLUGIN_OUT_DIR_ROOT)/windows
 
-server: venv plugins-linux
+server: venv plugins
 	@echo "--> Building Python server ELF with PyInstaller (Linux)..."
+	rm -f PrometheanProxy.spec build/PrometheanProxy.spec; \
+	# Ensure plugin output directories exist so --add-data paths are valid even if empty
+	mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX) $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG) \
+		$(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS) $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG); \
 	. venv/bin/activate && pyinstaller \
 	--onefile \
 	--name PrometheanProxy \
@@ -62,11 +68,11 @@ server: venv plugins-linux
 	--specpath build \
 	--clean -y \
 	--paths src \
-	--add-data src/Server/config.toml:embedded/ \
-	--add-data $(PLUGIN_OUT_DIR_LINUX):embedded/plugins/build/linux/release \
-	--add-data $(PLUGIN_OUT_DIR_LINUX_DEBUG):embedded/plugins/build/linux/debug \
-	--add-data $(PLUGIN_OUT_DIR_WINDOWS):embedded/plugins/build/windows/release \
-	--add-data $(PLUGIN_OUT_DIR_WINDOWS_DEBUG):embedded/plugins/build/windows/debug \
+	--add-data $(CURDIR)/src/Server/config.toml:embedded/ \
+	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX):embedded/plugins/linux/release \
+	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG):embedded/plugins/linux/debug \
+	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS):embedded/plugins/windows/release \
+	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG):embedded/plugins/windows/debug \
 	--hidden-import=engineio.async_drivers.threading \
 	src/Server/server.py
 
@@ -83,7 +89,6 @@ server-windows: venv
 	@if [ -f "dist/PrometheanProxy.exe" ]; then \
 		mv -f dist/PrometheanProxy.exe $(OUTPUT_DIR)/promethean-server-windows-amd64.exe; \
 	fi
-
 
 
 $(OUTPUT_LINUX_RELEASE): $(PLUGIN_SYSTEMINFO)
@@ -109,8 +114,8 @@ $(OUTPUT_WINDOWS_DEBUG):
 # Include plugins in overall build
 plugins: plugins-linux plugins-windows 
 
-plugins-linux: $(PLUGIN_PLUGINS_LINUX) $(PLUGIN_PLUGINS_LINUX_DEBUG)
-plugins-windows: $(PLUGIN_PLUGINS_WINDOWS) $(PLUGIN_PLUGINS_WINDOWS_DEBUG)
+plugins-linux: $(PLUGINS_LINUX) $(PLUGINS_LINUX_DEBUG)
+plugins-windows: $(PLUGINS_WINDOWS) $(PLUGINS_WINDOWS_DEBUG)
 
 build: linux windows plugins
 

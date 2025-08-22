@@ -3,6 +3,7 @@ import ssl
 import threading
 import os
 import sys
+import secrets
 import colorama
 import readline
 import json
@@ -39,13 +40,16 @@ class MultiHandler:
         self.multihandlercommands = MultiHandlerCommands(config)
         self.Authentication = Authentication()
         self.database = DatabaseClass(config)
+        self.create_certificate()
+        self.create_hmac()
+
         colorama.init(autoreset=True)
         if config['packetsniffer']['active']:
             sniffer = PacketSniffer()
             sniffer.start_raw_socket()
             logger.info("PacketSniffer started")
 
-        if config['server']['multiplayer']:
+        if config['multiplayer']['multiplayer']:
             self.isMultiplayer = True
             self.multiplayer = MultiPlayer(config)
             print(colorama.Fore.GREEN + "Multiplayer mode enabled")
@@ -54,6 +58,38 @@ class MultiHandler:
             args=(config,),
             daemon=True
         ).start()
+            
+    def create_hmac(self):
+        """
+        Checks if HMAC key is created in the location
+        defined in config.
+        If this doesn't exist, a new key is made.
+        """
+        logger.info("Checking for HMAC key")
+        cert_dir = os.path.expanduser(config['server']['TLSCertificateDir'])
+        hmac_key_path = os.path.join(cert_dir, "hmac.key")
+        logger.debug(f"HMAC key path: {hmac_key_path}")
+
+        if not os.path.isfile(hmac_key_path):
+            logger.info("HMAC key not found, creating new one")
+            if not os.path.isdir(cert_dir):
+                logger.debug(f"Creating directory for HMAC key: {cert_dir}")
+            # generate a 32-byte (64 hex chars) key using Python's secrets module and write it to file
+            try:
+                key = secrets.token_hex(32)
+                with open(hmac_key_path, "w") as f:
+                    f.write(key)
+                # try to make the file readable only by the owner
+                try:
+                    os.chmod(hmac_key_path, 0o600)
+                except Exception:
+                    logger.debug("Could not change permissions on HMAC key file")
+            except Exception as e:
+                logger.error(f"Failed to create HMAC key: {e}")
+            logger.info("HMAC key created successfully")
+            print(colorama.Fore.GREEN +
+                  "HMAC key created: " +
+                  f"{hmac_key_path}")
 
     def create_certificate(self) -> None:
         """
@@ -62,7 +98,7 @@ class MultiHandler:
         If these don't exist, a self-signed key and certificate is made.
         """
         logger.info("Checking for TLS certificates")
-        cert_dir = os.path.expanduser(f"~/.PrometheanProxy/{config['server']['TLSCertificateDir']}")
+        cert_dir = os.path.expanduser(config['server']['TLSCertificateDir'])
         tls_key = config['server']['TLSkey']
         tls_cert = config['server']['TLSCertificate']
 
@@ -98,7 +134,7 @@ class MultiHandler:
             logger.debug(f"Socket address: {self.address}")
             context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             logger.debug("Creating SSL context")
-            cert_dir = os.path.expanduser(f"~/.PrometheanProxy/{config['server']['TLSCertificateDir']}")
+            cert_dir = os.path.expanduser(config['server']['TLSCertificateDir'])
             tls_key = config['server']['TLSkey']
             tls_cert = config['server']['TLSCertificate']
             logger.debug(f"Certificate directory: {cert_dir}, Key: {tls_key}, Cert: {tls_cert}")
@@ -114,8 +150,7 @@ class MultiHandler:
             logger.error("TLS certificate or key file not found")
             sys.exit(
                 colorama.Fore.RED +
-                "TLS certificate or key file not found. " +
-                "Please run the server with --create-certificate to generate them.")
+                "TLS certificate or key file not found.")
         except ssl.SSLError as e:
             logger.critical(f"SSL error: {e}")
             print(colorama.Fore.RED + "SSL error: " + str(e))

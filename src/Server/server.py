@@ -15,53 +15,68 @@ import time
 import os
 import shutil
 
-from Modules.multi_handler.multi_handler import MultiHandler
-from Modules.global_objects import config, logger
-from Modules.beacon.beacon_server.server import start_beacon_server
-
 def _extract_embedded_assets():
-    """When packaged with PyInstaller, extract config.toml and plugins to user dir."""
-    base = getattr(sys, '_MEIPASS', None)
-    if not base:
-        return
-    # Paths inside bundle as added by Makefile --add-data
-    embedded_root = os.path.join(base, 'embedded')
-    config_src = os.path.join(embedded_root, 'config.toml')
-    plugins_linux_rel = os.path.join(embedded_root, 'plugins', 'linux', 'release')
-    plugins_linux_dbg = os.path.join(embedded_root, 'plugins', 'linux', 'debug')
+    """Ensure ~/.PrometheanProxy/config.toml exists and copy embedded plugins if bundled.
 
-    # Targets
+    - If running as a PyInstaller bundle, copy from embedded paths.
+    - If running from source, copy default config from repo (src/Server/config.toml).
+    """
     user_root = os.path.expanduser('~/.PrometheanProxy')
     os.makedirs(user_root, exist_ok=True)
     config_dst = os.path.join(user_root, 'config.toml')
     modules_dst_root = os.path.join(user_root, 'modules')
     os.makedirs(modules_dst_root, exist_ok=True)
 
-    # Copy config.toml if missing
-    try:
-        if os.path.isfile(config_src) and not os.path.exists(config_dst):
-            shutil.copy2(config_src, config_dst)
-    except Exception:
-        pass
+    base = getattr(sys, '_MEIPASS', None)
+    if base:
+        # Paths inside bundle as added by Makefile --add-data
+        embedded_root = os.path.join(base, 'embedded')
+        config_src = os.path.join(embedded_root, 'config.toml')
+        plugins_linux_rel = os.path.join(embedded_root, 'plugins', 'linux', 'release')
+        plugins_linux_dbg = os.path.join(embedded_root, 'plugins', 'linux', 'debug')
+        plugins_windows_rel = os.path.join(embedded_root, 'plugins', 'windows', 'release')
+        plugins_windows_dbg = os.path.join(embedded_root, 'plugins', 'windows', 'debug')
 
-    # Copy plugins (overwrite to keep updated)
-    mapping = [
-        (plugins_linux_rel, os.path.join(modules_dst_root, 'linux', 'release')),
-        (plugins_linux_dbg, os.path.join(modules_dst_root, 'linux', 'debug')),
-    ]
-    for src_dir, dst_dir in mapping:
-        if os.path.isdir(src_dir):
-            os.makedirs(dst_dir, exist_ok=True)
-            for fname in os.listdir(src_dir):
-                src = os.path.join(src_dir, fname)
-                dst = os.path.join(dst_dir, fname)
-                try:
-                    shutil.copy2(src, dst)
-                except Exception:
-                    pass
+        # Copy config.toml if missing
+        try:
+            if os.path.isfile(config_src) and not os.path.exists(config_dst):
+                shutil.copy2(config_src, config_dst)
+        except Exception:
+            pass
+
+        # Copy plugins (overwrite to keep updated)
+        mapping = [
+            (plugins_linux_rel, os.path.join(modules_dst_root, 'linux', 'release')),
+            (plugins_linux_dbg, os.path.join(modules_dst_root, 'linux', 'debug')),
+            (plugins_windows_rel, os.path.join(modules_dst_root, 'windows', 'release')),
+            (plugins_windows_dbg, os.path.join(modules_dst_root, 'windows', 'debug')),
+        ]
+        for src_dir, dst_dir in mapping:
+            if os.path.isdir(src_dir):
+                os.makedirs(dst_dir, exist_ok=True)
+                for fname in os.listdir(src_dir):
+                    src = os.path.join(src_dir, fname)
+                    dst = os.path.join(dst_dir, fname)
+                    try:
+                        shutil.copy2(src, dst)
+                    except Exception:
+                        pass
+    else:
+        # Running from source: copy default config from repo if missing
+        repo_config = os.path.join(os.path.dirname(__file__), 'config.toml')
+        try:
+            if os.path.isfile(repo_config) and not os.path.exists(config_dst):
+                shutil.copy2(repo_config, config_dst)
+        except Exception:
+            pass
 
 
 _extract_embedded_assets()
+
+# Defer heavy imports that rely on config until after extraction
+from Modules.multi_handler.multi_handler import MultiHandler
+from Modules.global_objects import config, logger
+from Modules.beacon.beacon_server.server import start_beacon_server
 
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
@@ -73,9 +88,7 @@ readline.parse_and_bind('tab: complete')
 if __name__ in {"__main__", "__mp_main__"}:
     logger.info("Starting server...")
     try:
-        _extract_embedded_assets()
         multi_handler = MultiHandler()
-        multi_handler.create_certificate()
 
         logger.debug("Server: Starting beacon server thread")
 
@@ -86,9 +99,6 @@ if __name__ in {"__main__", "__mp_main__"}:
             daemon=True
         ).start()
 
-        logger.debug("Server: Starting web UI server thread")
-
-        time.sleep(0.1) 
 
         multi_handler.startsocket()
         logger.debug("Server: Background server threads started successfully")
