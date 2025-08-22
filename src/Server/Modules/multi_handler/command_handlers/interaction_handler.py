@@ -35,15 +35,44 @@ class InteractionHandler:
         except Exception:
             dynamic_commands = []
 
+        # Prefer a module-aware wrapper for dynamic session commands as well,
+        # so even if on-disk discovery fails we still check/load before running.
         for cmd in dynamic_commands or []:
-            command_handlers[cmd] = lambda c=cmd: self.run_session_plugin(c, conn, r_address, user_ID)
+            def _session_dyn_handler(mod=cmd):
+                def _inner():
+                    try:
+                        # If the module is already loaded, just refresh plugins and run.
+                        if hasattr(session_obj, 'loaded_modules') and mod in getattr(session_obj, 'loaded_modules', set()):
+                            try:
+                                getattr(self, "load_plugins")()
+                            except Exception:
+                                pass
+                            return self.run_session_plugin(mod, conn, r_address, user_ID)
+
+                        # Otherwise ask to load the module first.
+                        choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
+                        if choice.startswith('y'):
+                            session_obj.load_module_direct_session(conn, r_address, mod)
+                            try:
+                                getattr(self, "load_plugins")()
+                            except Exception:
+                                pass
+                            return self.run_session_plugin(mod, conn, r_address, user_ID)
+                        else:
+                            print(colorama.Fore.YELLOW + "Cancelled.")
+                    except Exception as e:
+                        logger.error(f"Failed to handle session plugin '{mod}': {e}")
+                        print(colorama.Fore.RED + f"An error occurred: {e}")
+                return _inner
+            command_handlers[cmd] = _session_dyn_handler()
 
         # Add dynamic commands for predefined client modules
         try:
             platform_folder = 'windows' if 'windows' in session_obj.operating_system else 'linux'
             ext = '.dll' if platform_folder == 'windows' else '.so'
             channel = 'debug' if 'debug' in session_obj.operating_system else 'release'
-            module_dir = os.path.join(session_obj.config['server']['module_location'], platform_folder, channel)
+            module_base = os.path.expanduser(session_obj.config['server']['module_location'])
+            module_dir = os.path.abspath(os.path.join(module_base, platform_folder, channel))
             files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
             module_names = [os.path.splitext(f)[0] for f in files]
         except Exception:
@@ -136,14 +165,45 @@ class InteractionHandler:
 
         for cmd in dynamic_beacon or []:
             if cmd not in command_handlers:
-                command_handlers[cmd] = lambda c=cmd: self.run_beacon_plugin(c, UserID)
+                # Wrap dynamic beacon commands with a module-aware handler so we prompt
+                # to load missing modules before attempting to run the plugin.
+                def _beacon_dyn_handler(mod=cmd):
+                    def _inner():
+                        try:
+                            if hasattr(beaconClass, 'loaded_modules') and mod in getattr(beaconClass, 'loaded_modules', set()):
+                                try:
+                                    getattr(self, "load_plugins")()
+                                except Exception:
+                                    pass
+                                if self.run_beacon_plugin(mod, UserID):
+                                    print(colorama.Fore.GREEN + f"Queued beacon plugin '{mod}' for {UserID}.")
+                                return
+
+                            choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
+                            if choice.startswith('y'):
+                                beaconClass.load_module_direct_beacon(UserID, mod)
+                                try:
+                                    getattr(self, "load_plugins")()
+                                except Exception:
+                                    pass
+                                if self.run_beacon_plugin(mod, UserID):
+                                    print(colorama.Fore.GREEN + f"Queued beacon plugin {mod} for {UserID} after loading module.")
+                            else:
+                                print(colorama.Fore.YELLOW + "Cancelled.")
+                        except Exception as e:
+                            logger.error(f"Failed to handle beacon plugin '{mod}': {e}")
+                            if not self.config['server']['quiet_mode']:
+                                print(colorama.Fore.RED + f"An error occurred: {e}")
+                    return _inner
+                command_handlers[cmd] = _beacon_dyn_handler()
 
         # Discover on-disk modules and wire commands
         try:
             platform_folder = 'windows' if 'windows' in beaconClass.operating_system else 'linux'
             ext = '.dll' if platform_folder == 'windows' else '.so'
             channel = 'debug' if 'debug' in beaconClass.operating_system else 'release'
-            module_dir = os.path.join(beaconClass.config['server']['module_location'], platform_folder, channel)
+            module_base = os.path.expanduser(beaconClass.config['server']['module_location'])
+            module_dir = os.path.abspath(os.path.join(module_base, platform_folder, channel))
             files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
             module_names = [os.path.splitext(f)[0] for f in files]
         except Exception:

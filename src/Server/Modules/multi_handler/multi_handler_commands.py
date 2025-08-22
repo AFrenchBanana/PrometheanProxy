@@ -59,13 +59,30 @@ class MultiHandlerCommands(
     # Callers may invoke load_plugins() multiple times; that's fine.
 
         import os, sys
-        # Ensure the Server root is on sys.path so 'plugins' is importable
-        this_dir = os.path.dirname(__file__)
-        server_root = os.path.abspath(os.path.join(this_dir, "..", "..", ".."))
-        if server_root not in sys.path:
-            sys.path.insert(0, server_root)
+        # When running as a packaged binary (PyInstaller), prefer user plugins
+        # extracted to ~/.PrometheanProxy/plugins (contains top-level 'Plugins/' dir).
+        user_plugins_root = os.path.expanduser('~/.PrometheanProxy/plugins')
+        packaged = getattr(sys, '_MEIPASS', None) is not None
+        if packaged and os.path.isdir(os.path.join(user_plugins_root, 'Plugins')):
+            # Prepend so 'import Plugins' resolves to user plugin folder first
+            if user_plugins_root not in sys.path:
+                sys.path.insert(0, user_plugins_root)
+        else:
+            # Dev/source mode: ensure the Server root (src/Server) is on sys.path
+            this_dir = os.path.dirname(__file__)
+            server_dir = os.path.abspath(os.path.join(this_dir, "..", ".."))  # .../src/Server
+            if server_dir not in sys.path:
+                sys.path.insert(0, server_dir)
+            # Optionally also include project src
+            project_src = os.path.abspath(os.path.join(server_dir, ".."))  # .../src
+            if project_src not in sys.path:
+                sys.path.append(project_src)
 
-        packages_to_try = [package_name, "Server.plugins"] if package_name != "Server.plugins" else [package_name, "plugins"]
+        # Try both top-level package ("Plugins") and namespaced ("Server.Plugins").
+        # Note: Correct casing matters on Linux; avoid lower-case variants.
+        packages_to_try = [package_name]
+        if package_name != "Server.Plugins":
+            packages_to_try.append("Server.Plugins")
         discovered = 0
 
         for pkg_name in packages_to_try:
@@ -144,7 +161,8 @@ class MultiHandlerCommands(
             # Fallback: attempt to import by convention
             import importlib, inspect
             tried = []
-            for base in ("plugins", "Server.plugins"):
+            # Use correct-cased package names
+            for base in ("Plugins", "Server.Plugins"):
                 for mod_name in (f"{base}.{command}.{command}", f"{base}.{command}"):
                     try:
                         tried.append(mod_name)

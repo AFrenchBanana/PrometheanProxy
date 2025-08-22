@@ -8,7 +8,8 @@ TLSkey = "key.pem"
 GUI = false 
 quiet_mode = false
 implant_directory = "~/.PrometheanProxy/ImplantData/"
-module_location = "~/.PrometheanProxy/modules"
+# Default to unified plugins folder; legacy '~/.PrometheanProxy/modules' is still supported as fallback in code
+module_location = "~/.PrometheanProxy/plugins/Plugins"
 
 [multiplayer]
 multiplayer = true

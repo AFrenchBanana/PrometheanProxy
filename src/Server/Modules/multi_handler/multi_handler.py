@@ -99,8 +99,8 @@ class MultiHandler:
         """
         logger.info("Checking for TLS certificates")
         cert_dir = os.path.expanduser(config['server']['TLSCertificateDir'])
-        tls_key = config['server']['TLSkey']
-        tls_cert = config['server']['TLSCertificate']
+        tls_key =  os.path.expanduser(config['server']['TLSkey'])
+        tls_cert = os.path.expanduser(config['server']['TLSCertificate'])
 
         key_path = os.path.join(cert_dir, tls_key)
         cert_path = os.path.join(cert_dir, tls_cert)

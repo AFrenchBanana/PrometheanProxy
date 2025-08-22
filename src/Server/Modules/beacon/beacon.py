@@ -91,15 +91,45 @@ class Beacon:
         return
 
     def load_module_beacon(self, userID) -> None:
-        command_location = self.config['server']['module_location']
+        # Determine module base (prefer new unified path, fall back to legacy)
+        def _resolve_module_base() -> str:
+            candidates = [
+                os.path.expanduser(self.config['server'].get('module_location', '')),
+                os.path.expanduser('~/.PrometheanProxy/plugins/Plugins'),
+            ]
+            for c in candidates:
+                if c and os.path.isdir(c):
+                    return c
+            # Default to new location if nothing exists yet
+            return os.path.expanduser('~/.PrometheanProxy/plugins/Plugins')
+
+        command_location = _resolve_module_base()
         try:
             platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
             ext = '.dll' if platform_folder == 'windows' else '.so'
-            module_dir = os.path.join(command_location, platform_folder)
-            files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
-            module_names = [os.path.splitext(f)[0] for f in files]
+            channel = 'debug' if 'debug' in self.operating_system else 'release'
+            module_names: list[str] = []
+
+            # Legacy structure has OS folders at root
+            legacy_linux = os.path.join(command_location, 'linux')
+            legacy_windows = os.path.join(command_location, 'windows')
+            if os.path.isdir(legacy_linux) or os.path.isdir(legacy_windows):
+                module_dir = os.path.join(command_location, platform_folder)
+                files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
+                module_names = [os.path.splitext(f)[0].removesuffix('-debug') for f in files]
+            else:
+                # New unified structure: Plugins/<name>/{release,debug}/{name}[ -debug].ext
+                for name in os.listdir(command_location):
+                    full = os.path.join(command_location, name)
+                    if not os.path.isdir(full):
+                        continue
+                    fname = f"{name}{'-debug' if channel == 'debug' else ''}{ext}"
+                    cand = os.path.join(full, channel, fname)
+                    if os.path.isfile(cand):
+                        module_names.append(name)
+
             print("Available modules:")
-            for name in module_names:
+            for name in sorted(set(module_names)):
                 print(f" - {name}")
         except Exception as e:
             logger.error(f"Error listing modules in {command_location}: {e}")
@@ -123,21 +153,40 @@ class Beacon:
         Loads a module directly by its name.
         This is used when the module is already known and does not require user input.
         """
-        command_location = self.config['server']['module_location']
-        if "windows" in self.operating_system:
-            if "debug" in self.operating_system:
-                module_path = os.path.join(command_location, "windows", "debug", f"{module_name}.dll")
+        # Resolve module base (prefer new unified structure)
+        def _resolve_module_base() -> str:
+            candidates = [
+                os.path.expanduser(self.config['server'].get('module_location', '')),
+                os.path.expanduser('~/.PrometheanProxy/plugins/Plugins'),
+            ]
+            for c in candidates:
+                if c and os.path.isdir(c):
+                    return c
+            return os.path.expanduser('~/.PrometheanProxy/plugins/Plugins')
+
+        command_location = os.path.abspath(_resolve_module_base())
+        platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
+        ext = '.dll' if platform_folder == 'windows' else '.so'
+        channel = 'debug' if 'debug' in self.operating_system else 'release'
+
+        # New layout: Plugins/<name>/{release,debug}/{name}[ -debug].ext
+        filename = f"{module_name}{'-debug' if channel=='debug' else ''}{ext}"
+        module_path = os.path.join(command_location, module_name, channel, filename)
+        # Fallback to legacy if not present
+        if not os.path.isfile(module_path):
+            legacy_base = os.path.expanduser(self.config['server'].get('module_location', ''))
+            if platform_folder == 'windows':
+                legacy_try = os.path.join(legacy_base, 'windows', channel, f"{module_name}{'-debug' if channel=='debug' else ''}.dll")
             else:
-                module_path = os.path.join(command_location, "windows", "release", f"{module_name}.dll")
-        elif "linux" in self.operating_system:
-            if "debug" in self.operating_system:
-                module_path = os.path.join(command_location, "linux", "debug", f"{module_name}.so")
-            else:   
-                module_path = os.path.join(command_location, "linux", "release", f"{module_name}.so")
-        else:
+                legacy_try = os.path.join(legacy_base, 'linux', channel, f"{module_name}{'-debug' if channel=='debug' else ''}.so")
+            if os.path.isfile(legacy_try):
+                module_path = legacy_try
+
+        if not (ext and module_path):
             logger.error(f"Unsupported operating system: {self.operating_system}")
             print(f"Unsupported operating system: {self.operating_system}")
             return
+        module_path = os.path.abspath(os.path.expanduser(module_path))
         logger.debug(f"Loading module '{module_name}' for userID: {userID} from path: {module_path}")
         try:
             with open(module_path, "rb") as module_file:

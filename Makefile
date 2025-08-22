@@ -36,7 +36,10 @@ PLUGINS_WINDOWS := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS)/,$(addsuffix .dll,$(PLU
 PLUGINS_LINUX_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_LINUX_DEBUG)/,$(addsuffix -debug.so,$(PLUGIN_DIRS)))
 PLUGINS_WINDOWS_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/,$(addsuffix -debug.dll,$(PLUGIN_DIRS)))
 
-.PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins
+# Staging directory for bundling ONLY Python plugin sources (no Go artifacts)
+PY_PLUGIN_STAGING_DIR := build/py_plugins
+
+.PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins py-plugins
 
 all: build server
 
@@ -54,7 +57,7 @@ clean:
 	$(PLUGIN_OUT_DIR_ROOT)/linux \
 	$(PLUGIN_OUT_DIR_ROOT)/windows
 
-server: venv plugins
+server: venv plugins py-plugins
 	@echo "--> Building Python server ELF with PyInstaller (Linux)..."
 	rm -f PrometheanProxy.spec build/PrometheanProxy.spec; \
 	# Ensure plugin output directories exist so --add-data paths are valid even if empty
@@ -68,7 +71,10 @@ server: venv plugins
 	--specpath build \
 	--clean -y \
 	--paths src \
+	--collect-submodules Server.Plugins \
+	--hidden-import=Server.Plugins \
 	--add-data $(CURDIR)/src/Server/config.toml:embedded/ \
+	--add-data $(CURDIR)/$(PY_PLUGIN_STAGING_DIR):embedded/pyplugins \
 	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX):embedded/plugins/linux/release \
 	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG):embedded/plugins/linux/debug \
 	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS):embedded/plugins/windows/release \
@@ -118,6 +124,14 @@ plugins-linux: $(PLUGINS_LINUX) $(PLUGINS_LINUX_DEBUG)
 plugins-windows: $(PLUGINS_WINDOWS) $(PLUGINS_WINDOWS_DEBUG)
 
 build: linux windows plugins
+
+# Stage only Python files from src/Server/Plugins into build/py_plugins, preserving package layout
+py-plugins:
+	@echo "--> Staging Python plugin sources..."
+	@rm -rf $(PY_PLUGIN_STAGING_DIR)
+	@mkdir -p $(PY_PLUGIN_STAGING_DIR)
+	# Copy only .py files while preserving directory structure under a top-level 'Plugins' package
+	@rsync -a --prune-empty-dirs --include '*/' --include '*.py' --exclude '*' $(SERVER_SOURCE_DIR)/Plugins/ $(PY_PLUGIN_STAGING_DIR)/Plugins/
 
 $(PLUGIN_OUT_DIR_LINUX)/%.so:
 	@echo "--> Building Go plugin for $* (Linux)..."
