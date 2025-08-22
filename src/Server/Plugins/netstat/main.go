@@ -2,280 +2,176 @@ package main
 
 import (
 	"fmt"
-	"net"
-	"os"
-	"runtime"
+	"io"
+	"sort"
 	"strings"
-	"time"
 
 	Logger "src/Client/generic/logger"
+	"src/Client/generic/config"
 
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/disk"
-	"github.com/shirou/gopsutil/v3/host"
-	"github.com/shirou/gopsutil/v3/mem"
+	gnet "github.com/shirou/gopsutil/v3/net"
+	"github.com/shirou/gopsutil/v3/process"
 
 	"src/Client/dynamic/shared"
 
+	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 )
 
-var pluginName = "system_info"
+var pluginName = "netstat"
 
-type storageInfo struct {
-	DriveName  string `json:"drive_name"`
-	TotalSpace string `json:"total_space"`
-	FreeSpace  string `json:"free_space"`
-	UsedSpace  string `json:"used_space"`
+type connectionInfo struct {
+	Proto          string `json:"proto"`
+	LocalAddress   string `json:"local_address"`
+	LocalPort      uint32 `json:"local_port"`
+	RemoteAddress  string `json:"remote_address"`
+	RemotePort     uint32 `json:"remote_port"`
+	State          string `json:"state"`
+	PID            int32  `json:"pid"`
+	ProcessName    string `json:"process"`
 }
 
-type networkInterface struct {
-	Name        string   `json:"name"`
-	IPAddresses []string `json:"ip_addresses"`
-	MACAddress  string   `json:"mac_address"`
-}
+// --- Collection helpers ---
 
-type systemInfo struct {
-	OsName            string             `json:"os_name"`
-	OsVersion         string             `json:"os_version"`
-	Architecture      string             `json:"architecture"`
-	Hostname          string             `json:"hostname"`
-	NetworkInterfaces []networkInterface `json:"network_interfaces"`
-	CPU               string             `json:"cpu"`
-	Memory            string             `json:"memory"`
-	KernelVersion     string             `json:"kernel_version"`
-	UpTime            string             `json:"uptime"`
-	Storage           []storageInfo      `json:"storage"`
-}
-
-// bytesToGB converts bytes to a human-readable string in GB.
-func bytesToGB(b uint64) string {
-	return fmt.Sprintf("%.2f GB", float64(b)/float64(1<<30))
-}
-
-// --- Information Gathering Functions ---
-
-func getOSInfo() (string, string, string, string) {
-	Logger.Log("Gathering OS information...")
-	hostInfo, err := host.Info()
-	Logger.Log("OS information gathered.")
-	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get host info: %v", err))
-		return runtime.GOOS, "N/A", runtime.GOARCH, "N/A"
+func resolveProcName(pid int32) string {
+	if pid <= 0 {
+		return ""
 	}
-	Logger.Log(fmt.Sprintf("OS: %s, Version: %s, Arch: %s, Kernel: %s",
-		hostInfo.Platform, hostInfo.PlatformVersion, hostInfo.KernelArch, hostInfo.KernelVersion))
-	return hostInfo.Platform, hostInfo.PlatformVersion, hostInfo.KernelArch, hostInfo.KernelVersion
-}
-
-func getHostname() string {
-	Logger.Log("Gathering hostname...")
-	hostname, err := os.Hostname()
-	Logger.Log("Hostname gathered.")
+	p, err := process.NewProcess(pid)
 	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get hostname: %v", err))
-		return "N/A"
+		return ""
 	}
-	Logger.Log(fmt.Sprintf("Hostname: %s", hostname))
-	return hostname
-}
-
-func getUptime() string {
-	Logger.Log("Gathering system uptime...")
-	uptime, err := host.Uptime()
-	Logger.Log("Uptime gathered.")
+	name, err := p.Name()
 	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get uptime: %v", err))
-		return "N/A"
+		return ""
 	}
-	d := time.Duration(uptime) * time.Second
-	Logger.Log(fmt.Sprintf("Uptime: %s", d.String()))
-	return d.String()
+	return name
 }
 
-func getCPUInfo() string {
-	Logger.Log("Gathering CPU information...")
-	cpuInfos, err := cpu.Info()
-	if err != nil || len(cpuInfos) == 0 {
-		Logger.Warn(fmt.Sprintf("Could not get CPU info: %v", err))
-		return "N/A"
-	}
-	Logger.Log(fmt.Sprintf("CPU Model: %s, Cores: %d, Frequency: %.2f MHz",
-		cpuInfos[0].ModelName, cpuInfos[0].Cores, cpuInfos[0].Mhz))
-	return cpuInfos[0].ModelName
-}
-
-func getMemoryInfo() string {
-	Logger.Log("Gathering memory information...")
-	vmStat, err := mem.VirtualMemory()
+func collect(kind, proto string) []connectionInfo {
+	conns, err := gnet.Connections(kind)
 	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get memory info: %v", err))
-		return "N/A"
-	}
-	Logger.Log(fmt.Sprintf("Total Memory: %s, Free Memory: %s, Used Percent: %.2f%%",
-		bytesToGB(vmStat.Total), bytesToGB(vmStat.Free), vmStat.UsedPercent))
-	return fmt.Sprintf("Total: %s, Free: %s, Used: %.2f%%",
-		bytesToGB(vmStat.Total), bytesToGB(vmStat.Free), vmStat.UsedPercent)
-}
-
-func getNetworkInfo() []networkInterface {
-	Logger.Log("Gathering network interface information...")
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get network interfaces: %v", err))
+		Logger.Warn(fmt.Sprintf("Could not get %s connections: %v", kind, err))
 		return nil
 	}
-
-	var results []networkInterface
-	for _, iface := range interfaces {
-		Logger.Log(fmt.Sprintf("Processing interface: %s", iface.Name))
-		// Ignore loopback and inactive interfaces
-		if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 {
-			continue
+	results := make([]connectionInfo, 0, len(conns))
+	for _, c := range conns {
+		ci := connectionInfo{
+			Proto:         proto,
+			LocalAddress:  c.Laddr.IP,
+			LocalPort:     c.Laddr.Port,
+			RemoteAddress: c.Raddr.IP,
+			RemotePort:    c.Raddr.Port,
+			State:         c.Status,
+			PID:           c.Pid,
 		}
-
-		var ips []string
-		addrs, err := iface.Addrs()
-		if err != nil {
-			continue
+		if ci.ProcessName == "" {
+			ci.ProcessName = resolveProcName(ci.PID)
 		}
-		for _, addr := range addrs {
-			// Extract IP address from CIDR notation
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-			if ip != nil {
-				ips = append(ips, ip.String())
-			}
-		}
-		Logger.Log(fmt.Sprintf("Interface %s has IPs: %v", iface.Name, ips))
-
-		if len(ips) > 0 {
-			results = append(results, networkInterface{
-				Name:        iface.Name,
-				IPAddresses: ips,
-				MACAddress:  iface.HardwareAddr.String(),
-			})
-		}
+		results = append(results, ci)
 	}
-	Logger.Log(fmt.Sprintf("Found %d active network interfaces.", len(results)))
 	return results
 }
 
-func getStorageInfo() []storageInfo {
-	Logger.Log("Gathering storage information...")
-	partitions, err := disk.Partitions(true) // true for all partitions
+func getAllConnections() []connectionInfo {
+	Logger.Log("Gathering connection list (tcp, tcp6, udp, udp6)...")
+	var all []connectionInfo
+	all = append(all, collect("tcp", "tcp")...)
+	all = append(all, collect("tcp6", "tcp6")...)
+	all = append(all, collect("udp", "udp")...)
+	all = append(all, collect("udp6", "udp6")...)
+
+	// Sort for stable output: proto, state, laddr, raddr
+	sort.Slice(all, func(i, j int) bool {
+		if all[i].Proto != all[j].Proto {
+			return all[i].Proto < all[j].Proto
+		}
+		if all[i].State != all[j].State {
+			return all[i].State < all[j].State
+		}
+		if all[i].LocalAddress != all[j].LocalAddress {
+			return all[i].LocalAddress < all[j].LocalAddress
+		}
+		if all[i].LocalPort != all[j].LocalPort {
+			return all[i].LocalPort < all[j].LocalPort
+		}
+		if all[i].RemoteAddress != all[j].RemoteAddress {
+			return all[i].RemoteAddress < all[j].RemoteAddress
+		}
+		if all[i].RemotePort != all[j].RemotePort {
+			return all[i].RemotePort < all[j].RemotePort
+		}
+		return all[i].PID < all[j].PID
+	})
+	Logger.Log(fmt.Sprintf("Collected %d connections", len(all)))
+	return all
+}
+
+// NetstatString returns a human-readable table of connections similar to `netstat -tunap`.
+func NetstatString() string {
+	conns := getAllConnections()
+	header := fmt.Sprintf("%-5s %-22s %-22s %-12s %-7s %s", "Proto", "Local Address", "Remote Address", "State", "PID", "Process")
+	lines := make([]string, 0, len(conns)+2)
+	lines = append(lines, header)
+	lines = append(lines, strings.Repeat("-", len(header)))
+	for _, c := range conns {
+		l := c.LocalAddress
+		if c.LocalPort != 0 {
+			l = fmt.Sprintf("%s:%d", l, c.LocalPort)
+		}
+		r := c.RemoteAddress
+		if c.RemotePort != 0 {
+			r = fmt.Sprintf("%s:%d", r, c.RemotePort)
+		}
+		line := fmt.Sprintf("%-5s %-22s %-22s %-12s %-7d %s", c.Proto, l, r, c.State, c.PID, c.ProcessName)
+		lines = append(lines, line)
+	}
+	return strings.Join(lines, "\n")
+}
+
+// NetstatCommand implements the shared.SysinfoCommand interface.
+type NetstatCommand struct{}
+
+func (c *NetstatCommand) Execute(args []string) (string, error) {
+	Logger.Log("NetstatCommand.Execute called (default context)")
+	return NetstatString(), nil
+}
+
+func (c *NetstatCommand) ExecuteFromSession(args []string) (string, error) {
+	Logger.Log("NetstatCommand.ExecuteFromSession called")
+	output, err := c.Execute(args)
 	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get disk partitions: %v", err))
-		return nil
+		Logger.Error(fmt.Sprintf("Error executing netstat in session context: %v", err))
+		return "", err
 	}
-
-	var results []storageInfo
-	for _, p := range partitions {
-		usage, err := disk.Usage(p.Mountpoint)
-		if err != nil {
-			continue
-		}
-		// Only include physical devices and common filesystems
-		if strings.HasPrefix(p.Device, "/dev/loop") || usage.Total == 0 {
-			continue
-		}
-		results = append(results, storageInfo{
-			DriveName:  p.Mountpoint,
-			TotalSpace: bytesToGB(usage.Total),
-			FreeSpace:  bytesToGB(usage.Free),
-			UsedSpace:  bytesToGB(usage.Used),
-		})
-	}
-	Logger.Log(fmt.Sprintf("Found %d storage devices.", len(results)))
-	return results
+	return fmt.Sprintf("--- Netstat (Session Context) ---\n%s\n--------------------------------", output), nil
 }
 
-func GetSystemInfo() systemInfo {
-	Logger.Log("Gathering complete system information...")
-	osName, osVersion, arch, kernel := getOSInfo()
-
-	info := systemInfo{
-		OsName:            osName,
-		OsVersion:         osVersion,
-		Architecture:      arch,
-		Hostname:          getHostname(),
-		KernelVersion:     kernel,
-		UpTime:            getUptime(),
-		CPU:               getCPUInfo(),
-		Memory:            getMemoryInfo(),
-		NetworkInterfaces: getNetworkInfo(),
-		Storage:           getStorageInfo(),
-	}
-	Logger.Log("System information gathered successfully.")
-	return info
-}
-
-func SysInfoString() string {
-	Logger.Log("Generating system information string...")
-	info := GetSystemInfo()
-	// Using Sprintf to format the output. For more complex/structured output,
-	// you might marshal the systemInfo struct to JSON.
-	return fmt.Sprintf(
-		"OS:\t\t%s %s\n"+
-			"Arch:\t\t%s\n"+
-			"Hostname:\t%s\n"+
-			"Kernel:\t\t%s\n"+
-			"Uptime:\t\t%s\n"+
-			"CPU:\t\t%s\n"+
-			"Memory:\t\t%s\n"+
-			"Storage:\n%v\n"+
-			"Network Interfaces:\n%v",
-		info.OsName,
-		info.OsVersion,
-		info.Architecture,
-		info.Hostname,
-		info.KernelVersion,
-		info.UpTime,
-		info.CPU,
-		info.Memory,
-		info.Storage,
-		info.NetworkInterfaces,
-	)
-}
-
-// --- SysinfoCommand Implementation ---
-
-// SysinfoCommandImpl implements the shared.SysinfoCommand interface.
-type SysinfoCommandImpl struct{}
-
-func (c *SysinfoCommandImpl) Execute(args []string) (string, error) {
-	Logger.Log("SysinfoCommandImpl.Execute called (default context)")
-	return SysInfoString(), nil
-}
-
-func (c *SysinfoCommandImpl) ExecuteFromSession(args []string) (string, error) {
-	Logger.Log("SysinfoCommandImpl.ExecuteFromSession called")
-	output := SysInfoString() // Reuse the core info gathering
-	return fmt.Sprintf("--- System Info (Session Context) ---\n%s\n-------------------------------------", output), nil
-}
-
-func (c *SysinfoCommandImpl) ExecuteFromBeacon(args []string, data string) (string, error) {
-	Logger.Log(fmt.Sprintf("SysinfoCommandImpl.ExecuteFromBeacon called with data: %s", data))
+func (c *NetstatCommand) ExecuteFromBeacon(args []string, data string) (string, error) {
+	Logger.Log(fmt.Sprintf("NetstatCommand.ExecuteFromBeacon called with data: %s", data))
 	data, err := c.Execute(args)
 	if err != nil {
-		Logger.Error(fmt.Sprintf("Error executing system info in beacon context: %v", err))
+		Logger.Error(fmt.Sprintf("Error executing netstat info in beacon context: %v", err))
 		return "", err
 	}
 	Logger.Log(fmt.Sprintf("Beacon data received: %s", data))
-	return fmt.Sprintf("--- System Info (Beacon Context) ---\nBeacon Data: %s\n------------------------------------", data), nil
+	return fmt.Sprintf("--- Netstat Info (Beacon Context) ---\nBeacon Data: %s\n------------------------------------", data), nil
 }
 
 func main() {
+	// Silence plugin logs unless in debug
+	var plog hclog.Logger
+	if config.IsDebug() {
+		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.netstat", Level: hclog.Debug })
+	} else {
+		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.netstat", Level: hclog.Off, Output: io.Discard })
+	}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.HandshakeConfig,
 		Plugins: map[string]plugin.Plugin{
-			pluginName: &shared.CommandPlugin{Impl: &SysinfoCommandImpl{}},
+			pluginName: &shared.CommandPlugin{Impl: &NetstatCommand{}},
 		},
+		Logger: plog,
 	})
 }

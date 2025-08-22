@@ -132,7 +132,8 @@ class InteractionHandler:
                     logger.error(f"Error executing command '{command}': {e}\n{traceback.format_exc()}")
                     print(colorama.Fore.RED + f"An error occurred: {e}")
             else:
-                print(colorama.Fore.RED + f"Unknown command: '{command}'")
+                if command != "":
+                    print(colorama.Fore.RED + f"Unknown command: '{command}'")
         return
 
     def use_beacon(self, UserID, IPAddress) -> None:

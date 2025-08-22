@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"runtime"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	Logger "src/Client/generic/logger"
+	"src/Client/generic/config"
 
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -17,6 +19,7 @@ import (
 
 	"src/Client/dynamic/shared"
 
+	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 )
 
@@ -271,11 +274,19 @@ func (c *SysinfoCommandImpl) ExecuteFromBeacon(args []string, data string) (stri
 }
 
 func main() {
+	// Silence plugin logs unless in debug
+	var plog hclog.Logger
+	if config.IsDebug() {
+		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.system_info", Level: hclog.Debug })
+	} else {
+		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.system_info", Level: hclog.Off, Output: io.Discard })
+	}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.HandshakeConfig,
 		Plugins: map[string]plugin.Plugin{
 			pluginName: &shared.CommandPlugin{Impl: &SysinfoCommandImpl{}},
 		},
+		Logger: plog,
 	})
 }

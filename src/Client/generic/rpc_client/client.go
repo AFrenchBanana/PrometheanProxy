@@ -2,6 +2,7 @@ package rpc_client
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"sync"
@@ -9,8 +10,10 @@ import (
 	"src/Client/dynamic/shared"
 	"src/Client/generic/commands"
 	"src/Client/generic/logger"
+	"src/Client/generic/config"
 
 	"github.com/hashicorp/go-plugin"
+	hclog "github.com/hashicorp/go-hclog"
 )
 
 // In-memory store for dynamic commands and their clients
@@ -84,11 +87,27 @@ func LoadDynamicCommand(cmdName string, pluginPath string) error {
 	}
 	logger.Log(fmt.Sprintf("Loading dynamic command from plugin path: %s", pluginPath))
 	shared.RegisterPlugin(cmdName, &shared.CommandPlugin{})
+	// Configure the go-plugin logger: be noisy in debug, silent otherwise
+	var plog hclog.Logger
+	if config.IsDebug() {
+		plog = hclog.New(&hclog.LoggerOptions{
+			Name:   "plugin.host",
+			Level:  hclog.Debug,
+		})
+	} else {
+		plog = hclog.New(&hclog.LoggerOptions{
+			Name:   "plugin.host",
+			Level:  hclog.Off,
+			Output: io.Discard,
+		})
+	}
+
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig:  shared.HandshakeConfig,
 		Plugins:          shared.PluginMap,
 		Cmd:              exec.Command(pluginPath),
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolNetRPC},
+		Logger:           plog,
 	})
 
 	// Connect via RPC

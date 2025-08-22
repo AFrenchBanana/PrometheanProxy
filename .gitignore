@@ -15,3 +15,5 @@ bin/
 server.log
 PrometheanProxy.spec
 .nicegui
+*.so
+*.dll
