@@ -8,7 +8,7 @@ TLSkey = "key.pem"
 GUI = false 
 quiet_mode = false
 implant_directory = "~/ImplantData/"
-module_location = "../../bin/plugins/"
+module_location = "~/.PrometheanProxy/modules"
 
 [multiplayer]
 multiplayer = true

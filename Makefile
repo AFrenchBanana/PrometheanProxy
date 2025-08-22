@@ -1,26 +1,35 @@
-HMAC_KEY ?= $(shell cat $(HOME)/.PrometheanProxy/Certificates/hmac.key)
+# Read HMAC key if present; keep empty (no error) if file is missing
+HMAC_KEY ?= $(shell test -f $(HOME)/.PrometheanProxy/Certificates/hmac.key && cat $(HOME)/.PrometheanProxy/Certificates/hmac.key || echo)
 
 # Source and Output Directories
 CLIENT_SOURCE_DIR = src/Client
-SERVER_SOURCE_DIR = src/Server
+server: venv plugins-linux
 OUTPUT_DIR = bin
-
-# Define Go build flags
-GO_BUILD_FLAGS = -ldflags="-s -w -X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
-GO_BUILD_FLAGS_DEBUG = -tags=debug -ldflags="-X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
-
-# Define output targets
-OUTPUT_LINUX_RELEASE = $(OUTPUT_DIR)/promethean-client-linux-amd64
-OUTPUT_LINUX_DEBUG = $(OUTPUT_DIR)/promethean-client-linux-amd64-debug
-OUTPUT_WINDOWS_RELEASE = $(OUTPUT_DIR)/promethean-client-windows-amd64.exe
-OUTPUT_WINDOWS_DEBUG = $(OUTPUT_DIR)/promethean-client-windows-amd64-debug.exe
-
-# Discover Go plugins dynamically
-PLUGIN_DIRS := $(filter-out template,$(notdir $(shell find plugins/* -maxdepth 0 -type d)))
-PLUGIN_OUT_DIR_LINUX := $(OUTPUT_DIR)/plugins/linux/release
-PLUGIN_OUT_DIR_WINDOWS := $(OUTPUT_DIR)/plugins/windows/release
-PLUGIN_OUT_DIR_LINUX_DEBUG := $(OUTPUT_DIR)/plugins/linux/debug
-PLUGIN_OUT_DIR_WINDOWS_DEBUG := $(OUTPUT_DIR)/plugins/windows/debug
+	ABS_CONFIG=$$(realpath src/Server/config.toml); \
+	ABS_PLUG_REL=$$(realpath $(PLUGIN_OUT_DIR_LINUX) || echo); \
+	ABS_PLUG_DBG=$$(realpath $(PLUGIN_OUT_DIR_LINUX_DEBUG) || echo); \
+	. venv/bin/activate && pyinstaller \
+	--onefile \
+	--name PrometheanProxy \
+	--distpath $(OUTPUT_DIR) \
+	--workpath build/pyinstaller_work \
+	--specpath build \
+	--clean -y \
+	--paths src \
+	$${ABS_CONFIG:+--add-data $${ABS_CONFIG}:embedded/} \
+	$${ABS_PLUG_REL:+--add-data $${ABS_PLUG_REL}:embedded/plugins/linux/release} \
+	$${ABS_PLUG_DBG:+--add-data $${ABS_PLUG_DBG}:embedded/plugins/linux/debug} \
+	--hidden-import=engineio.async_drivers.threading \
+	src/Server/server.py
+RAW_PLUGIN_DIRS := $(shell for d in $(PLUGINS_SRC_DIR)/*; do \
+	if [ -d $$d ] && [ -f $$d/main.go ]; then basename $$d; fi; \
+done)
+PLUGIN_DIRS := $(filter-out template,$(RAW_PLUGIN_DIRS))
+PLUGIN_OUT_DIR_ROOT := $(SERVER_SOURCE_DIR)/plugins
+PLUGIN_OUT_DIR_LINUX := $(PLUGIN_OUT_DIR_ROOT)/linux/release
+PLUGIN_OUT_DIR_WINDOWS := $(PLUGIN_OUT_DIR_ROOT)/windows/release
+PLUGIN_OUT_DIR_LINUX_DEBUG := $(PLUGIN_OUT_DIR_ROOT)/linux/debug
+PLUGIN_OUT_DIR_WINDOWS_DEBUG := $(PLUGIN_OUT_DIR_ROOT)/windows/debug
 
 PLUGIN_PLUGINS_LINUX := $(addprefix $(PLUGIN_OUT_DIR_LINUX)/,$(addsuffix .so,$(PLUGIN_DIRS)))
 PLUGIN_PLUGINS_WINDOWS := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS)/,$(addsuffix .dll,$(PLUGIN_DIRS)))
@@ -41,9 +50,9 @@ test: venv
 	. venv/bin/activate && PYTHONPATH=$(SERVER_SOURCE_DIR) python3 -m unittest tests/*.py
 
 clean:
-	rm -rf bin build dist *.egg-info PrometheanProxy.spec
+	rm -rf bin build dist *.egg-info PrometheanProxy.spec $(PLUGIN_OUT_DIR_ROOT)
 
-server: venv
+server: venv plugins-linux
 	@echo "--> Building Python server ELF with PyInstaller (Linux)..."
 	. venv/bin/activate && pyinstaller \
 	--onefile \
@@ -53,6 +62,11 @@ server: venv
 	--specpath build \
 	--clean -y \
 	--paths src \
+	--add-data src/Server/config.toml:embedded/ \
+	--add-data $(PLUGIN_OUT_DIR_LINUX):embedded/plugins/build/linux/release \
+	--add-data $(PLUGIN_OUT_DIR_LINUX_DEBUG):embedded/plugins/build/linux/debug \
+	--add-data $(PLUGIN_OUT_DIR_WINDOWS):embedded/plugins/build/windows/release \
+	--add-data $(PLUGIN_OUT_DIR_WINDOWS_DEBUG):embedded/plugins/build/windows/debug \
 	--hidden-import=engineio.async_drivers.threading \
 	src/Server/server.py
 
@@ -103,25 +117,25 @@ build: linux windows plugins
 $(PLUGIN_OUT_DIR_LINUX)/%.so:
 	@echo "--> Building Go plugin for $* (Linux)..."
 	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX)
-	cd plugins/$*/ && \
+	cd $(PLUGINS_SRC_DIR)/$*/ && \
 		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX)/$*.so main.go
 
 $(PLUGIN_OUT_DIR_WINDOWS)/%.dll:
 	@echo "--> Building Go plugin for $* (Windows)..."
 	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS)
-	cd plugins/$*/ && \
+	cd $(PLUGINS_SRC_DIR)/$*/ && \
 		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS)/$*.dll main.go
 
 $(PLUGIN_OUT_DIR_LINUX_DEBUG)/%-debug.so:
 	@echo "--> Building Go plugin for $* (Linux, Debug)..."
 	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG)
-	cd plugins/$*/ && \
+	cd $(PLUGINS_SRC_DIR)/$*/ && \
 		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG)/$*-debug.so main.go
 
 $(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/%-debug.dll:
 	@echo "--> Building Go plugin for $* (Windows, Debug)..."
 	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)
-	cd plugins/$*/ && \
+	cd $(PLUGINS_SRC_DIR)/$*/ && \
 		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/$*-debug.dll main.go
 
 
