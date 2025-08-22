@@ -11,6 +11,7 @@ import colorama
 import readline
 import ssl
 import traceback
+import os
 
 
 class InteractionHandler:
@@ -27,71 +28,82 @@ class InteractionHandler:
             logger.error(f"Session not found for user ID: {user_ID}")
             return
 
-        def handle_beacon():
-            logger.info(f"Handling beacon command for user ID: {user_ID}")
-            for uid, beacon in beacon_list.items():
-                if uid == user_ID:
-                    beacon.change_beacon(conn, r_address, user_ID)
-            return
+        # Only dynamic plugin commands for sessions
+        command_handlers = {}
+        try:
+            dynamic_commands = getattr(self, "list_loaded_session_commands")()
+        except Exception:
+            dynamic_commands = []
 
-        command_handlers = {
-            "shell": lambda: session_obj.shell(conn, r_address),
-            "close": lambda: session_obj.close_connection(conn, r_address),
-            "processes": lambda: session_obj.list_processes(conn, r_address),
-            "system_info": lambda: session_obj.systeminfo(conn, r_address),
-            "checkfiles": lambda: session_obj.checkfiles(conn),
-            "download": lambda: session_obj.DownloadFiles(conn),
-            "upload": lambda: session_obj.UploadFiles(conn),
-            "services": lambda: session_obj.list_services(conn, r_address),
-            "netstat": lambda: session_obj.netstat(conn, r_address),
-            "diskusage": lambda: session_obj.diskusage(conn, r_address),
-            "listdir": lambda: session_obj.list_dir(conn, r_address),
-            "beacon": handle_beacon,
-            "module": lambda: session_obj.load_module_session(conn, r_address),
-        }
+        for cmd in dynamic_commands or []:
+            command_handlers[cmd] = lambda c=cmd: self.run_session_plugin(c, conn, r_address, user_ID)
+
+        # Add dynamic commands for predefined client modules
+        try:
+            platform_folder = 'windows' if 'windows' in session_obj.operating_system else 'linux'
+            ext = '.dll' if platform_folder == 'windows' else '.so'
+            channel = 'debug' if 'debug' in session_obj.operating_system else 'release'
+            module_dir = os.path.join(session_obj.config['server']['module_location'], platform_folder, channel)
+            files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
+            module_names = [os.path.splitext(f)[0] for f in files]
+        except Exception:
+            module_names = []
+
+        # Wire up discovered on-disk modules (if any). Always use a module-aware handler
+        # so we prompt to load if missing before running the session plugin.
+        for m in module_names:
+            def _session_module_handler(mod=m):
+                def _inner():
+                    if mod in session_obj.loaded_modules:
+                        try:
+                            getattr(self, "load_plugins")()
+                            self.run_session_plugin(mod, conn, r_address, user_ID)
+                            print(colorama.Fore.GREEN + f"Ran session plugin '{mod}'.")
+                        except Exception as e:
+                            logger.error(f"Failed to run session plugin '{mod}' after detecting loaded module: {e}")
+                        return
+                    # Ask to load the module, then run the plugin command
+                    choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
+                    if choice.startswith('y'):
+                        session_obj.load_module_direct_session(conn, r_address, mod)
+                        try:
+                            getattr(self, "load_plugins")()
+                            self.run_session_plugin(mod, conn, r_address, user_ID)
+                            print(colorama.Fore.GREEN + f"Ran session plugin '{mod}' after loading module.")
+                        except Exception as e:
+                            logger.error(f"Failed to run session plugin '{mod}' after loading module: {e}")
+                    else:
+                        print(colorama.Fore.YELLOW + "Cancelled.")
+                return _inner
+            command_handlers[m] = _session_module_handler()
+
+        # Optional: show available commands once when entering the session menu
+        if command_handlers:
+            print(colorama.Fore.YELLOW + "Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]))
 
         while True:
             colorama.init(autoreset=True)
             readline.parse_and_bind("tab: complete")
             readline.set_completer(
                 lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))
-            
+
             command = (input(colorama.Fore.YELLOW +
                              f"{r_address[0]}:{r_address[1]} Command: ")
                        .lower().strip())
-            
+
             logger.info(f"Command input is {command}")
             if command == "exit":
                 break
-            
+
             handler = command_handlers.get(command)
             if handler:
-                if command not in session_obj.loaded_modules and command not in ["module", "beacon", "close", "shell"]:
-                    logger.warning("Module not loaded, cannot execute command.")
-                    print(colorama.Fore.RED + "Module not loaded, cannot execute command.")
-                    load = input(
-                        colorama.Fore.YELLOW + "Load module? (y/N): ").lower().strip()
-                    if load == "y":
-                        logger.info(f"Loading module for command: {command}")
-                        print("Loading module, please wait...")
-                        session_obj.load_module_direct_session(conn, r_address, command)
-                        handler()
-                        print("handler called")
-                        continue  # back to prompt after execution
-                    else:
-                        logger.info("Module not loaded, command skipped.")
-                        continue
                 try:
                     handler()
-                    if command == "close":
-                        logger.info("Connection closed by command.")
-                        return
                 except Exception as e:
                     logger.error(f"Error executing command '{command}': {e}\n{traceback.format_exc()}")
                     print(colorama.Fore.RED + f"An error occurred: {e}")
             else:
                 print(colorama.Fore.RED + f"Unknown command: '{command}'")
-                print(colorama.Fore.GREEN + self.config['SessionModules']['help'])
         return
 
     def use_beacon(self, UserID, IPAddress) -> None:
@@ -109,30 +121,69 @@ class InteractionHandler:
         print(colorama.Fore.YELLOW + f"Interacting with beacon {beaconClass.hostname} ({beaconClass.uuid})")
         logger.info(f"Beacon {beaconClass.hostname} ({beaconClass.uuid}) found")
 
-        def handle_session():
-            logger.info(f"Changing beacon {UserID} to session mode")
-            print(colorama.Fore.GREEN +
-                  "Beacon will attempt to upgrade to a full session on next callback.")
-            add_beacon_command_list(UserID, None, "session", None)
-            logger.info(f"Added 'session' command for beacon {UserID}")
-            return
-
+        # Only static; all other commands are plugins
         command_handlers = {
-            "shell": lambda: beaconClass.shell(UserID, IPAddress),
-            "listdir": lambda: beaconClass.list_dir(UserID, IPAddress),
             "close": lambda: beaconClass.close_connection(UserID),
-            "processes": lambda: beaconClass.list_processes(UserID),
-            "system_info": lambda: beaconClass.systeminfo(UserID),
-            "diskusage": lambda: beaconClass.disk_usage(UserID),
-            "netstat": lambda: beaconClass.netstat(UserID),
-            "session": handle_session,
-            "commands": lambda: beaconClass.list_db_commands(UserID),
-            "directorytraversal": lambda: beaconClass.dir_traversal(UserID),
-            "takephoto": lambda: beaconClass.takePhoto(UserID),
-            "listfiles": lambda: beaconClass.list_files(UserID),
-            "viewfile": lambda: beaconClass.view_file(UserID),
             "module": lambda: beaconClass.load_module_beacon(UserID),
+            "session": lambda: beaconClass.switch_session(UserID)
         }
+
+        # Merge in dynamic beacon plugins via MultiHandlerCommands
+        try:
+            dynamic_beacon = getattr(self, "list_loaded_beacon_commands")()
+        except Exception:
+            dynamic_beacon = []
+
+        for cmd in dynamic_beacon or []:
+            if cmd not in command_handlers:
+                command_handlers[cmd] = lambda c=cmd: self.run_beacon_plugin(c, UserID)
+
+        # Discover on-disk modules and wire commands
+        try:
+            platform_folder = 'windows' if 'windows' in beaconClass.operating_system else 'linux'
+            ext = '.dll' if platform_folder == 'windows' else '.so'
+            channel = 'debug' if 'debug' in beaconClass.operating_system else 'release'
+            module_dir = os.path.join(beaconClass.config['server']['module_location'], platform_folder, channel)
+            files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
+            module_names = [os.path.splitext(f)[0] for f in files]
+        except Exception:
+            module_names = []
+        if module_names:
+            print("Loaded modules:")
+            for m in module_names:
+                print(f" - {m}")
+        for m in module_names:
+            # Always override with a module-aware handler so we can prompt to load if needed
+            def _beacon_module_handler(mod=m):
+                def _inner():
+                    if mod in beaconClass.loaded_modules:
+                        print(colorama.Fore.GREEN + f"Module '{mod}' is already loaded.")
+                        # Ensure plugins are discovered, then run the plugin command
+                        try:
+                            getattr(self, "load_plugins")()
+                            if self.run_beacon_plugin(mod, UserID):
+                                print(colorama.Fore.GREEN + f"Queued beacon plugin '{mod}' for {UserID}.")
+                        except Exception as e:
+                            logger.error(f"Failed to run beacon plugin '{mod}' after detecting loaded module: {e}")
+                        return
+                    # Ask to load the module, then run the plugin command
+                    choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
+                    if choice.startswith('y'):
+                        beaconClass.load_module_direct_beacon(UserID, mod)
+                        try:
+                            getattr(self, "load_plugins")()
+                            if self.run_beacon_plugin(mod, UserID):
+                                print(colorama.Fore.GREEN + f"Queued beacon plugin {mod} for {UserID} after loading module.")
+                        except Exception as e:
+                            logger.error(f"Failed to run beacon plugin '{mod}' after loading module: {e}")
+                    else:
+                        print(colorama.Fore.YELLOW + "Cancelled.")
+                return _inner
+            command_handlers[m] = _beacon_module_handler()
+
+        # Optional: show available commands once when entering the beacon menu
+        if command_handlers:
+            print(colorama.Fore.YELLOW + "Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]))
 
         while True:
             colorama.init(autoreset=True)
@@ -142,33 +193,18 @@ class InteractionHandler:
 
             command = (input(colorama.Fore.YELLOW +
                              f"{UserID} Command: ").lower().strip())
-            
+
             logger.info(f"Command input is {command}")
             if command == "exit":
                 break
 
             handler = command_handlers.get(command)
-            default_commands = ["commands", "shell", "close", "module"]
             if handler:
-                # Only check for module loading for non-default commands
-                if command not in default_commands and command not in default_commands:
-                    logger.warning("Module not loaded, cannot execute command.")
-                    print(colorama.Fore.RED + "Module not loaded, cannot execute command.")
-                    load = input(
-                        colorama.Fore.YELLOW + "Load module? (y/N): ").lower().strip()
-                    if load == "y":
-                        logger.info(f"Loading module for command: {command}")
-                        beaconClass.load_module_direct_beacon(UserID, command)
-                        continue  # wait for module load before executing command
-                    else:
-                        logger.info("Module not loaded, command skipped.")
-                        continue
                 try:
                     logger.info(f"Executing/queueing command: {command}")
                     handler()
                     logger.info(f"Executed/queued command: {command}")
-                    # Commands that terminate the interaction loop
-                    if command in ["close", "session"]:
+                    if command == "close":
                         return
                 except Exception as e:
                     logger.error(f"Error with command '{command}': {e}\n{traceback.format_exc()}")

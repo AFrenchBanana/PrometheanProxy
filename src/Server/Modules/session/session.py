@@ -8,15 +8,10 @@ from ..global_objects import sessions_list, logger
 
 # Import command handlers
 from .commands.control_commands import ControlCommands
-from .commands.file_commands import FileCommands
-from .commands.interactive_commands import InteractiveCommands
-from .commands.system_commands import SystemCommands
+
 
 class Session(
     ControlCommands,
-    FileCommands,
-    InteractiveCommands,
-    SystemCommands
 ):
     """
     Handles commands within a session by composing functionality from various handler classes.

@@ -124,7 +124,7 @@ func RetryRequest(urlStr string, attempts int, sleepDurationSeconds int) error {
 	logger.Warn(fmt.Sprintf("Retrying request for URL: %s for up to %d attempts.", urlStr, attempts))
 	for count := 0; count < attempts; count++ {
 		logger.Warn(fmt.Sprintf("Retry attempt %d for %s", count+1, urlStr))
-		SleepFor(sleepDurationSeconds)
+		SleepFor(sleepDurationSeconds * count)
 
 		responseCode, _, _, err := GetRequest(urlStr)
 		if err != nil {

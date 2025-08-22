@@ -36,12 +36,11 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
             continue
 
         command.command_output = output
-        
+        print(f"Command output for {cid}: {output}")
         if command.command == "module":
             command.data = ""
 
         if command.command == "directory_traversal":
-            socketio_event = "directory_traversal"
             command.command_output = "Response received, view in the Directory Listing tab."
             dir_path = os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}")
             os.makedirs(dir_path, exist_ok=True)

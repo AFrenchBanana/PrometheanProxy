@@ -63,7 +63,7 @@ class Beacon:
         """
         if (input(
                 colorama.Back.RED +
-                "Are you sure want to close the connection?: Y/N ").lower()
+                "Are you sure want to close the connection?: y/N ").lower()
                 == "y"):
             print(
                 colorama.Back.YELLOW +
@@ -90,69 +90,6 @@ class Beacon:
                 "Connection not closed")
         return
 
-    def shell(self, userID, IPAddress) -> None:
-        """runs a shell between the sessions client and server"""
-        logger.debug(f"Starting shell for userID: {userID} at IP: {IPAddress}")
-        print(
-            f"Shell {IPAddress}: Type exit to quit session, "
-            "Please use absolute paths")
-        command = input("Command: ")
-        logger.debug(f"Shell command: {command}")
-        add_beacon_command_list(userID, None, "shell", command)
-        logger.debug(f"Shell command added to command list for userID: {userID}")
-
-    def list_dir(self, userID, IPAddress) -> None:
-        """runs a shell between the sessions client and server"""
-        logger.debug(f"Listing directory for userID: {userID} at IP: {IPAddress}")
-        print(
-            f"ListDir {IPAddress}: Type exit to quit session, "
-            "Please use absolute paths")
-        command = input("Directory: ")
-        logger.debug(f"List directory command: {command}")
-        add_beacon_command_list(userID, None, "list_dir", command)
-        logger.debug(f"List directory command added to command list for userID: {userID}")
-
-    def list_processes(self, userID) -> None:
-        logger.debug(f"Listing processes for userID: {userID}")
-        add_beacon_command_list(userID, None, "list_processes", "")
-        logger.debug(f"List processes command added to command list for userID: {userID}")
-        return
-
-    def systeminfo(self, userID) -> None:
-        """gets the systeminfo of the client"""
-        add_beacon_command_list(userID, None, "system_info", "")
-        logger.debug(f"Systeminfo command added to command list for userID: {userID}")
-        return
-
-    def disk_usage(self, userID) -> None:
-        add_beacon_command_list(userID, None, "disk_usage", "")
-        logger.debug(f"Disk usage command added to command list for userID: {userID}")
-        return
-
-    def dir_traversal(self, userID) -> None:
-        add_beacon_command_list(userID, None, "directory_traversal", "")
-        logger.debug(f"Directory traversal command added to command list for userID: {userID}")
-        return
-
-    def netstat(self, userID) -> None:
-        add_beacon_command_list(userID, None, "netstat", "")
-        logger.debug(f"Netstat command added to command list for userID: {userID}")
-        return
-
-    def takePhoto(self, userID) -> None:
-        add_beacon_command_list(userID, None, "snap", "")
-        logger.debug(f"Take photo command added to command list for userID: {userID}")
-        return
-
-    def list_files(self, userID) -> None:
-        data = input("Enter the path to list files: ")
-        if not data:
-            print("No path provided. Listing files in current directory.")
-            data = "."
-        logger.debug(f"Listing files for userID: {userID} at path: {data}")
-        self.file_manager.list_files(userID, data)
-        logger.debug(f"List files for userID: {userID}")
-        
     def load_module_beacon(self, userID) -> None:
         command_location = self.config['server']['module_location']
         try:
@@ -216,6 +153,10 @@ class Beacon:
         except Exception as e:
             logger.error(f"Error loading module '{module_name}': {e}")
             print(f"Error loading module '{module_name}': {e}")
+
+    def switch_session(self, userID) -> None:
+        logger.debug(f"Switching session for userID: {userID}")
+        add_beacon_command_list(userID, None, "session", {})
 
     def list_db_commands(self, userID) -> None:
         logger.debug(f"Listing commands for userID: {userID}")

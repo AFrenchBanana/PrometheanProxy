@@ -27,7 +27,7 @@ PLUGIN_PLUGINS_WINDOWS := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS)/,$(addsuffix .dl
 PLUGIN_PLUGINS_LINUX_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_LINUX_DEBUG)/,$(addsuffix -debug.so,$(PLUGIN_DIRS)))
 PLUGIN_PLUGINS_WINDOWS_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/,$(addsuffix -debug.dll,$(PLUGIN_DIRS)))
 
-.PHONY: all venv lint test clean server build linux windows run-client check-hmac-key plugins
+.PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins
 
 all: build server
 
@@ -41,10 +41,10 @@ test: venv
 	. venv/bin/activate && PYTHONPATH=$(SERVER_SOURCE_DIR) python3 -m unittest tests/*.py
 
 clean:
-	rm -rf bin build  *.egg-info PrometheanProxy.spec
+	rm -rf bin build dist *.egg-info PrometheanProxy.spec
 
 server: venv
-	@echo "--> Building Python server executable..."
+	@echo "--> Building Python server ELF with PyInstaller (Linux)..."
 	. venv/bin/activate && pyinstaller \
 	--onefile \
 	--name PrometheanProxy \
@@ -55,6 +55,20 @@ server: venv
 	--paths src \
 	--hidden-import=engineio.async_drivers.threading \
 	src/Server/server.py
+
+# Alias for clarity; produces an ELF on Linux via PyInstaller
+server-elf: server
+
+# Windows build of the Python server using py2exe. Run on Windows only.
+server-windows: venv
+	@echo "--> Building Python server .exe with py2exe (Windows-only)..."
+	@echo "    Note: py2exe only works on Windows. Run this target on a Windows host."
+	. venv/bin/activate && pip install -q --upgrade py2exe || true
+	. venv/bin/activate && python src/Server/setup_py2exe.py py2exe
+	@mkdir -p $(OUTPUT_DIR)
+	@if [ -f "dist/PrometheanProxy.exe" ]; then \
+		mv -f dist/PrometheanProxy.exe $(OUTPUT_DIR)/promethean-server-windows-amd64.exe; \
+	fi
 
 
 
@@ -125,5 +139,5 @@ hmac-key:
 
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)"
 
