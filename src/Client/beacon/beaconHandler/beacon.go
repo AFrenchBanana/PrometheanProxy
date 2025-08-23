@@ -14,7 +14,6 @@ import (
 func Beacon() (error, bool) {
 	logger.Log("Beacon loop initiated.")
 	var switchSession bool
-	// Initial validation before starting the loop.
 	config.ConfigMutex.RLock()
 	if config.ID == "" {
 		config.ConfigMutex.RUnlock()

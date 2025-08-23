@@ -33,5 +33,6 @@ type Module struct {
 }
 
 type Command struct {
-	Name string `json:"obfuscation_name"`
+	Name    string `json:"obfuscation_name"`
+	Command string `json:"command"`
 }
