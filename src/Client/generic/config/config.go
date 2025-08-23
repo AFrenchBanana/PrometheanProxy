@@ -10,14 +10,14 @@ import (
 )
 
 var (
-	ID                 string = ""
-	Jitter             int    = 5
-	Timer              int    = 10
-	URLPort            string = "8000"
-	SessionAddressPort string = "2000"
-	URL                string = "http://localhost:" + URLPort
-	SessionAddr        string = "localhost:" + SessionAddressPort
-	OsIdentifier       string = runtime.GOOS + " " + runtime.GOARCH + func() string {
+	ID                 string  = ""
+	Jitter             float64 = 5
+	Timer              float64 = 10
+	URLPort            string  = "8000"
+	SessionAddressPort string  = "2000"
+	URL                string  = "http://localhost:" + URLPort
+	SessionAddr        string  = "localhost:" + SessionAddressPort
+	OsIdentifier       string  = runtime.GOOS + " " + runtime.GOARCH + func() string {
 		if IsDebug() {
 			return " (DEBUG)"
 		} else {
@@ -58,7 +58,6 @@ func init() {
 
 	if cfgPath == "" {
 		panic("No obfuscation config path provided via flag, environment variable, or build settings")
-		return
 	}
 
 	data, err := os.ReadFile(cfgPath)

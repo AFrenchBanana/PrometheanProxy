@@ -31,7 +31,7 @@ func init() {
 	pluginName = pluginKey
 
 	type entry struct {
-		ObfuscatedName string `json:"obfuscated_name"`
+		ObfuscatedName string `json:"obfuscation_name"`
 	}
 	var m map[string]entry
 	if err := json.Unmarshal(obfuscateJSON, &m); err == nil {

@@ -29,7 +29,7 @@ class SystemInfo:
             obfuscation = {}
 
         nested = obfuscation.get("system_info") or {}
-        self.obf_name = nested.get("obfuscated_name") if isinstance(nested, dict) else ValueError("Invalid obfuscate.json format")
+        self.obf_name = nested.get("obfuscation_name") if isinstance(nested, dict) else ValueError("Invalid obfuscate.json format")
 
         if obfuscation:
             try:

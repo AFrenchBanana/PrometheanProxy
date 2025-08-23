@@ -218,7 +218,7 @@ class Beacon:
                 try:
                     entry = obfuscation_map.get(module_name)
                     if isinstance(entry, dict):
-                        obf_name = entry.get("obfuscated_name") or module_name
+                        obf_name = entry.get("obfuscation_name") or module_name
                 except Exception:
                     obf_name = module_name
 

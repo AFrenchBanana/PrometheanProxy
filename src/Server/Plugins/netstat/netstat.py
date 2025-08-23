@@ -26,16 +26,6 @@ class Netstat:
             logger.error(
                 f"Netstat: could not load obfuscate.json (falling back to plain command). Error: {e}"
             )
-            obfuscation = {}
-
-        # Resolve obfuscated name with safe fallback
-        nested = obfuscation.get("netstat") or {}
-        if isinstance(nested, dict):
-            self.obf_name = nested.get("obfuscated_name") or self.command
-        else:
-            logger.error("Netstat: invalid obfuscate.json format for 'netstat' entry; using plain command")
-            self.obf_name = self.command
-
         if obfuscation:
             try:
                 obfuscation_map.update(obfuscation)
@@ -46,7 +36,7 @@ class Netstat:
 
     def beacon(self, beacon: dict) -> None:
         """Queue netstat command for a beacon by userID."""
-        add_beacon_command_list(beacon.userID, None, self.obf_name, "")
+        add_beacon_command_list(beacon.userID, None, self.command, "")
         logger.debug(
             f"Netstat command added to command list for userID: {beacon.userID}"
         )
@@ -54,7 +44,7 @@ class Netstat:
     def session(self, session: dict) -> None:
         """Request netstat from a live session and store the result."""
         logger.info(f"Requesting netstat from {session['userID']}")
-        send_data(session['conn'], self.obf_name)
+        send_data(session['conn'], self.command)
         data = receive_data(session['conn'])
         self.database.insert_entry(
             "Netstat",

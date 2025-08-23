@@ -1,4 +1,5 @@
 {
-    "plugin_name": "test",
-    "obfuscated_name": "T34T"
+    "test": {
+        "obfuscation_name": "T34T"
+    }
 }

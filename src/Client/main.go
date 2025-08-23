@@ -69,11 +69,11 @@ func beacon() {
 			}
 
 			config.Timer = connTimer
-			logger.Log("Timer set to " + strconv.Itoa(config.Timer))
+			logger.Log("Timer set to " + strconv.FormatFloat(config.Timer, 'f', -1, 64))
 			config.ID = connID
 			logger.Log("ID set to " + config.ID)
 			config.Jitter = connJitter
-			logger.Log("Jitter set to " + strconv.Itoa(config.Jitter))
+			logger.Log("Jitter set to " + strconv.FormatFloat(config.Jitter, 'f', -1, 64))
 		}
 
 		logger.Log("Beaconing")

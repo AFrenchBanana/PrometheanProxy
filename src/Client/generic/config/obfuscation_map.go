@@ -17,6 +17,21 @@ type ImplantInfo struct {
 }
 
 type Commands struct {
-	Module string `json:"module"`
-	Shell  string `json:"shell"`
+	Name        string  `json:"obfuscation_name"`
+	CommandUUID string  `json:"command_uuid"`
+	Command     string  `json:"command"`
+	Data        string  `json:"data"`
+	Module      Module  `json:"module"`
+	Shell       Command `json:"shell"`
+	None        Command `json:"none"`
+}
+
+type Module struct {
+	Name       string `json:"obfuscation_name"`
+	ModuleName string `json:"module_name"`
+	Data       string `json:"data"`
+}
+
+type Command struct {
+	Name string `json:"obfuscation_name"`
 }

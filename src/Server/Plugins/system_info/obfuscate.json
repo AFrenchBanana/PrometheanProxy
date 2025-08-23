@@ -1,4 +1,5 @@
 {
-    "plugin_name": "system_info",
-    "obfuscated_name": "212efd"
+    "system_info": {
+        "obfuscation_name": "212efd"
+    }
 }
