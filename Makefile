@@ -6,9 +6,12 @@ CLIENT_SOURCE_DIR = src/Client
 SERVER_SOURCE_DIR = src/Server
 OUTPUT_DIR = bin
 
+# Default obfuscate config path (adjust if your workspace differs)
+OBFUSCATE_CONFIG ?= $(CURDIR)/src/Server/obfuscate.json
+
 # Define Go build flags
-GO_BUILD_FLAGS = -ldflags="-s -w -X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
-GO_BUILD_FLAGS_DEBUG = -tags=debug -ldflags="-X src/Client/generic/config.HMACKey=$(HMAC_KEY)"
+GO_BUILD_FLAGS = -ldflags="-s -w -X src/Client/generic/config.HMACKey=$(HMAC_KEY) -X 'src/Client/generic/config.ObfuscateConfigPath=$(OBFUSCATE_CONFIG)'"
+GO_BUILD_FLAGS_DEBUG = -tags=debug -ldflags="-X src/Client/generic/config.HMACKey=$(HMAC_KEY) -X 'src/Client/generic/config.ObfuscateConfigPath=$(OBFUSCATE_CONFIG)'"
 
 # Define output targets
 OUTPUT_LINUX_RELEASE = $(OUTPUT_DIR)/promethean-client-linux-amd64
@@ -191,5 +194,5 @@ hmac-key:
 
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)"
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)" -obfuscate="$(OBFUSCATE_CONFIG)"
 

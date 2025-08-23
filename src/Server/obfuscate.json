@@ -1,5 +1,17 @@
 {
     "generic":{
-        "module": "asghuin2"
+        "implant_info": {
+            "Name": "1286",
+            "os": "dsfsed165",
+            "address": "sdfiojhHIUASDHIU",
+            "timer": "1215",
+            "uuid": "0",
+            "jitter": "dsfd"
+        },
+        "commands":{
+            "module": "asghuin2",
+            "shell": "M1",
+            "none": "424mkl"
+        }
     }
 }

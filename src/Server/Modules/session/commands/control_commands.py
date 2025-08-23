@@ -8,7 +8,7 @@ import readline
 import json
 import base64
 from ..transfer import send_data
-from ...global_objects import logger, tab_completion
+from ...global_objects import logger, tab_completion, obfuscation_map
 
 class ControlCommands:
     """Handles session state and control commands."""
@@ -141,7 +141,7 @@ class ControlCommands:
             # Encode binary module data as base64 and serialize payload to JSON
             encoded_data = base64.b64encode(file_data).decode('ascii')
             payload = {"module": {"name": module_name, "data": encoded_data}}
-            send_data(conn, json.dumps(payload))
+            send_data(conn, payload)
             # Track loaded module
             if module_name not in self.loaded_modules:
                 self.loaded_modules.append(module_name)

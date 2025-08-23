@@ -64,7 +64,6 @@ func Beacon() (error, bool) {
 			return nil, true
 		}
 
-		// Sleep before the next beacon attempt.
 		logger.Log(fmt.Sprintf("Beacon sleeping for %v.", sleepDuration))
 		time.Sleep(sleepDuration)
 	}

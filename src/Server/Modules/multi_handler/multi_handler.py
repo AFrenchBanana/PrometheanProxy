@@ -23,7 +23,8 @@ from ..global_objects import (
     execute_local_commands,
     config,
     tab_completion,
-    logger
+    logger,
+    obfuscation_map
 )
 from Modules.utils.config_configuration import config_menu, beacon_config_menu
 
@@ -42,6 +43,7 @@ class MultiHandler:
         self.database = DatabaseClass(config)
         self.create_certificate()
         self.create_hmac()
+        print(obfuscation_map)
 
         colorama.init(autoreset=True)
         if config['packetsniffer']['active']:
