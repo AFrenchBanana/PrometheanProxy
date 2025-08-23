@@ -24,22 +24,18 @@ RAW_PLUGIN_DIRS := $(shell for d in $(PLUGINS_SRC_DIR)/*; do \
 done)
 PLUGIN_DIRS := $(filter-out template,$(RAW_PLUGIN_DIRS))
 
-# Compiled plugin output directories (kept inside repo under Server/Plugins)
-PLUGIN_OUT_DIR_ROOT := $(SERVER_SOURCE_DIR)/Plugins
-PLUGIN_OUT_DIR_LINUX := $(PLUGIN_OUT_DIR_ROOT)/linux/release
-PLUGIN_OUT_DIR_WINDOWS := $(PLUGIN_OUT_DIR_ROOT)/windows/release
-PLUGIN_OUT_DIR_LINUX_DEBUG := $(PLUGIN_OUT_DIR_ROOT)/linux/debug
-PLUGIN_OUT_DIR_WINDOWS_DEBUG := $(PLUGIN_OUT_DIR_ROOT)/windows/debug
-
-PLUGINS_LINUX := $(addprefix $(PLUGIN_OUT_DIR_LINUX)/,$(addsuffix .so,$(PLUGIN_DIRS)))
-PLUGINS_WINDOWS := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS)/,$(addsuffix .dll,$(PLUGIN_DIRS)))
-PLUGINS_LINUX_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_LINUX_DEBUG)/,$(addsuffix -debug.so,$(PLUGIN_DIRS)))
-PLUGINS_WINDOWS_DEBUG := $(addprefix $(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/,$(addsuffix -debug.dll,$(PLUGIN_DIRS)))
+# Compiled plugin output directories (per-plugin layout under Server/Plugins/<name>)
+# Linux:   src/Server/Plugins/<name>/{release,debug}/<name>[ -debug].so
+# Windows: src/Server/Plugins/<name>/{release,debug}/<name>[ -debug].dll
+PLUGINS_RELEASE_LINUX := $(foreach p,$(PLUGIN_DIRS),$(PLUGINS_SRC_DIR)/$(p)/release/$(p).so)
+PLUGINS_RELEASE_WINDOWS := $(foreach p,$(PLUGIN_DIRS),$(PLUGINS_SRC_DIR)/$(p)/release/$(p).dll)
+PLUGINS_DEBUG_LINUX := $(foreach p,$(PLUGIN_DIRS),$(PLUGINS_SRC_DIR)/$(p)/debug/$(p)-debug.so)
+PLUGINS_DEBUG_WINDOWS := $(foreach p,$(PLUGIN_DIRS),$(PLUGINS_SRC_DIR)/$(p)/debug/$(p)-debug.dll)
 
 # Staging directory for bundling ONLY Python plugin sources (no Go artifacts)
 PY_PLUGIN_STAGING_DIR := build/py_plugins
 
-.PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins py-plugins
+.PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins py-plugins install-plugins
 
 all: build server
 
@@ -54,15 +50,17 @@ test: venv
 
 clean:
 	rm -rf bin build dist *.egg-info PrometheanProxy.spec \
-	$(PLUGIN_OUT_DIR_ROOT)/linux \
-	$(PLUGIN_OUT_DIR_ROOT)/windows
+	$(SERVER_SOURCE_DIR)/Plugins/*/release \
+	$(SERVER_SOURCE_DIR)/Plugins/*/debug
 
 server: venv plugins py-plugins
 	@echo "--> Building Python server ELF with PyInstaller (Linux)..."
 	rm -f PrometheanProxy.spec build/PrometheanProxy.spec; \
 	# Ensure plugin output directories exist so --add-data paths are valid even if empty
-	mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX) $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG) \
-		$(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS) $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG); \
+	for p in $(PLUGIN_DIRS); do \
+		mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$$p/release; \
+		mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$$p/debug; \
+	done; \
 	. venv/bin/activate && pyinstaller \
 	--onefile \
 	--name PrometheanProxy \
@@ -75,10 +73,8 @@ server: venv plugins py-plugins
 	--hidden-import=Server.Plugins \
 	--add-data $(CURDIR)/src/Server/config.toml:embedded/ \
 	--add-data $(CURDIR)/$(PY_PLUGIN_STAGING_DIR):embedded/pyplugins \
-	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX):embedded/plugins/linux/release \
-	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG):embedded/plugins/linux/debug \
-	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS):embedded/plugins/windows/release \
-	--add-data $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG):embedded/plugins/windows/debug \
+	$(foreach p,$(PLUGIN_DIRS),--add-data $(CURDIR)/$(PLUGINS_SRC_DIR)/$(p)/release:embedded/plugins/$(p)/release) \
+	$(foreach p,$(PLUGIN_DIRS),--add-data $(CURDIR)/$(PLUGINS_SRC_DIR)/$(p)/debug:embedded/plugins/$(p)/debug) \
 	--hidden-import=engineio.async_drivers.threading \
 	src/Server/server.py
 
@@ -120,8 +116,8 @@ $(OUTPUT_WINDOWS_DEBUG):
 # Include plugins in overall build
 plugins: plugins-linux plugins-windows 
 
-plugins-linux: $(PLUGINS_LINUX) $(PLUGINS_LINUX_DEBUG)
-plugins-windows: $(PLUGINS_WINDOWS) $(PLUGINS_WINDOWS_DEBUG)
+plugins-linux: $(PLUGINS_RELEASE_LINUX) $(PLUGINS_DEBUG_LINUX)
+plugins-windows: $(PLUGINS_RELEASE_WINDOWS) $(PLUGINS_DEBUG_WINDOWS)
 
 build: linux windows plugins
 
@@ -133,29 +129,52 @@ py-plugins:
 	# Copy only .py files while preserving directory structure under a top-level 'Plugins' package
 	@rsync -a --prune-empty-dirs --include '*/' --include '*.py' --exclude '*' $(SERVER_SOURCE_DIR)/Plugins/ $(PY_PLUGIN_STAGING_DIR)/Plugins/
 
-$(PLUGIN_OUT_DIR_LINUX)/%.so:
-	@echo "--> Building Go plugin for $* (Linux)..."
-	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX)
-	cd $(PLUGINS_SRC_DIR)/$*/ && \
-		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX)/$*.so main.go
+# Install compiled Go plugin artifacts into the user's plugins directory for source runs
+install-plugins: plugins
+	@echo "--> Installing compiled plugins to $$HOME/.PrometheanProxy/plugins ..."
+	@dest="$$HOME/.PrometheanProxy/plugins"; \
+	mkdir -p "$$dest"; \
+	for p in $(PLUGIN_DIRS); do \
+		for ch in release debug; do \
+			src_dir="$(PLUGINS_SRC_DIR)/$$p/$$ch"; \
+			out_dir="$$dest/$$p/$$ch"; \
+			if [ -d "$$src_dir" ]; then \
+				mkdir -p "$$out_dir"; \
+				find "$$src_dir" -maxdepth 1 -type f \( -name '*.so' -o -name '*.dll' \) -exec cp -f {} "$$out_dir/" \; ; \
+			fi; \
+		done; \
+	done; \
+	echo "--> Plugins installed under $$dest"
 
-$(PLUGIN_OUT_DIR_WINDOWS)/%.dll:
-	@echo "--> Building Go plugin for $* (Windows)..."
-	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS)
-	cd $(PLUGINS_SRC_DIR)/$*/ && \
-		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS)/$*.dll main.go
 
-$(PLUGIN_OUT_DIR_LINUX_DEBUG)/%-debug.so:
-	@echo "--> Building Go plugin for $* (Linux, Debug)..."
-	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG)
-	cd $(PLUGINS_SRC_DIR)/$*/ && \
-		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGIN_OUT_DIR_LINUX_DEBUG)/$*-debug.so main.go
 
-$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/%-debug.dll:
-	@echo "--> Building Go plugin for $* (Windows, Debug)..."
-	@mkdir -p $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)
-	cd $(PLUGINS_SRC_DIR)/$*/ && \
-		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGIN_OUT_DIR_WINDOWS_DEBUG)/$*-debug.dll main.go
+define GO_PLUGIN_RULES
+$(PLUGINS_SRC_DIR)/$(1)/release/$(1).so:
+	@echo "--> Building Go plugin for $(1) (Linux, Release)..."
+	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release
+	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
+		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).so main.go
+
+$(PLUGINS_SRC_DIR)/$(1)/release/$(1).dll:
+	@echo "--> Building Go plugin for $(1) (Windows, Release)..."
+	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release
+	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
+		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).dll main.go
+
+$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.so:
+	@echo "--> Building Go plugin for $(1) (Linux, Debug)..."
+	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug
+	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
+		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.so main.go
+
+$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.dll:
+	@echo "--> Building Go plugin for $(1) (Windows, Debug)..."
+	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug
+	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
+		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.dll main.go
+endef
+
+$(foreach p,$(PLUGIN_DIRS),$(eval $(call GO_PLUGIN_RULES,$(p))))
 
 
 linux: $(OUTPUT_LINUX_RELEASE) $(OUTPUT_LINUX_DEBUG)

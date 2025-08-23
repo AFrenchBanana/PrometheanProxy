@@ -13,12 +13,13 @@ from tomlkit.exceptions import InvalidCharInStringError
 
 import os
 import sys
-
+import json
 
 beacon_list = {}
 command_list = {}
 sessions_list = {}
 multiplayer_connections = {}
+obfuscation_map = {}
 
 if getattr(sys, "frozen", False):
     base_dir = os.path.expanduser("~/.PrometheanProxy")
@@ -53,6 +54,10 @@ except InvalidCharInStringError:
     print("Invalid character found in config file. Regenerating config file.")
     with TomlFiles(config_file_path) as f:
         config = f
+
+with open("src/Server/obfuscate.json") as f:
+    obfuscation_map = json.load(f)
+    f.close()
 
 logger = Logger(
     name="Server",

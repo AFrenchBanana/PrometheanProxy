@@ -33,12 +33,9 @@ def _extract_embedded_assets():
         # Paths inside bundle as added by Makefile --add-data
         embedded_root = os.path.join(base, 'embedded')
         config_src = os.path.join(embedded_root, 'config.toml')
-        # Go module artifacts staged by Makefile
-        plugins_linux_rel = os.path.join(embedded_root, 'plugins', 'linux', 'release')
-        plugins_linux_dbg = os.path.join(embedded_root, 'plugins', 'linux', 'debug')
-        plugins_windows_rel = os.path.join(embedded_root, 'plugins', 'windows', 'release')
-        plugins_windows_dbg = os.path.join(embedded_root, 'plugins', 'windows', 'debug')
-        # Python plugin sources staged by Makefile
+        # Compiled plugin artifacts staged by Makefile under embedded/plugins/<name>/{release,debug}
+        plugins_root = os.path.join(embedded_root, 'plugins')
+        # Python plugin sources staged by Makefile under embedded/pyplugins
         pyplugins_src = os.path.join(embedded_root, 'pyplugins')
 
         # Copy config.toml if missing
@@ -49,38 +46,38 @@ def _extract_embedded_assets():
             pass
 
         # Copy compiled plugin artifacts into unified layout:
-        # ~/.PrometheanProxy/plugins/Plugins/<name>/{release|debug}/<name>[ -debug].{so|dll}
-        compiled_sources = [
-            (plugins_linux_rel, 'release'),
-            (plugins_linux_dbg, 'debug'),
-            (plugins_windows_rel, 'release'),
-            (plugins_windows_dbg, 'debug'),
-        ]
-        for src_dir, channel in compiled_sources:
-            if not os.path.isdir(src_dir):
-                continue
-            for fname in os.listdir(src_dir):
-                src = os.path.join(src_dir, fname)
-                if not os.path.isfile(src):
-                    continue
-                name, ext = os.path.splitext(fname)
-                # Remove '-debug' suffix to get canonical plugin name
-                plugin_name = name[:-6] if name.endswith('-debug') else name
-                # Keep original filename so debug keeps '-debug' suffix
-                out_dir = os.path.join(plugins_dst_root, 'Plugins', plugin_name, channel)
-                os.makedirs(out_dir, exist_ok=True)
-                dst = os.path.join(out_dir, fname)
-                try:
-                    shutil.copy2(src, dst)
-                except Exception:
-                    pass
+        # ~/.PrometheanProxy/plugins/<name>/{release|debug}/<name>[ -debug].{so|dll}
+        try:
+            if os.path.isdir(plugins_root):
+                for plugin_name in os.listdir(plugins_root):
+                    pdir = os.path.join(plugins_root, plugin_name)
+                    if not os.path.isdir(pdir):
+                        continue
+                    for channel in ("release", "debug"):
+                        src_dir = os.path.join(pdir, channel)
+                        if not os.path.isdir(src_dir):
+                            continue
+                        out_dir = os.path.join(plugins_dst_root, plugin_name, channel)
+                        os.makedirs(out_dir, exist_ok=True)
+                        for fname in os.listdir(src_dir):
+                            src = os.path.join(src_dir, fname)
+                            if not os.path.isfile(src):
+                                continue
+                            dst = os.path.join(out_dir, fname)
+                            try:
+                                shutil.copy2(src, dst)
+                            except Exception:
+                                pass
+        except Exception:
+            pass
 
         # Copy Python plugin sources to ~/.PrometheanProxy/plugins (preserve structure)
         try:
             if os.path.isdir(pyplugins_src):
                 for root, dirs, files in os.walk(pyplugins_src):
                     rel = os.path.relpath(root, pyplugins_src)
-                    dst_root = os.path.join(plugins_dst_root, rel)
+                    rel_out = "" if rel == "." else rel
+                    dst_root = os.path.join(plugins_dst_root, rel_out)
                     os.makedirs(dst_root, exist_ok=True)
                     for fname in files:
                         src = os.path.join(root, fname)
@@ -97,6 +94,29 @@ def _extract_embedded_assets():
         try:
             if os.path.isfile(repo_config) and not os.path.exists(config_dst):
                 shutil.copy2(repo_config, config_dst)
+        except Exception:
+            pass
+
+        try:
+            legacy_root = os.path.join(user_root, 'plugins', 'Plugins')
+            if os.path.isdir(legacy_root):
+                for name in os.listdir(legacy_root):
+                    src_dir = os.path.join(legacy_root, name)
+                    dst_dir = os.path.join(plugins_dst_root, name)
+                    if os.path.isdir(src_dir):
+                        for root, dirs, files in os.walk(src_dir):
+                            rel = os.path.relpath(root, src_dir)
+                            out_root = os.path.join(dst_dir, rel)
+                            os.makedirs(out_root, exist_ok=True)
+                            for fname in files:
+                                try:
+                                    shutil.copy2(os.path.join(root, fname), os.path.join(out_root, fname))
+                                except Exception:
+                                    pass
+                try:
+                    shutil.rmtree(legacy_root)
+                except Exception:
+                    pass
         except Exception:
             pass
 

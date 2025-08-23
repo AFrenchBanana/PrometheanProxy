@@ -52,12 +52,12 @@ class ControlCommands:
         def _resolve_module_base() -> str:
             candidates = [
                 os.path.expanduser(self.config['server'].get('module_location', '')),
-                os.path.expanduser('~/.PrometheanProxy/plugins/Plugins'),
+                os.path.expanduser('~/.PrometheanProxy/plugins'),
             ]
             for c in candidates:
                 if c and os.path.isdir(c):
                     return c
-            return os.path.expanduser('~/.PrometheanProxy/plugins/Plugins')
+            return os.path.expanduser('~/.PrometheanProxy/plugins')
 
         command_location = _resolve_module_base()
         try:
@@ -73,7 +73,7 @@ class ControlCommands:
                 files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
                 module_names = [os.path.splitext(f)[0].removesuffix('-debug') for f in files]
             else:
-                # New layout: Plugins/<name>/{release,debug}/{name}[ -debug].ext
+                # Unified layout: <name>/{release,debug}/{name}[ -debug].ext
                 for name in os.listdir(command_location):
                     full = os.path.join(command_location, name)
                     if not os.path.isdir(full):
@@ -105,18 +105,18 @@ class ControlCommands:
         def _resolve_module_base() -> str:
             candidates = [
                 os.path.expanduser(self.config['server'].get('module_location', '')),
-                os.path.expanduser('~/.PrometheanProxy/plugins/Plugins'),
+                os.path.expanduser('~/.PrometheanProxy/plugins'),
             ]
             for c in candidates:
                 if c and os.path.isdir(c):
                     return c
-            return os.path.expanduser('~/.PrometheanProxy/plugins/Plugins')
+            return os.path.expanduser('~/.PrometheanProxy/plugins')
 
         base = os.path.abspath(_resolve_module_base())
         platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
         ext = '.dll' if platform_folder == 'windows' else '.so'
         channel = 'debug' if 'debug' in self.operating_system else 'release'
-        # New unified layout: Plugins/<name>/{release,debug}/{name}[ -debug].ext
+        # Unified layout: <name>/{release,debug}/{name}[ -debug].ext
         filename = f"{module_name}{'-debug' if channel=='debug' else ''}{ext}"
         module_path = os.path.join(base, module_name, channel, filename)
         # Fallback to legacy if unified file missing
@@ -128,7 +128,7 @@ class ControlCommands:
                 legacy_try = os.path.join(legacy_base, 'linux', channel, f"{module_name}{'-debug' if channel=='debug' else ''}.so")
             if os.path.isfile(legacy_try):
                 module_path = legacy_try
-        
+
         module_path = os.path.abspath(os.path.expanduser(module_path))
         logger.info(f"Loading module '{module_name}' from {module_path}")
 
@@ -137,7 +137,7 @@ class ControlCommands:
         try:
             with open(module_path, "rb") as module_file:
                 file_data = module_file.read()
-                
+
             # Encode binary module data as base64 and serialize payload to JSON
             encoded_data = base64.b64encode(file_data).decode('ascii')
             payload = {"module": {"name": module_name, "data": encoded_data}}

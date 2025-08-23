@@ -1,11 +1,12 @@
 import os
 from http.server import BaseHTTPRequestHandler
 
-from Modules.global_objects import command_list, logger
+from Modules.global_objects import command_list, logger, obfuscation_map
 from Modules.beacon.beacon_server.utils import process_request_data
 
 
 def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
+
     """Receives the output from executed commands."""
     logger.info(f"Response received from {handler.path}")
 
@@ -39,14 +40,6 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
         print(f"Command output for {cid}: {output}")
         if command.command == "module":
             command.data = ""
-
-        if command.command == "directory_traversal":
-            command.command_output = "Response received, view in the Directory Listing tab."
-            dir_path = os.path.expanduser(f"~/.PrometheanProxy/{command.beacon_uuid}")
-            os.makedirs(dir_path, exist_ok=True)
-            with open(os.path.join(dir_path, "directory_traversal.json"), "w") as f:
-                f.write(output)
-            logger.info(f"Directory Traversal response for {command.beacon_uuid} saved.")
 
     handler.send_response(200)
     handler.end_headers()
