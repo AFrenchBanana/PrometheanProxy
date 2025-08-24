@@ -97,12 +97,12 @@ server-windows: venv
 	fi
 
 
-$(OUTPUT_LINUX_RELEASE): $(PLUGIN_SYSTEMINFO)
+$(OUTPUT_LINUX_RELEASE):
 	@echo "--> Building Go client for Linux (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
 	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@  main.go 
 
-$(OUTPUT_LINUX_DEBUG): $(PLUGIN_SYSTEMINFO)
+$(OUTPUT_LINUX_DEBUG):
 	@echo "--> Building Go client for Linux (Debug)..."
 	@mkdir -p $(OUTPUT_DIR)
 	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go 
@@ -122,6 +122,26 @@ plugins: plugins-linux plugins-windows
 
 plugins-linux: $(PLUGINS_RELEASE_LINUX) $(PLUGINS_DEBUG_LINUX)
 plugins-windows: $(PLUGINS_RELEASE_WINDOWS) $(PLUGINS_DEBUG_WINDOWS)
+
+dependency-update:
+	@echo "--> Updating Go dependencies for client..."
+	@cd $(CLIENT_SOURCE_DIR) && \
+	if [ -f go.mod ]; then \
+		go mod tidy && go get -u ./... || true; \
+	else \
+		echo "  (no go.mod in $(CLIENT_SOURCE_DIR), skipping)"; \
+	fi
+	@echo "--> Updating Go dependencies for plugins..."
+	@for p in $(PLUGIN_DIRS); do \
+		dir="$(CURDIR)/$(PLUGINS_SRC_DIR)/$$p"; \
+		if [ -f "$$dir/go.mod" ]; then \
+			echo "  -> $$p"; \
+			( cd "$$dir" && go mod tidy && go get -u ./... ) || echo "    failed to update $$p"; \
+		else \
+			echo "  -> $$p (no go.mod, skipping)"; \
+		fi; \
+	done
+
 
 build: linux windows plugins
 
