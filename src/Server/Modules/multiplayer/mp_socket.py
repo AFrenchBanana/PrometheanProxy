@@ -5,6 +5,7 @@ import ssl
 import os
 import json
 from ..global_objects import logger, multiplayer_connections
+from ..utils.console import cprint, warn, error as c_error
 
 from .mp_client import Client
 from ..session.transfer import send_data, receive_data, perform_ecdh_handshake
@@ -59,8 +60,7 @@ class MP_Socket:
             logger.info(f"Socket bound to {self.address[0]}:{self.address[1]}")
         except OSError:  # error incase socket is already being used
             logger.error(f"Socket {self.address[0]}:{self.address[1]} already in use")
-            print(colorama.Fore.RED +
-                  f"{self.address[0]}:{self.address[1]} already in use")
+            c_error(f"{self.address[0]}:{self.address[1]} already in use")
             logger.critical("Exiting due to socket error")
         self.sslSocket.listen()
         logger.info(f"Socket listening on {self.address[0]}:{self.address[1]}")
@@ -112,14 +112,14 @@ class MP_Socket:
             password = userinfo.get("password")
             if username in multiplayer_connections or username == self.current_user:
                 logger.warning(f"User {username} is already logged in from another connection")
-                print(colorama.Fore.YELLOW, f"User {username} is already logged in from another connection")
+                warn(f"User {username} is already logged in from another connection")
                 send_data(conn, "User already logged in")
                 conn.close()
                 continue
 
             if self.authenticate_user(username, password):
                 logger.info(f"User {username} authenticated successfully from {r_address}")
-                print(colorama.Fore.GREEN, f"User {username} authenticated successfully from {r_address}")
+                cprint(f"User {username} authenticated successfully from {r_address}", fg="green")
                 mp_client = Client(conn, r_address, username, True)
                 multiplayer_connections[username] = mp_client
                 client_thread = threading.Thread(target=mp_client.start, args=())
@@ -129,7 +129,7 @@ class MP_Socket:
 
             else:
                 logger.warning(f"Authentication failed for user {username} from {r_address}")
-                print(colorama.Fore.RED, f"Authentication failed for user {username} from {r_address}")
+                c_error(f"Authentication failed for user {username} from {r_address}")
                 send_data(conn, "Authentication failed")
                 conn.close()
                 continue

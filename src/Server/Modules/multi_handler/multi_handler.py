@@ -27,6 +27,7 @@ from ..global_objects import (
     obfuscation_map
 )
 from Modules.utils.config_configuration import config_menu, beacon_config_menu
+from Modules.utils.console import cprint, warn, error as c_error
 
 
 class MultiHandler:
@@ -54,7 +55,7 @@ class MultiHandler:
         if config['multiplayer']['multiplayer']:
             self.isMultiplayer = True
             self.multiplayer = MultiPlayer(config)
-            print(colorama.Fore.GREEN + "Multiplayer mode enabled")
+            cprint("Multiplayer mode enabled", fg="green")
             logger.info("Server: Multiplayer mode enabled")
             threading.Thread(target=self.multiplayer.start(),
             args=(config,),
@@ -89,9 +90,7 @@ class MultiHandler:
             except Exception as e:
                 logger.error(f"Failed to create HMAC key: {e}")
             logger.info("HMAC key created successfully")
-            print(colorama.Fore.GREEN +
-                  "HMAC key created: " +
-                  f"{hmac_key_path}")
+            cprint("HMAC key created: " + f"{hmac_key_path}", fg="green")
 
     def create_certificate(self) -> None:
         """
@@ -119,9 +118,7 @@ class MultiHandler:
                 "'/CN=localhost'"
             )
             logger.info("TLS certificates created successfully")
-            print(colorama.Fore.GREEN +
-                  "TLS certificates created: " +
-                  f"{cert_dir}{tls_key} and {cert_dir}{tls_cert}")
+            cprint("TLS certificates created: " + f"{cert_dir}{tls_key} and {cert_dir}{tls_cert}", fg="green")
 
     def startsocket(self) -> None:
         """
@@ -150,24 +147,22 @@ class MultiHandler:
             logger.debug("Wrapping socket with SSL context")
         except FileNotFoundError:
             logger.error("TLS certificate or key file not found")
-            sys.exit(
-                colorama.Fore.RED +
-                "TLS certificate or key file not found.")
+            c_error("TLS certificate or key file not found.")
+            sys.exit(1)
         except ssl.SSLError as e:
             logger.critical(f"SSL error: {e}")
-            print(colorama.Fore.RED + "SSL error: " + str(e))
+            c_error("SSL error: " + str(e))
             sys.exit(1)
         except Exception as e:
             logger.critical(f"Unexpected error: {e}")
-            print(colorama.Fore.RED + "Unexpected error: " + str(e))
+            c_error("Unexpected error: " + str(e))
             sys.exit(1)
         try:
             SSL_Socket.bind(self.address)
             logger.info(f"Socket bound to {self.address[0]}:{self.address[1]}")
         except OSError:  # error incase socket is already being used
             logger.error(f"Socket {self.address[0]}:{self.address[1]} already in use")
-            print(colorama.Fore.RED +
-                  f"{self.address[0]}:{self.address[1]} already in use")
+            c_error(f"{self.address[0]}:{self.address[1]} already in use")
             logger.critical("Exiting due to socket error")
             sys.exit(1)
         SSL_Socket.listen()
@@ -230,14 +225,9 @@ class MultiHandler:
     def multi_handler(self, config: dict) -> None:
         logger.info("Starting MultiHandler menu")
         try:
-            print(
-                colorama.Fore.YELLOW +
-                f"Awaiting connection on port {self.address[0]}:"
-                f"{self.address[1]}")
+            cprint(f"Awaiting connection on port {self.address[0]}:{self.address[1]}", fg="yellow")
             if config['packetsniffer']['active']:
-                print(colorama.Back.GREEN,
-                      "PacketSniffing active on port",
-                      config['packetsniffer']['port'])
+                cprint("PacketSniffing active on port " + str(config['packetsniffer']['port']), fg="green")
                 logger.info("PacketSniffing is active")
             while True:
                 readline.parse_and_bind("tab: complete")
@@ -252,20 +242,20 @@ class MultiHandler:
                 command = input("MultiHandler: ").lower()
                 logger.debug(f"Received command: {command}")
                 if command == "exit":  # closes the server down
-                    print(colorama.Fore.RED + "Closing connections")
+                    c_error("Closing connections")
                     break  # exits the multihandler
 
                 def handle_sessions():
                     logger.debug("Handling sessions command")
                     if len(sessions_list) == 0:
-                        print(colorama.Fore.RED + "No sessions connected")
+                        c_error("No sessions connected")
                     else:
                         self.multihandlercommands.sessionconnect()
 
                 def handle_beacons():
                     logger.debug("Handling beacons command")
                     if len(beacon_list) == 0:
-                        print(colorama.Fore.RED + "No beacons connected")
+                        c_error("No beacons connected")
                         logger.warning("No beacons connected")
                     elif len(beacon_list) > 1:
                         index = int(input("Enter the index of the beacon: "))
@@ -279,7 +269,7 @@ class MultiHandler:
                             logger.info(f"Using beacon {beacon.uuid} at {beacon.address}")
 
                         except IndexError:
-                            print(colorama.Fore.RED + "Index out of range")
+                            c_error("Index out of range")
                             logger.error("Index out of range for beacon selection")
                     else:
                         beacon = list(beacon_list.values())[0]
@@ -299,7 +289,7 @@ class MultiHandler:
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
                     "config": config_menu,
                     "configBeacon": beacon_config_menu,
-                    "users": self.multiplayer.userMenu if self.multiplayer else print(colorama.Fore.RED, "Multiplayer mode is not enabled"),
+                    "users": self.multiplayer.userMenu if self.multiplayer else (lambda: c_error("Multiplayer mode is not enabled")),
                     "logs": self.multihandlercommands.view_logs,
                 }
 
@@ -317,5 +307,5 @@ class MultiHandler:
                     print(e)
         except KeyboardInterrupt:
             logger.warning("KeyboardInterrupt received, exiting MultiHandler")
-            print(colorama.Fore.RED + "\nUse exit next time")
+            c_error("\nUse exit next time")
         return

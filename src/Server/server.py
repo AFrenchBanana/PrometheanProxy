@@ -45,8 +45,7 @@ def _extract_embedded_assets():
         except Exception:
             pass
 
-        # Copy compiled plugin artifacts into unified layout:
-        # ~/.PrometheanProxy/plugins/<name>/{release|debug}/<name>[ -debug].{so|dll}
+
         try:
             if os.path.isdir(plugins_root):
                 for plugin_name in os.listdir(plugins_root):
@@ -126,6 +125,7 @@ _extract_embedded_assets()
 # Defer heavy imports that rely on config until after extraction
 from Modules.multi_handler.multi_handler import MultiHandler
 from Modules.global_objects import config, logger
+from Modules.utils.console import banner, error as c_error, cprint
 from Modules.beacon.beacon_server.server import start_beacon_server
 
 
@@ -154,23 +154,20 @@ if __name__ in {"__main__", "__mp_main__"}:
         logger.debug("Server: Background server threads started successfully")
 
         if not config['server']['quiet_mode']:
-            colors = [colorama.Fore.CYAN, colorama.Fore.RED,
-                      colorama.Fore.GREEN, colorama.Fore.YELLOW,
-                      colorama.Fore.BLUE]
             art_key = f'art{random.randint(1, 5)}'
             logger.info(f"Server: Displaying ASCII art with key {art_key}")
-            print(random.choice(colors) + config['ASCII'][art_key])
+            banner(config['ASCII'][art_key])
         else:
-            print(colorama.Back.RED + "Quiet Mode On")
+            cprint("Quiet Mode On", bg="red")
 
-        print(colorama.Back.GREEN + "Type Help for available commands")
+        cprint("Type Help for available commands", bg="green")
         multi_handler.multi_handler(config)
 
     except Exception as e:
         logger.error(f"Server: Error occurred - {e}")
-        print(colorama.Fore.RED + f"Error: {e}")
+        c_error(f"Error: {e}")
         if not config['server']['quiet_mode']:
-            print(colorama.Fore.RED + "Traceback:")
+            c_error("Traceback:")
             traceback.print_exc()
         print("\nUse 'exit' or 'quit' next time.")
         logger.critical("Server: Exiting due to error")

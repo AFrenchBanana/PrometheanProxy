@@ -6,6 +6,7 @@ from ...session.session import remove_connection_list
 
 from ...beacon.beacon import remove_beacon_list
 from ...global_objects import sessions_list, beacon_list, multiplayer_connections, logger, tab_completion
+from ...utils.console import cprint, warn, error as c_error
 
 from tabulate import tabulate
 import colorama
@@ -24,7 +25,7 @@ class ConnectionHandler:
         # Sessions table
         logger.info("Listing all active connections")
         if len(sessions_list) == 0:
-            print(colorama.Fore.RED + "No Active Sessions")
+            c_error("No Active Sessions")
         else:
             print("Sessions:")
             table = []
@@ -32,14 +33,14 @@ class ConnectionHandler:
             for userID, session in sessions_list.items():
                 table.append((userID, session.hostname, session.address, session.operating_system))
             logger.info("Printing sessions table")
-            print(colorama.Fore.WHITE + tabulate(
+            cprint(tabulate(
                 table, headers=["UUID", "Hostname", "Address", "OS"],
-                tablefmt="grid"))
+                tablefmt="grid"), fg="white")
 
         # Beacons table
         if len(beacon_list) == 0:
             logger.info("No active beacons found")
-            print(colorama.Fore.RED + "No Active Beacons")
+            c_error("No Active Beacons")
         else:
             print("Beacons:")
             table = []
@@ -79,17 +80,26 @@ class ConnectionHandler:
 
             # Print the table with color
             for row, row_color in table:
-                print(row_color +
-                      tabulate([row], headers=["Host", "OS", "IP", "ID",
+                # Map colorama Fore value to our helper fg names
+                fg = "white"
+                if row_color == colorama.Fore.RED:
+                    fg = "red"
+                elif row_color == colorama.Fore.YELLOW:
+                    fg = "yellow"
+                elif row_color == colorama.Fore.CYAN:
+                    fg = "cyan"
+                elif row_color == colorama.Fore.GREEN:
+                    fg = "green"
+                cprint(tabulate([row], headers=["Host", "OS", "IP", "ID",
                                                "Last Callback", "Status"],
-                               tablefmt="grid"))
+                               tablefmt="grid"), fg=fg)
         if self.config["server"]["multiplayer"]:
             if not multiplayer_connections:
-                print(colorama.Fore.RED + "No Active Multiplayer Connections")
+                c_error("No Active Multiplayer Connections")
             else:
-                print(colorama.Fore.WHITE + "Active Multiplayer Connections:")
+                cprint("Active Multiplayer Connections:", fg="white")
                 for username, client in multiplayer_connections.items():
-                    print(colorama.Fore.WHITE + f"User: {username}, Address: {client.address[0]}")
+                    cprint(f"User: {username}, Address: {client.address[0]}", fg="white")
 
     def sessionconnect(self) -> None:
         """allows interaction with individual session,
@@ -97,7 +107,7 @@ class ConnectionHandler:
         try:
             keys = list(sessions_list.keys())
             if not keys:
-                print(colorama.Fore.RED + "No active sessions to connect to.")
+                c_error("No active sessions to connect to.")
                 return
 
             if len(sessions_list) == 1:
@@ -120,10 +130,7 @@ class ConnectionHandler:
 
         except (IndexError, ValueError):
             logger.error("Invalid client selection or no active sessions")
-            print(
-                colorama.Fore.WHITE +
-                colorama.Back.RED +
-                "Not a Valid Client")
+            cprint("Not a Valid Client", fg="white", bg="red")
         return
 
     def close_all_connections(self) -> None:
@@ -143,25 +150,20 @@ class ConnectionHandler:
                     conn.details.close()
                     logger.info(f"Closed connection to {conn.address}")
                 if not self.config["server"]["quiet_mode"]:
-                    print(
-                        colorama.Back.GREEN +
-                        f"Closed {conn.address}")
+                    cprint(f"Closed {conn.address}", bg="green")
             except Exception as e:
                 logger.error(f"Error closing connection {conn.address}: {e}")
-                print(colorama.Back.RED +
-                      f"Error Closing + {conn.address}: {e}")
+                cprint(f"Error Closing + {conn.address}: {e}", bg="red")
                 error = True
         
         logger.info("Clearing session and beacon lists")
         sessions_list.clear() # Beacons should be handled separately if they persist
         if not error:
             logger.info("All connections closed successfully")
-            print(
-                colorama.Back.GREEN +
-                "All connections closed")
+            cprint("All connections closed", bg="green")
         else:
             logger.error("Not all connections could be closed")
-            print(colorama.Back.RED + "Not all connections could be closed")
+            cprint("Not all connections could be closed", bg="red")
         return
 
     def close_from_multihandler(self) -> None:
@@ -170,7 +172,7 @@ class ConnectionHandler:
         try:
             all_keys = list(sessions_list.keys()) + list(beacon_list.keys())
             if not all_keys:
-                print(colorama.Fore.RED + "No connections to close.")
+                c_error("No connections to close.")
                 return
 
             readline.set_completer(lambda text, state: tab_completion(text, state, all_keys))
@@ -181,18 +183,17 @@ class ConnectionHandler:
                 session = sessions_list[uuid_to_close]
                 session.close_connection(session.details, session.address)
                 # The close_connection method should handle list removal
-                print(colorama.Back.GREEN + f"Session {uuid_to_close} Closed")
+                cprint(f"Session {uuid_to_close} Closed", bg="green")
 
             elif uuid_to_close in beacon_list:
                 logger.info(f"Queueing close command for beacon with ID: {uuid_to_close}")
                 beacon = beacon_list[uuid_to_close]
                 beacon.close_connection(uuid_to_close) # This should queue the command
-                print(colorama.Back.GREEN +
-                      f"Beacon {uuid_to_close} will shutdown at next callback.")
+                cprint(f"Beacon {uuid_to_close} will shutdown at next callback.", bg="green")
             else:
-                print(colorama.Back.RED + "Not a valid connection UUID.")
+                cprint("Not a valid connection UUID.", bg="red")
 
         except (ValueError, IndexError) as e:
             logger.error(f"Error during close operation: {e}")
-            print(colorama.Back.RED + "An error occurred.")
+            cprint("An error occurred.", bg="red")
         return

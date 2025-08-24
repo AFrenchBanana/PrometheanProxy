@@ -1,4 +1,5 @@
 from ..global_objects import logger
+from ..utils.console import cprint, error as c_error
 import colorama
 import bcrypt
 from ServerDatabase.database import DatabaseClass
@@ -60,9 +61,9 @@ class MP_Users:
         logger.info("MP_Users instance created with database connection")
         self.users = {}
         self.load_users()
-        self.current_user = "admin" # temp
+        self.current_user = "admin"  # temp
         self.add_user("test", "test")  # Add a test user for initial testing
-        print(colorama.Fore.GREEN, f"You are logged in as {self.current_user}")
+        cprint(f"You are logged in as {self.current_user}", fg="green")
 
     def currentUser(self) -> str:
         return self.current_user
@@ -158,11 +159,11 @@ class MP_Users:
                 logger.info(f"Switching to user: {username}")
                 self.current_user = username
                 logger.info(f"Switched to user: {username}")
-                print(colorama.Fore.GREEN, f"Switched to user: {username}")
+                cprint(f"Switched to user: {username}", fg="green")
             else:
                 logger.warning(f"Authentication failed for user {username}")
-                print(colorama.Fore.RED, f"Authentication failed for user {username}")
+                c_error(f"Authentication failed for user {username}")
         else:
             logger.warning(f"User {username} does not exist")
-            print(colorama.Fore.RED, f"User {username} does not exist")
+            c_error(f"User {username} does not exist")
         

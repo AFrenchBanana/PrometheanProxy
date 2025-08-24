@@ -5,6 +5,7 @@ from ...global_objects import (
     beacon_list,
     logger
 )
+from ...utils.console import cprint, warn, error as c_error
 
 from typing import Tuple
 import colorama
@@ -59,10 +60,10 @@ class InteractionHandler:
                                 pass
                             return self.run_session_plugin(mod, conn, r_address, user_ID)
                         else:
-                            print(colorama.Fore.YELLOW + "Cancelled.")
+                            warn("Cancelled.")
                     except Exception as e:
                         logger.error(f"Failed to handle session plugin '{mod}': {e}")
-                        print(colorama.Fore.RED + f"An error occurred: {e}")
+                        c_error(f"An error occurred: {e}")
                 return _inner
             command_handlers[cmd] = _session_dyn_handler()
 
@@ -87,7 +88,7 @@ class InteractionHandler:
                         try:
                             getattr(self, "load_plugins")()
                             self.run_session_plugin(mod, conn, r_address, user_ID)
-                            print(colorama.Fore.GREEN + f"Ran session plugin '{mod}'.")
+                            cprint(f"Ran session plugin '{mod}'.", fg="green")
                         except Exception as e:
                             logger.error(f"Failed to run session plugin '{mod}' after detecting loaded module: {e}")
                         return
@@ -98,17 +99,17 @@ class InteractionHandler:
                         try:
                             getattr(self, "load_plugins")()
                             self.run_session_plugin(mod, conn, r_address, user_ID)
-                            print(colorama.Fore.GREEN + f"Ran session plugin '{mod}' after loading module.")
+                            cprint(f"Ran session plugin '{mod}' after loading module.", fg="green")
                         except Exception as e:
                             logger.error(f"Failed to run session plugin '{mod}' after loading module: {e}")
                     else:
-                        print(colorama.Fore.YELLOW + "Cancelled.")
+                        warn("Cancelled.")
                 return _inner
             command_handlers[m] = _session_module_handler()
 
         # Optional: show available commands once when entering the session menu
         if command_handlers:
-            print(colorama.Fore.YELLOW + "Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]))
+            cprint("Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]), fg="yellow")
 
         while True:
             colorama.init(autoreset=True)
@@ -116,9 +117,7 @@ class InteractionHandler:
             readline.set_completer(
                 lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))
 
-            command = (input(colorama.Fore.YELLOW +
-                             f"{r_address[0]}:{r_address[1]} Command: ")
-                       .lower().strip())
+            command = input(f"{r_address[0]}:{r_address[1]} Command: ").lower().strip()
 
             logger.info(f"Command input is {command}")
             if command == "exit":
@@ -130,10 +129,10 @@ class InteractionHandler:
                     handler()
                 except Exception as e:
                     logger.error(f"Error executing command '{command}': {e}\n{traceback.format_exc()}")
-                    print(colorama.Fore.RED + f"An error occurred: {e}")
+                    c_error(f"An error occurred: {e}")
             else:
                 if command != "":
-                    print(colorama.Fore.RED + f"Unknown command: '{command}'")
+                    c_error(f"Unknown command: '{command}'")
         return
 
     def use_beacon(self, UserID, IPAddress) -> None:
@@ -148,7 +147,7 @@ class InteractionHandler:
             print(f"No beacon found with UUID: {UserID}")
             return
         
-        print(colorama.Fore.YELLOW + f"Interacting with beacon {beaconClass.hostname} ({beaconClass.uuid})")
+        cprint(f"Interacting with beacon {beaconClass.hostname} ({beaconClass.uuid})", fg="yellow")
         logger.info(f"Beacon {beaconClass.hostname} ({beaconClass.uuid}) found")
 
         # Only static; all other commands are plugins
@@ -177,7 +176,7 @@ class InteractionHandler:
                                 except Exception:
                                     pass
                                 if self.run_beacon_plugin(mod, UserID):
-                                    print(colorama.Fore.GREEN + f"Queued beacon plugin '{mod}' for {UserID}.")
+                                    cprint(f"Queued beacon plugin '{mod}' for {UserID}.", fg="green")
                                 return
 
                             choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
@@ -188,13 +187,13 @@ class InteractionHandler:
                                 except Exception:
                                     pass
                                 if self.run_beacon_plugin(mod, UserID):
-                                    print(colorama.Fore.GREEN + f"Queued beacon plugin {mod} for {UserID} after loading module.")
+                                    cprint(f"Queued beacon plugin {mod} for {UserID} after loading module.", fg="green")
                             else:
-                                print(colorama.Fore.YELLOW + "Cancelled.")
+                                warn("Cancelled.")
                         except Exception as e:
                             logger.error(f"Failed to handle beacon plugin '{mod}': {e}")
                             if not self.config['server']['quiet_mode']:
-                                print(colorama.Fore.RED + f"An error occurred: {e}")
+                                c_error(f"An error occurred: {e}")
                     return _inner
                 command_handlers[cmd] = _beacon_dyn_handler()
 
@@ -218,12 +217,12 @@ class InteractionHandler:
             def _beacon_module_handler(mod=m):
                 def _inner():
                     if mod in beaconClass.loaded_modules:
-                        print(colorama.Fore.GREEN + f"Module '{mod}' is already loaded.")
+                        cprint(f"Module '{mod}' is already loaded.", fg="green")
                         # Ensure plugins are discovered, then run the plugin command
                         try:
                             getattr(self, "load_plugins")()
                             if self.run_beacon_plugin(mod, UserID):
-                                print(colorama.Fore.GREEN + f"Queued beacon plugin '{mod}' for {UserID}.")
+                                cprint(f"Queued beacon plugin '{mod}' for {UserID}.", fg="green")
                         except Exception as e:
                             logger.error(f"Failed to run beacon plugin '{mod}' after detecting loaded module: {e}")
                         return
@@ -234,17 +233,17 @@ class InteractionHandler:
                         try:
                             getattr(self, "load_plugins")()
                             if self.run_beacon_plugin(mod, UserID):
-                                print(colorama.Fore.GREEN + f"Queued beacon plugin {mod} for {UserID} after loading module.")
+                                cprint(f"Queued beacon plugin {mod} for {UserID} after loading module.", fg="green")
                         except Exception as e:
                             logger.error(f"Failed to run beacon plugin '{mod}' after loading module: {e}")
                     else:
-                        print(colorama.Fore.YELLOW + "Cancelled.")
+                        warn("Cancelled.")
                 return _inner
             command_handlers[m] = _beacon_module_handler()
 
         # Optional: show available commands once when entering the beacon menu
         if command_handlers:
-            print(colorama.Fore.YELLOW + "Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]))
+            cprint("Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]), fg="yellow")
 
         while True:
             colorama.init(autoreset=True)
@@ -252,8 +251,7 @@ class InteractionHandler:
             readline.set_completer(
                 lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))
 
-            command = (input(colorama.Fore.YELLOW +
-                             f"{UserID} Command: ").lower().strip())
+            command = input(f"{UserID} Command: ").lower().strip()
 
             logger.info(f"Command input is {command}")
             if command == "exit":
@@ -270,8 +268,8 @@ class InteractionHandler:
                 except Exception as e:
                     logger.error(f"Error with command '{command}': {e}\n{traceback.format_exc()}")
                     if not self.config['server']['quiet_mode']:
-                        print(colorama.Fore.RED + "Traceback:")
+                        c_error("Traceback:")
                         traceback.print_exc()
             else:
-                print(colorama.Fore.RED + f"Unknown command: '{command}'")
+                c_error(f"Unknown command: '{command}'")
         return

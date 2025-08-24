@@ -5,6 +5,7 @@ import os
 import tqdm
 import colorama
 import hashlib
+from ...utils.console import cprint, warn, error as c_error
 
 
 class DatabaseHandler:
@@ -22,7 +23,7 @@ class DatabaseHandler:
             if os.path.isdir(dir_path):
                 file_list = [os.path.join(dir_path, f) for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
                 if not file_list:
-                    print(colorama.Fore.YELLOW + f"No files found in directory '{dir_path}'.")
+                    warn(f"No files found in directory '{dir_path}'.")
                     return
 
                 print(f"Found {len(file_list)} files to hash.")
@@ -33,25 +34,25 @@ class DatabaseHandler:
                         except PermissionError:
                             logger.warning(f"Permission denied for file: {file_path}")
                         pbar.update(1)
-                print(colorama.Back.GREEN + "Directory hashing complete.")
+                cprint("Directory hashing complete.", bg="green")
 
             # Handle single file
             elif os.path.isfile(dir_path):
                 logger.info(f"Hashing single file: {dir_path}")
                 self.hashfile(dir_path)
-                print(colorama.Back.GREEN + "File Hashed.")
+                cprint("File Hashed.", bg="green")
 
             # Handle not found
             else:
                 logger.error(f"File or directory does not exist: {dir_path}")
-                print(colorama.Back.RED + "File or Directory does not exist.")
+                cprint("File or Directory does not exist.", bg="red")
         
         except PermissionError:
             logger.error(f"Permission error accessing path: {dir_path}")
-            print(colorama.Back.RED + f"Permission error accessing '{dir_path}'.")
+            cprint(f"Permission error accessing '{dir_path}'.", bg="red")
         except Exception as e:
             logger.error(f"An unexpected error occurred during hashing: {e}")
-            print(colorama.Back.RED + "An unexpected error occurred.")
+            cprint("An unexpected error occurred.", bg="red")
 
 
     def hashfile(self, file_path: str) -> None:

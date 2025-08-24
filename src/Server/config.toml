@@ -17,12 +17,6 @@ multiplayerListenAddress = "0.0.0.0"
 multiplayerPort = 2001
 
 
-[multiplayer]
-multiplayer = true
-multiplayerListenAddress = "0.0.0.0"
-multiplayerPort = 2001
-
-
 [authentication]
 #key length for the random auth string
 keylength = 111

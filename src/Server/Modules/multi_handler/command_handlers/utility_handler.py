@@ -1,5 +1,5 @@
 from ...global_objects import logger, tab_completion
-
+from ...utils.console import cprint, warn, error as c_error
 import colorama
 import readline
 
@@ -20,7 +20,7 @@ class UtilityHandler:
             count = 100
         
         if count < 0:
-            print(colorama.Fore.RED + "Line count cannot be negative.")
+            c_error("Line count cannot be negative.")
             return
             
         readline.set_completer(
@@ -33,17 +33,17 @@ class UtilityHandler:
         logger.info(f"Retrieved {len(logs)} log messages for {log_level_str}")
         
         if not logs:
-            print(colorama.Fore.YELLOW + "No logs found for the specified criteria.")
+            warn("No logs found for the specified criteria.")
             return
 
         for log in logs:
             # Colorize based on level
             if "ERROR" in log or "CRITICAL" in log:
-                print(colorama.Fore.RED + log, end='')
+                cprint(log.rstrip("\n"), fg="red")
             elif "WARNING" in log:
-                print(colorama.Fore.YELLOW + log, end='')
+                cprint(log.rstrip("\n"), fg="yellow")
             else:
-                print(colorama.Fore.WHITE + log, end='')
+                cprint(log.rstrip("\n"), fg="white")
             
         logger.info("Displayed log messages to user.")
         return

@@ -3,6 +3,7 @@
 import ssl
 from typing import Tuple
 import colorama
+from ...utils.console import cprint, warn, error as c_error
 import os
 import readline
 import json
@@ -19,21 +20,20 @@ class ControlCommands:
         from ..session import remove_connection_list
 
         logger.info(f"Closing connection {r_address[0]}:{r_address[1]}")
-        
-        confirm = input(colorama.Back.RED + "Are you sure you want to close the connection? (y/N): ").lower()
+        confirm = input("Are you sure you want to close the connection? (y/N): ").lower()
         if confirm == "y":
-            print(colorama.Back.YELLOW + colorama.Fore.BLACK + f"Closing {r_address[0]}:{r_address[1]}")
+            cprint(f"Closing {r_address[0]}:{r_address[1]}", fg="black", bg="yellow")
             try:
                 send_data(conn, "shutdown")
                 logger.info(f"Sent shutdown command to {r_address[0]}:{r_address[1]}")
             except Exception as e:
                 logger.error(f"Error sending shutdown command to {r_address}: {e}")
-            
+
             remove_connection_list(r_address)
             conn.close()
-            print(colorama.Back.GREEN + "Connection Closed")
+            cprint("Connection Closed", bg="green")
         else:
-            print(colorama.Back.GREEN + "Connection not closed.")
+            cprint("Connection not closed.", bg="green")
         return
 
     def change_beacon(self, conn: ssl.SSLSocket, r_address: Tuple[str, int], uuid) -> None:
@@ -43,7 +43,7 @@ class ControlCommands:
 
         send_data(conn, "switch_beacon")
         logger.info(f"Sent 'switch to beacon mode' command to {r_address[0]}:{r_address[1]}")
-        print(colorama.Fore.GREEN + f"Session {uuid} will now operate in beacon mode.")
+        cprint(f"Session {uuid} will now operate in beacon mode.", fg="green")
         remove_connection_list(r_address)
         return
     

@@ -3,6 +3,7 @@
 import ssl
 from typing import Tuple
 import colorama
+from ..utils.console import cprint
 from ServerDatabase.database import DatabaseClass
 from ..global_objects import sessions_list, logger
 
@@ -10,13 +11,18 @@ from ..global_objects import sessions_list, logger
 from .commands.control_commands import ControlCommands
 
 
-class Session(
-    ControlCommands,
-):
-    """
-    Handles commands within a session by composing functionality from various handler classes.
-    """
-    def __init__(self, address, details, hostname, operating_system, mode, modules, config):
+class Session(ControlCommands):
+    """Session object that composes command handlers."""
+    def __init__(
+        self,
+        address,
+        details,
+        hostname,
+        operating_system,
+        mode,
+        modules,
+        config,
+    ):
         self.address = address
         self.details = details
         self.hostname = hostname
@@ -26,9 +32,11 @@ class Session(
         self.config = config
         self.database = DatabaseClass(config)
         colorama.init(autoreset=True)
-        
-        logger.info(f"New session created: {self.address[0]}:{self.address[1]} ({self.hostname})")
-        print(colorama.Fore.GREEN + f"\nNew Session from {self.hostname} ({self.address[0]})")
+
+        logger.info(
+            f"New session created: {self.address[0]}:{self.address[1]} ({self.hostname})"
+        )
+        cprint(f"\nNew Session from {self.hostname} ({self.address[0]})", fg="green")
 
 
 def add_connection_list(

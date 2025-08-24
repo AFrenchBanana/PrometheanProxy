@@ -2,7 +2,6 @@ import threading
 from http.server import HTTPServer
 
 from Modules.beacon.beacon_server.request_handler import BeaconRequestHandler
-from Modules.beacon.beacon_server.socket_manager import socketio, socket_flask_app
 from Modules.global_objects import logger
 
 
