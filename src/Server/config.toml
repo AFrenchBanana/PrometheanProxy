@@ -2,13 +2,20 @@
 listenaddress = "0.0.0.0"
 webPort = 8000
 port = 2000
-TLSCertificateDir = "~/Certificates/"
+TLSCertificateDir = "~/.PrometheanProxy/Certificates/"
 TLSCertificate = "cert.pem"
 TLSkey = "key.pem"
 GUI = false 
 quiet_mode = false
-implant_directory = "~/ImplantData/"
-module_location = "../../bin/plugins/"
+implant_directory = "~/.PrometheanProxy/ImplantData/"
+# Default plugins folder (compiled artifacts expected under <name>/{release,debug})
+module_location = "~/.PrometheanProxy/plugins"
+
+[multiplayer]
+multiplayer = true
+multiplayerListenAddress = "0.0.0.0"
+multiplayerPort = 2001
+
 
 [multiplayer]
 multiplayer = true
@@ -24,8 +31,8 @@ keylength = 111
 active = false
 listenaddress = "0.0.0.0"
 port = 11001
-TLSCertificate = "~/Certificates/cert.pem"
-TLSkey = "~/Certificates/key.pem"
+TLSCertificate = "~/PrometheanProxy/Certificates/cert.pem"
+TLSkey = "~/PrometheanProxy/Certificates/key.pem"
 debugPrint = true
 
 [beacon]
@@ -39,7 +46,7 @@ level = "DEBUG"
 fmt = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 datefmt  = "%Y-%m-%d %H:%M:%S"
 max_size = 1048576 # MB
-
+module_location = "~/.PrometheanProxy/plugins"
 
 [MultiHandlerCommands]
 help = """List of available commands: 
@@ -106,6 +113,10 @@ schema = "IP text, Services text, Time text"
 [[tables]]
 name = "Netstat"
 schema = "IP text, Netstat text, Time text"
+
+[[tables]]
+name = "Whoami"
+schema = "IP text, Whoami text, Time text"
 
 [[tables]]
 name = "SystemInfo"

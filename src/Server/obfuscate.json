@@ -1,0 +1,29 @@
+{
+    "generic":{
+        "implant_info": {
+            "Name": "1286",
+            "os": "dsfsed165",
+            "address": "sdfiojhHIUASDHIU",
+            "timer": "1215",
+            "uuid": "0",
+            "jitter": "dsfd"
+        },
+        "commands":{
+            "obfuscation_name": "asghuin2",
+            "command_uuid": "Ksad@@:",
+            "command": "SDADG£{}{",
+            "data": "%SDADADA%",
+            "module": {
+                "obfuscation_name": "3rff",
+                "module_name": "d7494651",
+                "data": "%%"
+            },
+            "shell": {
+                "obfuscation_name": "M1"
+            },
+            "none": {
+                "obfuscation_name": "424mkl"
+            }
+        }
+    }
+}
