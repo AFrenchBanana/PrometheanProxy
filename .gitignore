@@ -18,3 +18,5 @@ PrometheanProxy.spec
 .nicegui
 *.so
 *.dll
+*/Plugins/*/debug/
+*/Plugins/*/release/

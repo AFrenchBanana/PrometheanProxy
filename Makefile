@@ -178,25 +178,25 @@ $(PLUGINS_SRC_DIR)/$(1)/release/$(1).so:
 	@echo "--> Building Go plugin for $(1) (Linux, Release)..."
 	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release
 	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
-		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).so main.go
+		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).so .
 
 $(PLUGINS_SRC_DIR)/$(1)/release/$(1).dll:
 	@echo "--> Building Go plugin for $(1) (Windows, Release)..."
 	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release
 	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
-		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).dll main.go
+		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).dll .
 
 $(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.so:
 	@echo "--> Building Go plugin for $(1) (Linux, Debug)..."
 	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug
 	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
-		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.so main.go
+		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.so .
 
 $(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.dll:
 	@echo "--> Building Go plugin for $(1) (Windows, Debug)..."
 	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug
 	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
-		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.dll main.go
+		GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/debug/$(1)-debug.dll .
 endef
 
 $(foreach p,$(PLUGIN_DIRS),$(eval $(call GO_PLUGIN_RULES,$(p))))

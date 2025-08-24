@@ -109,6 +109,10 @@ name = "Netstat"
 schema = "IP text, Netstat text, Time text"
 
 [[tables]]
+name = "Whoami"
+schema = "IP text, Whoami text, Time text"
+
+[[tables]]
 name = "SystemInfo"
 schema = "IP Text, SystemInfo text, Time text"
 
