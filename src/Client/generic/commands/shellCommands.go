@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"runtime"
 	"src/Client/generic/logger"
 	"src/Client/session/protocol"
 	"strings"
@@ -76,7 +77,14 @@ func RunShellCommand(commandStr string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel() // Ensure the context is cancelled to release resources.
 
-	cmd := exec.CommandContext(ctx, "sh", "-c", commandStr)
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		// Use the native Windows shell
+		cmd = exec.CommandContext(ctx, "cmd.exe", "/c", commandStr)
+	} else {
+		// POSIX shells
+		cmd = exec.CommandContext(ctx, "sh", "-c", commandStr)
+	}
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

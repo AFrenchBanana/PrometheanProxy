@@ -107,9 +107,10 @@ class Beacon:
         command_location = _resolve_module_base()
         repo_plugins = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../Plugins"))
         try:
-            platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
+            os_str = str(self.operating_system).lower()
+            platform_folder = 'windows' if 'windows' in os_str else 'linux'
             ext = '.dll' if platform_folder == 'windows' else '.so'
-            channel = 'debug' if 'debug' in self.operating_system else 'release'
+            channel = 'debug' if 'debug' in os_str else 'release'
             module_names: list[str] = []
 
             # Legacy structure has OS folders at root (linux/windows/<channel>/*.ext)
@@ -182,9 +183,10 @@ class Beacon:
 
         command_location = os.path.abspath(_resolve_module_base())
         repo_plugins = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../Plugins"))
-        platform_folder = 'windows' if 'windows' in self.operating_system else 'linux'
+        os_str = str(self.operating_system).lower()
+        platform_folder = 'windows' if 'windows' in os_str else 'linux'
         ext = '.dll' if platform_folder == 'windows' else '.so'
-        channel = 'debug' if 'debug' in self.operating_system else 'release'
+        channel = 'debug' if 'debug' in os_str else 'release'
 
         # Unified layout: <name>/{release,debug}/{name}[ -debug].ext
         filename = f"{module_name}{'-debug' if channel=='debug' else ''}{ext}"
@@ -192,7 +194,12 @@ class Beacon:
         # Fallback to legacy if not present
         if not os.path.isfile(module_path):
             legacy_base = os.path.expanduser(self.config['server'].get('module_location', ''))
-            legacy_try = os.path.join(legacy_base, 'windows' if platform_folder == 'windows' else 'linux', channel, f"{module_name}{'-debug' if channel=='debug' else ''}{ext}")
+            legacy_try = os.path.join(
+                legacy_base,
+                'windows' if platform_folder == 'windows' else 'linux',
+                channel,
+                f"{module_name}{'-debug' if channel=='debug' else ''}{ext}"
+            )
             if os.path.isfile(legacy_try):
                 module_path = legacy_try
 

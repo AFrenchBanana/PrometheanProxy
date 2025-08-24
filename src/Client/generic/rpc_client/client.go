@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"sync"
 
 	"src/Client/dynamic/shared"
@@ -138,9 +139,33 @@ func startPluginProcess(cmdName string, dc *DynamicCommand) (func(), error) {
 	var tmpToRemove string
 	if len(dc.data) > 0 {
 		// Create a randomized temp file name that doesn't leak the plugin name
-		tmp, err := os.CreateTemp("", "pp-*.bin")
+		// On Windows we must use an .exe suffix so CreateProcess can execute it.
+		pattern := "pp-*.bin"
+		if runtime.GOOS == "windows" {
+			pattern = "pp-*.exe"
+		}
+		tmp, err := os.CreateTemp("", pattern)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create temp file for plugin %s: %w", cmdName, err)
+		}
+		// Validate magic bytes to fail fast on OS mismatch (e.g., ELF on Windows, PE on Linux)
+		if len(dc.data) >= 4 {
+			if runtime.GOOS == "windows" {
+				// PE starts with 'MZ'
+				if !(dc.data[0] == 0x4d && dc.data[1] == 0x5a) {
+					tmp.Close()
+					os.Remove(tmp.Name())
+					return nil, fmt.Errorf("plugin bytes for '%s' are not a Windows PE (expected 'MZ'); possible OS mismatch (received non-PE)", cmdName)
+				}
+			} else {
+				// ELF starts with 0x7f 'E' 'L' 'F'
+				if !(dc.data[0] == 0x7f && dc.data[1] == 'E' && dc.data[2] == 'L' && dc.data[3] == 'F') {
+					// Not fatal for non-Windows if host can exec scripts, but here we expect native binary
+					tmp.Close()
+					os.Remove(tmp.Name())
+					return nil, fmt.Errorf("plugin bytes for '%s' are not an ELF binary; possible OS mismatch (received non-ELF)", cmdName)
+				}
+			}
 		}
 		if _, err := tmp.Write(dc.data); err != nil {
 			tmp.Close()
@@ -174,9 +199,6 @@ func startPluginProcess(cmdName string, dc *DynamicCommand) (func(), error) {
 		})
 	}
 
-	// Note: go-plugin communicates over stdio pipes internally. Named pipes are
-	// not directly supported by the framework. We keep the process short-lived
-	// to prevent many concurrent subprocesses.
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig:  shared.HandshakeConfig,
 		Plugins:          shared.PluginMap,

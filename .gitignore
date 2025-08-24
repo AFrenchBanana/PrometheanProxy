@@ -13,6 +13,7 @@ venv*
 build*/
 bin/
 server.log
+server.log1
 PrometheanProxy.spec
 .nicegui
 *.so

