@@ -38,7 +38,7 @@ PLUGINS_DEBUG_WINDOWS := $(foreach p,$(PLUGIN_DIRS),$(PLUGINS_SRC_DIR)/$(p)/debu
 # Staging directory for bundling ONLY Python plugin sources (no Go artifacts)
 PY_PLUGIN_STAGING_DIR := build/py_plugins
 
-.PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins py-plugins install-plugins
+.PHONY: all venv lint test clean server server-elf server-windows build linux windows run-client check-hmac-key plugins py-plugins install-plugins install-py-plugins install-all-plugins
 
 all: build server
 
@@ -75,6 +75,7 @@ server: venv plugins py-plugins
 	--collect-submodules Server.Plugins \
 	--hidden-import=Server.Plugins \
 	--add-data $(CURDIR)/src/Server/config.toml:embedded/ \
+	--add-data $(CURDIR)/src/Server/obfuscate.json:embedded/ \
 	--add-data $(CURDIR)/$(PY_PLUGIN_STAGING_DIR):embedded/pyplugins \
 	$(foreach p,$(PLUGIN_DIRS),--add-data $(CURDIR)/$(PLUGINS_SRC_DIR)/$(p)/release:embedded/plugins/$(p)/release) \
 	$(foreach p,$(PLUGIN_DIRS),--add-data $(CURDIR)/$(PLUGINS_SRC_DIR)/$(p)/debug:embedded/plugins/$(p)/debug) \
@@ -129,8 +130,29 @@ py-plugins:
 	@echo "--> Staging Python plugin sources..."
 	@rm -rf $(PY_PLUGIN_STAGING_DIR)
 	@mkdir -p $(PY_PLUGIN_STAGING_DIR)
-	# Copy only .py files while preserving directory structure under a top-level 'Plugins' package
-	@rsync -a --prune-empty-dirs --include '*/' --include '*.py' --exclude '*' $(SERVER_SOURCE_DIR)/Plugins/ $(PY_PLUGIN_STAGING_DIR)/Plugins/
+	# Copy .py files and each plugin's obfuscate.json while preserving directory structure under a top-level 'Plugins' package
+	@rsync -a --prune-empty-dirs \
+		--include '*/' \
+		--include '*.py' \
+		--include 'obfuscate.json' \
+		--exclude '*' \
+		$(SERVER_SOURCE_DIR)/Plugins/ $(PY_PLUGIN_STAGING_DIR)/Plugins/
+
+# Install Python plugin sources (including obfuscate.json) for source runs
+install-py-plugins: py-plugins
+	@echo "--> Installing Python plugin sources to $$HOME/.PrometheanProxy/plugins/Plugins ..."
+	@dest="$$HOME/.PrometheanProxy/plugins/Plugins"; \
+	mkdir -p "$$dest"; \
+	rsync -a --prune-empty-dirs \
+		--include '*/' \
+		--include '*.py' \
+		--include 'obfuscate.json' \
+		--exclude '*' \
+		$(SERVER_SOURCE_DIR)/Plugins/ "$$dest"/
+	@echo "--> Python plugins installed under $$HOME/.PrometheanProxy/plugins/Plugins"
+
+# Convenience target to install both compiled and Python plugins
+install-all-plugins: install-plugins install-py-plugins
 
 # Install compiled Go plugin artifacts into the user's plugins directory for source runs
 install-plugins: plugins

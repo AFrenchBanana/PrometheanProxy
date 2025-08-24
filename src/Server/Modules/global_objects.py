@@ -55,9 +55,25 @@ except InvalidCharInStringError:
     with TomlFiles(config_file_path) as f:
         config = f
 
-with open("src/Server/obfuscate.json") as f:
-    obfuscation_map = json.load(f)
-    f.close()
+# Load obfuscation map. When running from a PyInstaller binary, use the bundled file.
+try:
+    if getattr(sys, "frozen", False):
+        # PyInstaller bundles --add-data into a temp dir available via sys._MEIPASS
+        base_path = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+        obf_path = os.path.join(base_path, "embedded", "obfuscate.json")
+    else:
+        # Running from source tree
+        server_root = os.path.dirname(os.path.dirname(__file__))
+        obf_path = os.path.join(server_root, "obfuscate.json")
+
+    with open(obf_path, "r", encoding="utf-8") as f:
+        obfuscation_map = json.load(f)
+except FileNotFoundError:
+    # Fall back to empty map if missing
+    obfuscation_map = {}
+except json.JSONDecodeError:
+    # If corrupted, also fall back safely
+    obfuscation_map = {}
 
 logger = Logger(
     name="Server",
