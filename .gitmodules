@@ -1,0 +1,3 @@
+[submodule "src/PrometheanProxyAndroid"]
+	path = src/PrometheanProxyAndroid
+	url = git@github.com:AFrenchBanana/PrometheanProxyAndroid.git
