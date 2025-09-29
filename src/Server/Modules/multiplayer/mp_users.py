@@ -13,6 +13,8 @@ class User:
         self.username = username
         self.password = self.hashPassword_bcrypt(password)
         self.passwordSalt = None
+        self.auth_token = None
+        self.auth_token_expiry = None
         self.admin = False
         logger.info(f"User {self.username} created")
     

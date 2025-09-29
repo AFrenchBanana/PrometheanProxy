@@ -99,7 +99,11 @@ class ConnectionHandler:
             else:
                 cprint("Active Multiplayer Connections:", fg="white")
                 for username, client in multiplayer_connections.items():
-                    cprint(f"User: {username}, Address: {client.address[0]}", fg="white")
+                    try:
+                        addr = client.address[0] if isinstance(client.address, (list, tuple)) else str(client.address)
+                    except Exception:
+                        addr = "unknown"
+                    cprint(f"User: {username}, Address: {addr}", fg="white")
 
     def sessionconnect(self) -> None:
         """allows interaction with individual session,
