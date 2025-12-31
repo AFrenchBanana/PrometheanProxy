@@ -93,7 +93,12 @@ class ConnectionHandler:
                 cprint(tabulate([row], headers=["Host", "OS", "IP", "ID",
                                                "Last Callback", "Status"],
                                tablefmt="grid"), fg=fg)
-        if self.config["server"]["multiplayer"]:
+        try:
+            multiplayer_enabled = self.config["multiplayer"]["multiplayerEnabled"]
+        except KeyError:
+            multiplayer_enabled = False
+
+        if multiplayer_enabled:
             if not multiplayer_connections:
                 c_error("No Active Multiplayer Connections")
             else:

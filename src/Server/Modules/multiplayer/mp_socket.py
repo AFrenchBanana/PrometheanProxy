@@ -124,6 +124,7 @@ class MP_Socket:  # Keeping the original class name for compatibility
         return {"error": "Invalid UUID"}
 
     def _get_active_connections(self, filter):
+        logger.debug(f"Fetching active connections with filter: {filter}")
         beacons = []
         sessions = []
         if filter == "beacons" or filter is None:
@@ -162,7 +163,6 @@ class MP_Socket:  # Keeping the original class name for compatibility
             })
         return {"beacons": beacons, "sessions": sessions}
 
-    # ------ Route registration ------
     def _register_routes(self):
         @self._app.post("/api/login")
         def login():  # noqa
@@ -252,7 +252,7 @@ class MP_Socket:  # Keeping the original class name for compatibility
                 return jsonify({"error": "Missing uuid"}), 400
             return jsonify({"response": self._available_commands(uuid)})
 
-        @self._app.get("/api/ping")
+        @self._app.get("/ping")
         def ping():  # noqa
             return jsonify({"pong": True})
 

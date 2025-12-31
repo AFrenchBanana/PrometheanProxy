@@ -12,7 +12,7 @@ implant_directory = "~/.PrometheanProxy/ImplantData/"
 module_location = "~/.PrometheanProxy/plugins"
 
 [multiplayer]
-multiplayer = true
+multiplayerEnabled = true
 multiplayerListenAddress = "0.0.0.0"
 multiplayerPort = 2001
 

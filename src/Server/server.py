@@ -142,7 +142,7 @@ if __name__ in {"__main__", "__mp_main__"}:
 
         logger.debug("Server: Starting beacon server thread")
 
-        # --- Beacon Server Thread ---
+        # --- Beacon erver Thread ---
         threading.Thread(
             target=start_beacon_server,
             args=(config,),

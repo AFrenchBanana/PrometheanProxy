@@ -4,6 +4,7 @@ import threading
 import os
 import sys
 import secrets
+import traceback
 import colorama
 import readline
 import json
@@ -44,7 +45,6 @@ class MultiHandler:
         self.database = DatabaseClass(config)
         self.create_certificate()
         self.create_hmac()
-        print(obfuscation_map)
 
         colorama.init(autoreset=True)
         if config['packetsniffer']['active']:
@@ -52,15 +52,21 @@ class MultiHandler:
             sniffer.start_raw_socket()
             logger.info("PacketSniffer started")
 
-        if config['multiplayer']['multiplayer']:
-            self.isMultiplayer = True
-            self.multiplayer = MultiPlayer(config)
-            cprint("Multiplayer mode enabled", fg="green")
-            logger.info("Server: Multiplayer mode enabled")
-            threading.Thread(target=self.multiplayer.start(),
-            args=(config,),
-            daemon=True
-        ).start()
+        self.isMultiplayer = False
+        try:
+            if config['multiplayer']['multiplayerEnabled']:
+                self.isMultiplayer = True
+                self.multiplayer = MultiPlayer(config)
+                self.multihandlercommands = MultiHandlerCommands(config)
+                cprint("Multiplayer mode enabled", fg="green")
+                logger.info("Server: Multiplayer mode enabled")
+                threading.Thread(target=self.multiplayer.start(),
+                args=(config,),
+                daemon=True
+            ).start()
+        except KeyError:
+            warn("Multiplayer configuration not found, continuing in singleplayer mode")
+            logger.info("Server: Continuing in singleplayer mode")
             
     def create_hmac(self):
         """
@@ -224,6 +230,7 @@ class MultiHandler:
 
     def multi_handler(self, config: dict) -> None:
         logger.info("Starting MultiHandler menu")
+        
         try:
             cprint(f"Awaiting connection on port {self.address[0]}:{self.address[1]}", fg="yellow")
             if config['packetsniffer']['active']:
@@ -235,7 +242,7 @@ class MultiHandler:
                     lambda text, state:
                         tab_completion(text,
                                        state, ["list", "sessions", "beacons",
-                                               "close", "closeall", "users" if self.multiplayer else None,
+                                               "close", "closeall", "users" if self.isMultiplayer else None,
                                                "configbeacon",
                                                "command", "hashfiles",
                                                "config", "configBeacon", "logs", "help", "exit",]))
@@ -289,7 +296,7 @@ class MultiHandler:
                     "hashfiles": self.multihandlercommands.localDatabaseHash,
                     "config": config_menu,
                     "configBeacon": beacon_config_menu,
-                    "users": self.multiplayer.userMenu if self.multiplayer else (lambda: c_error("Multiplayer mode is not enabled")),
+                    "users": self.multiplayer.userMenu if self.isMultiplayer else (lambda: c_error("Multiplayer mode is not enabled")),
                     "logs": self.multihandlercommands.view_logs,
                 }
 
@@ -305,6 +312,8 @@ class MultiHandler:
                 except (KeyError, SyntaxError, AttributeError) as e:
                     logger.error(f"Error executing command: {e}")
                     print(e)
+                    traceback.print_exc()
+
         except KeyboardInterrupt:
             logger.warning("KeyboardInterrupt received, exiting MultiHandler")
             c_error("\nUse exit next time")
