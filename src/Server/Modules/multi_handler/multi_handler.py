@@ -32,17 +32,21 @@ from Modules.utils.console import cprint, warn, error as c_error
 
 
 class MultiHandler:
+    """
+    Main MultiHandler class that sets up the server,
+    handles connections, and manages multiplayer mode.
+    Args:
+        None
+    Returns:
+        None
+    """
+
+
     def __init__(self) -> None:
-        """
-        main function that starts the socket server, threads the
-        socket.start() as a daemon to allow multiple connections,
-        it starts the database for the main thread
-        it then runs the multihandler function
-        """
         logger.info("Starting MultiHandler")
         self.multihandlercommands = MultiHandlerCommands(config)
         self.Authentication = Authentication()
-        self.database = DatabaseClass(config)
+        self.database = DatabaseClass(config, "command_database")
         self.create_certificate()
         self.create_hmac()
 
@@ -70,9 +74,13 @@ class MultiHandler:
             
     def create_hmac(self):
         """
-        Checks if HMAC key is created in the location
+        Checks if an HMAC key is created in the location
         defined in config.
-        If this doesn't exist, a new key is made.
+        If it doesn't exist, a new HMAC key is generated and saved.
+        Args:
+            None
+        Returns:
+            None
         """
         logger.info("Checking for HMAC key")
         cert_dir = os.path.expanduser(config['server']['TLSCertificateDir'])
@@ -102,7 +110,11 @@ class MultiHandler:
         """
         Checks if TLS certificates are created in the location
         defined in config.
-        If these don't exist, a self-signed key and certificate is made.
+        If they don't exist, new TLS certificates are generated and saved.
+        Args:
+            None
+        Returns:
+            None
         """
         logger.info("Checking for TLS certificates")
         cert_dir = os.path.expanduser(config['server']['TLSCertificateDir'])
@@ -128,8 +140,12 @@ class MultiHandler:
 
     def startsocket(self) -> None:
         """
-        starts a TLS socket and threads the accept connection to allow
-        multiple connections
+        Starts the SSL socket server, binds to the configured address and port,
+        and begins listening for incoming connections.
+        Args:
+            None
+        Returns:
+            None
         """
         try:
             logger.info("Starting socket server")
@@ -183,13 +199,13 @@ class MultiHandler:
 
     def accept_connection(self) -> None:
         """
-        Function that listens for connections and handles them, by calling
-        connection_list() to make them referencable. The database is
-        initalised and then when a new connection is recieved the details
-        are inserted to the database table addresses
-        Ideally run as a deamon thread to allow any connections to input.
+        Accepts incoming connections and handles authentication.
+        Args:
+            None
+        Returns:
+            None
         """
-        threadDB = DatabaseClass(config)
+        threadDB = DatabaseClass(config, "command_database")
         logger.info("Accepting connections on socket")
         while True:
             conn, r_address = SSL_Socket.accept()
@@ -229,6 +245,14 @@ class MultiHandler:
                 conn.close()
 
     def multi_handler(self, config: dict) -> None:
+        """
+        Starts the MultiHandler command interface,
+        allowing user interaction with connected sessions and beacons.
+        Args:
+            config (dict): Configuration object for database and settings
+        Returns:
+            None
+        """
         logger.info("Starting MultiHandler menu")
         
         try:

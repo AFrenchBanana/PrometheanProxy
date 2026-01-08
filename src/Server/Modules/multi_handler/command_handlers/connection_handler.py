@@ -16,11 +16,21 @@ import time
 
 
 class ConnectionHandler:
-    """Handles connection management commands."""
+    """
+    Handles various connection-related commands for the multi-handler module.
+    Args:
+        None
+    Returns:
+        None
+    """
 
     def listconnections(self) -> None:
         """
-        List all active connections stored in the global objects variables
+        Lists all active connections including sessions and beacons.
+        Args:   
+            None
+        Returns:    
+            None
         """
         # Sessions table
         logger.info("Listing all active connections")
@@ -111,8 +121,13 @@ class ConnectionHandler:
                     cprint(f"User: {username}, Address: {addr}", fg="white")
 
     def sessionconnect(self) -> None:
-        """allows interaction with individual session,
-            passes connection details through to the current_client function"""
+        """
+        Connects to a session from the list of active sessions.
+        Args:
+            None
+        Returns:    
+            None        
+        """
         try:
             keys = list(sessions_list.keys())
             if not keys:
@@ -144,9 +159,13 @@ class ConnectionHandler:
 
     def close_all_connections(self) -> None:
         """
-        close all connections and remove the details
-        from the lists in global objects
+        Closes all active connection.
+        Args: 
+            None
+        Returns:    
+            None
         """
+        
         logger.info("Closing all connections")
         error = False
         # Iterate over a copy of the list of connections to avoid modification issues
@@ -176,7 +195,14 @@ class ConnectionHandler:
         return
 
     def close_from_multihandler(self) -> None:
-        """Allows an individual client to be closed from the multi-handler menu"""
+        """
+        Closes an individual client connection from the multi-handler.
+        Args:
+            None
+        Returns:    
+            None
+        """
+
         logger.info("Closing individual client from multi handler")
         try:
             all_keys = list(sessions_list.keys()) + list(beacon_list.keys())

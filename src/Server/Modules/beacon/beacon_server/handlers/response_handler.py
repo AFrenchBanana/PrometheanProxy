@@ -6,8 +6,14 @@ from Modules.beacon.beacon_server.utils import process_request_data
 
 
 def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
-
-    """Receives the output from executed commands."""
+    """
+    Receives the output from executed commands.
+    Args:
+        handler (BaseHTTPRequestHandler): The HTTP request handler
+        match (dict): Regex match object for the request path
+    Returns:
+        None
+    """
     logger.info(f"Response received from {handler.path}")
 
     content_len = int(handler.headers.get('Content-Length', 0))

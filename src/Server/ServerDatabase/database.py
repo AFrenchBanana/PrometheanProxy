@@ -12,19 +12,24 @@ class DatabaseClass:
 
     """class that handles the database within the project"""
 
-    def __init__(self, config) -> None:
+    def __init__(self, config, database) -> None:
         logger.debug("DatabaseClass: Initializing database connection")
         self.config = config
+        self.database = database
         self.create_db_connection()
         self.initalise_database()
 
     def create_db_connection(self) -> None:
+        """
+        Creates a connection to the SQLite database specified in the config.
+        Args:
+            None
+        Returns:
+            None
+        """
         logger.debug("DatabaseClass: Creating database connection")
-        """attempts to create a connection to a database and then
-        calls the initialise_database function.
-        Function needs the path to the db file to use."""
         try:
-            dbPath = os.path.expanduser(f"{self.config['database']['file']}")
+            dbPath = os.path.expanduser(f"{self.config[self.database]['file']}")
             if not os.path.exists(dbPath):
                 logger.debug(f"DatabaseClass: Database file {dbPath} does not exist, creating it")
                 os.makedirs(os.path.dirname(dbPath), exist_ok=True)
@@ -42,9 +47,14 @@ class DatabaseClass:
 
     def initalise_database(self) -> None:
         """
-        Attempts to create the required database tables for the
-        database to function properly.
+        Initialises the database by creating necessary tables
+        as defined in the configuration.
+        Args:
+            None
+        Returns:
+            None
         """
+    
         logger.debug("DatabaseClass: Initializing database tables")
         if not self.cursor:
             logger.error("DatabaseClass: Database cursor is not available")
@@ -66,7 +76,14 @@ class DatabaseClass:
         return
 
     def insert_entry(self, table: str, values: tuple) -> None:
-        """SQL Query to insert data into a table using parameterized queries."""
+        """
+        Inserts an entry into the specified table using parameterized queries
+        to prevent SQL injection.
+        Args:
+            table (str): The table to insert data into
+            values (tuple): The values to insert
+        """
+
         if not self.cursor:
             logger.error("DatabaseClass: Database cursor is not available")
             print("Database cursor is not available.")
@@ -97,7 +114,17 @@ class DatabaseClass:
 
     def search_query(self, selectval: str, table: str,
                      column: str, value: str) -> str:
-        """Search query for database searching using parameterized queries and identifier validation."""
+        """Search query for database searching using parameterized queries and identifier validation.
+        
+        Args:
+            selectval (str): The value(s) to select (e.g., "*", "name, age")
+            table (str): The table to search in
+            column (str): The column to filter by
+            value (str): The value to search for in the specified column
+
+        Returns:
+            str: The first matched result or None if not found
+        """
         logger.debug(f"DatabaseClass: Searching in table {table} for {column} = {value}")
         if not self.cursor:
             logger.error("DatabaseClass: Database cursor is not available")

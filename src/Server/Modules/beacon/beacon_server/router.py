@@ -15,8 +15,15 @@ ROUTES = {
 }
 
 
-def get_handler(method: str, path: str):
-    """Finds the correct handler for a given HTTP method and path."""
+def get_handler(method: str, path: str) -> tuple:
+    """
+    Retrieves the appropriate handler function for a given HTTP method and path.
+    Args:
+        method (str): The HTTP method (e.g., 'GET', 'POST')
+        path (str): The request path
+    Returns:
+        tuple: (handler function, match dict) or (None, None) if no match found
+    """
     for pattern, handler in ROUTES.get(method, []):
         match = pattern.match(path)
         if match:

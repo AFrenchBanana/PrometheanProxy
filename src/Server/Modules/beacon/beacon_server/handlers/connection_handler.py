@@ -13,7 +13,14 @@ from Modules.beacon.beacon_server.utils import process_request_data
 
 
 def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
-    """Handles the initial connection request from a new beacon."""
+    """
+    Handles a new connection request from a beacon.
+    Args:
+        handler (BaseHTTPRequestHandler): The HTTP request handler
+        match (dict): Regex match object for the request path
+    Returns:
+        None
+    """
     logger.info(f"Connection request from {handler.path}")
 
     content_len = int(handler.headers.get('Content-Length', 0))
@@ -72,7 +79,14 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
 
 
 def handle_reconnect(handler: BaseHTTPRequestHandler, match: dict):
-    """Handles a reconnection request."""
+    """
+    Handles a reconnection request from a beacon.
+    Args:
+        handler (BaseHTTPRequestHandler): The HTTP request handler
+        match (dict): Regex match object for the request path
+    Returns:
+        None
+    """
     logger.info(f"Reconnection request from {handler.path}")
 
     content_len = int(handler.headers.get('Content-Length', 0))

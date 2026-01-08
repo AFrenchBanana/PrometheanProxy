@@ -6,7 +6,13 @@ from Modules.global_objects import logger
 
 
 def run_http_server(config):
-    """Starts the main HTTP server."""
+    """
+    Starts the HTTP server for handling beacon requests.
+    Args:
+        config (dict): Configuration dictionary
+    Returns:
+        None
+    """
     host = config["server"]["listenaddress"]
     port = config["server"]["webPort"]
     server_address = (host, port)
@@ -23,6 +29,10 @@ def run_http_server(config):
 
 def start_beacon_server(config):
     """
-    Main entry point to start both the beacon HTTP and Socket.IO servers.
+    Starts the beacon HTTP server in a separate thread.
+    Args:
+        config (dict): Configuration dictionary
+    Returns:
+        None
     """
     run_http_server(config)

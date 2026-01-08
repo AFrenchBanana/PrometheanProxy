@@ -9,11 +9,20 @@ from ...utils.console import cprint, warn, error as c_error
 
 
 class DatabaseHandler:
-    """Handles local file hashing and database commands."""
-
+    """
+    Handles database-related commands for the multi-handler module.
+    Args:
+        None
+    Returns:
+        None    
+    """
     def localDatabaseHash(self) -> None:
         """
-        Hashes local files or directories and stores the hashes in the database.
+        Hashes files or directories locally and stores the hashes in the database.
+        Args:
+            None
+        Returns:
+            None
         """
         logger.info("Starting local database hash process")
         dir_path = input("Enter the directory or file path to hash: ")
@@ -57,7 +66,11 @@ class DatabaseHandler:
 
     def hashfile(self, file_path: str) -> None:
         """
-        Hashes a single file and calls the database function to add the hash.
+        Hashes a single file and adds the hash with sha256 and adds to the database.
+        Args:
+            file_path (str): Path to the file to be hashed
+        Returns:
+            None
         """
         with open(file_path, 'rb') as f:
             file_bytes = f.read()
@@ -68,7 +81,12 @@ class DatabaseHandler:
 
     def addHashToDatabase(self, file_path: str, hashed_file: str) -> None:
         """
-        Checks if a hash is in the database; if not, it adds it.
+        Adds a file hash to the database if it does not already exist.
+        Args:
+            file_path (str): Path to the file
+            hashed_file (str): SHA256 hash of the file
+        Returns:
+            None
         """
         logger.info(f"Adding hash for file: {file_path}")
         

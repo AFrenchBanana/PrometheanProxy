@@ -7,8 +7,9 @@ from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass
 from flask import Flask, request, jsonify
 
-from ..global_objects import logger, multiplayer_connections, beacon_list, sessions_list
-from ..utils.console import cprint, warn, error as c_error
+from ...global_objects import logger, multiplayer_connections, beacon_list, sessions_list
+from ...beacon.beacon import command_list, add_beacon_command_list
+from ...utils.console import cprint, warn, error as c_error
 
 
 @dataclass
@@ -29,6 +30,7 @@ class MP_Socket:  # Keeping the original class name for compatibility
         GET  /api/connections -> active beacons/sessions
         GET  /api/commands?uuid=UUID -> available commands for implant/session
         POST /api/logout -> invalidate current token
+        POST /api/command -> issue command to implant/session 
     Authentication: Provide token via Authorization: Bearer <token> header or ?token= query parameter.
     Token Model (updated):
         One active token per user. Re-authentication rotates the token; any previous token
@@ -241,6 +243,35 @@ class MP_Socket:  # Keeping the original class name for compatibility
             if not username:
                 return jsonify({"error": "Unauthorized"}), 401
             return jsonify(self._get_active_connections(connections_filter))
+        
+        @self._app.get("/api/connections/details")
+        def connections_details():  # noqa
+            
+            username = self._require_auth()
+            data = {}
+            if not username:
+                return jsonify({"error": "Unauthorized"}), 401
+            uuid = request.args.get("uuid")
+            if not uuid:
+                return jsonify({"error": "Missing uuid"}), 400
+            commands = request.args.get("commands")
+            if not commands:
+                commands = None
+            else:
+                commands = []
+                for command in command_list:
+                    if command.beacon_uuid == uuid:
+                        commands.append({
+                            "command_uuid": command.command_uuid,
+                            "command": command.command,
+                            "data": getattr(command, "command_data", None),
+                            "executed": command.executed
+                        })
+                data = data.update({"commands": commands})
+            
+            
+            return jsonify(data)
+
 
         @self._app.get("/api/commands")
         def commands():  # noqa
@@ -251,6 +282,29 @@ class MP_Socket:  # Keeping the original class name for compatibility
             if not uuid:
                 return jsonify({"error": "Missing uuid"}), 400
             return jsonify({"response": self._available_commands(uuid)})
+        
+        @self._app.post("/api/commands")
+        def post_command():  # noqa
+            username = self._require_auth()
+            if not username:
+                return jsonify({"error": "Unauthorized"}), 401
+            try:
+                data = request.get_json(force=True)
+            except Exception:
+                return jsonify({"error": "Invalid JSON"}), 400
+            uuid = data.get("uuid")
+            data = data.get("data")
+            command = data.get("command")
+            if not uuid or not command:
+                return jsonify({"error": "Missing uuid or command"}), 400
+            if command not in self._available_commands(uuid):
+                return jsonify({"error": "Invalid command for given UUID"}), 400
+            try:
+                add_beacon_command_list(uuid, command, data)
+            except Exception as e:
+                logger.error(f"Failed to add command to beacon/session {uuid}: {e}")
+                return jsonify({"error": "Failed to add command"}), 500
+            return jsonify({"status": "command issued", "uuid": uuid, "command": command})
 
         @self._app.get("/ping")
         def ping():  # noqa

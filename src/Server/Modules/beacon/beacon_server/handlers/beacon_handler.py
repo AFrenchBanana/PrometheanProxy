@@ -8,7 +8,14 @@ from Modules.global_objects import beacon_list, command_list, logger, obfuscatio
 
 
 def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
-    """Handles periodic beacon check-ins for new commands."""
+    """
+    Handles beacon call-ins, updating beacon status and sending commands.
+    Args:
+        handler (BaseHTTPRequestHandler): The HTTP request handler
+        match (dict): Regex match object for the request path
+    Returns:
+        None
+    """
     logger.info(f"Beacon call-in from {handler.path}")
 
     query_components = parse_qs(urlparse(handler.path).query)

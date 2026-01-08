@@ -23,18 +23,18 @@ class MultiHandlerCommands(
     UtilityHandler
 ):
     """
-    Class with multi-handler commands. Each multi-handler instance
-    can call this class to get access to all commands.
-    It is built from smaller, specialized handler classes.
+    Main command handler class for the multi-handler module,
+    inheriting from specific command handler classes.
+    Args:
+        config: Configuration object for database and settings
+    Returns:
+        None
     """
+
     def __init__(self, config) -> None:
-        """
-        Initializes the command handler, setting up config, database,
-        and colorama.
-        """
         logger.info("Initializing MultiHandlerCommands")
         self.config = config
-        self.database = DatabaseClass(config)
+        self.database = DatabaseClass(config, "command_database")
         colorama.init(autoreset=True)
         self._plugins_loaded = False
         self.session_plugins = {}  # command -> instance
@@ -46,18 +46,18 @@ class MultiHandlerCommands(
         return
 
     def load_plugins(self, package_name: str = "Plugins") -> None:
-        """Discover and instantiate plugin classes under Plugins/.
-
+        """
+        Discover and instantiate plugin classes under Plugins/.
         A plugin is any class in a module under package_name that defines
         at least one of: session(self, session: dict), beacon(self, beacon)
         and (optionally) a 'command' attribute. If 'command' is missing,
         the class name is used as the key.
+        Args:
+            package_name (str): The package name to search for plugins
+        Returns:
+            None
         """
-    # Allow re-discovery to pick up newly added plugins or recover after
-    # an initial import failure. We'll still avoid duplicate keys below.
-    # Set a soft guard to prevent infinite recursion.
-    # Callers may invoke load_plugins() multiple times; that's fine.
-
+        
         import os, sys
         # When running as a packaged binary (PyInstaller), prefer user plugins
         # extracted to ~/.PrometheanProxy/plugins (contains top-level 'Plugins/' dir).
@@ -127,15 +127,40 @@ class MultiHandlerCommands(
         )
 
     def list_loaded_session_commands(self):
+        """
+        Lists the loaded session plugin commands.
+        Args:
+            None
+        Returns:
+            None
+        """
         self.load_plugins()
         return sorted(self.session_plugins.keys())
 
     def list_loaded_beacon_commands(self):
+        """
+        Lists the loaded beacon plugin commands.
+        Args:
+            None
+        Returns:
+            None    
+        """
         self.load_plugins()
         return sorted(self.beacon_plugins.keys())
 
     def run_session_plugin(self, command: str, conn, r_address, user_id: str | None = None) -> None:
-        """Invoke session(session_dict) on the named plugin, if present."""
+        """
+        Invoke session on the named plugin, if present.
+        We pass a simple object exposing .userID and .conn to satisfy plugins that
+        expect those attributes.
+        Args:
+            command (str): The name of the session plugin command to run    
+            conn: The connection object to the session
+            r_address: The remote address of the session
+            user_id (str | None): The unique identifier for the session
+        Returns:
+            None
+        """
         self.load_plugins()
         plugin = self.session_plugins.get(command)
         if not plugin:
@@ -150,10 +175,15 @@ class MultiHandlerCommands(
             logger.error(f"Session plugin '{command}' failed: {e}")
 
     def run_beacon_plugin(self, command: str, userID: str) -> bool:
-        """Invoke beacon(beacon_like) on the named plugin, if present.
-
+        """
+        Invoke beacon on the named plugin, if present.
         We pass a simple object exposing .userID to satisfy plugins that
         expect that attribute.
+        Args:
+            command (str): The name of the beacon plugin command to run    
+            userID (str): The unique identifier for the beacon  
+        Returns:
+            bool: True if the plugin was found and ran successfully, False otherwise
         """
         self.load_plugins()
         plugin = self.beacon_plugins.get(command)

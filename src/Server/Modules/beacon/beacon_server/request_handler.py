@@ -6,8 +6,12 @@ from .router import get_handler
 
 class BeaconRequestHandler(BaseHTTPRequestHandler):
     """
-    An HTTP request handler that routes requests to the appropriate
-    handler function based on the URL path and method.
+    Custom HTTP request handler for beacon server.
+    Routes requests to appropriate handlers based on method and path.
+    Args:
+        BaseHTTPRequestHandler: Inherited HTTP request handler class
+    Returns:
+        None
     """
     def _route_request(self, method: str):
         parsed_url = urlparse(self.path)

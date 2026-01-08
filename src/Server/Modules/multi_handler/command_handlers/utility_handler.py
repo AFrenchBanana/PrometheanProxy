@@ -5,11 +5,21 @@ import readline
 
 
 class UtilityHandler:
-    """Handles utility commands like viewing logs."""
+    """
+    Handles utility commands for the multi-handler module.
+    Args:
+        None
+    Returns:
+        None
+    """
 
     def view_logs(self) -> None:
         """
-        View the logs stored in the log file, with options for count and level.
+        Views log messages with optional filtering by level.
+        Args:
+            None    
+        Returns:
+            None
         """
         logger.info("Viewing logs")
         try:

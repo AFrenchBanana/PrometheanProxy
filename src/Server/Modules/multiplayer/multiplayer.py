@@ -1,6 +1,6 @@
 from ..global_objects import logger
-from .mp_socket import MP_Socket
-from .mp_users import MP_Users
+from .http.mp_http import MP_Socket
+from .users.mp_users import MP_Users
 
 class MultiPlayer (MP_Socket, MP_Users):
     """

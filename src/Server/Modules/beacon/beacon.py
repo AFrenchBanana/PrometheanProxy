@@ -32,7 +32,21 @@ class beacon_command:
 
 
 class Beacon:
-    """Handles commands within a session"""
+    """
+    Class that represents a beacon/implant connection.
+    Args:        
+        uuid (str): Unique identifier for the beacon
+        address (str): IP address of the beacon
+        hostname (str): Hostname of the beacon
+        operating_system (str): Operating system of the beacon
+        last_beacon (float): Timestamp of the last beacon check-in
+        timer (float): Interval for beacon check-ins
+        jitter (float): Jitter percentage for beacon check-ins
+        modules (list): List of loaded modules for the beacon
+        config (dict): Configuration dictionary
+    Returns:
+        None
+    """
 
     def __init__(self, uuid: str, address: str, hostname: str, operating_system: str,
                  last_beacon: float, timer: float, jitter: float, modules: list, config: dict):
@@ -60,7 +74,11 @@ class Beacon:
 
     def close_connection(self, userID) -> None:
         """
-        closes connection from the current session within the session commands
+        Closes the connection to the beacon after user confirmation.
+        Args:
+            userID (str): Unique identifier for the beacon
+        Returns:
+            None
         """
         if (input(
                 colorama.Back.RED +
@@ -92,8 +110,19 @@ class Beacon:
         return
 
     def load_module_beacon(self, userID) -> None:
-        # Determine module base (prefer unified path, fall back to legacy)
+        """
+        Loads a module for the beacon by prompting the user to select from available modules.
+        Args:
+            userID (str): Unique identifier for the beacon
+        Returns:
+            None
+        """
         def _resolve_module_base() -> str:
+            """
+            Resolves the base directory for modules, preferring unified structure.
+            Returns:
+                str: Path to the module base directory
+            """
             candidates = [
                 os.path.expanduser(self.config['server'].get('module_location', '')),
                 os.path.expanduser('~/.PrometheanProxy/plugins'),
@@ -167,11 +196,20 @@ class Beacon:
 
     def load_module_direct_beacon(self, userID, module_name) -> None:
         """
-        Loads a module directly by its name.
-        This is used when the module is already known and does not require user input.
+        Loads a specified module for the beacon.
+        Args:
+            userID (str): Unique identifier for the beacon
+            module_name (str): Name of the module to load
+        Returns:
+            None
         """
         # Resolve module base (prefer unified structure under ~/.PrometheanProxy/plugins)
         def _resolve_module_base() -> str:
+            """
+            Resolves the base directory for modules, preferring unified structure.
+            Returns:
+                str: Path to the module base directory  
+            """
             candidates = [
                 os.path.expanduser(self.config['server'].get('module_location', '')),
                 os.path.expanduser('~/.PrometheanProxy/plugins'),
@@ -246,10 +284,24 @@ class Beacon:
             print(f"Error loading module '{module_name}': {e}")
 
     def switch_session(self, userID) -> None:
+        """
+        Switches the session for the beacon.
+        Args:
+            userID (str): Unique identifier for the beacon
+        Returns:
+            None
+        """
         logger.debug(f"Switching session for userID: {userID}")
         add_beacon_command_list(userID, None, "session", {})
 
     def list_db_commands(self, userID) -> None:
+        """
+        Lists the commands in the database for the beacon.
+        Args:
+            userID (str): Unique identifier for the beacon
+        Returns:
+            None
+        """
         logger.debug(f"Listing commands for userID: {userID}")
         for _, beacon_commands in command_list.items():
             if beacon_commands.beacon_uuid == userID:
@@ -262,7 +314,14 @@ class Beacon:
                     Response: {beacon_commands.command_output if beacon_commands.command_output else "Awaiting Response"}""") # noqa
         return
 
-    def beacon_configueration(self, userID) -> None:
+    def beacon_configuration(self, userID) -> None:
+        """
+        Configures the beacon by prompting the user for configuration commands and values.
+        Args:       
+            userID (str): Unique identifier for the beacon
+        Returns:
+            None
+        """
         logger.debug(f"Configuring beacon for userID: {userID}")
         data = {}
         additional_data = "y"
@@ -288,6 +347,20 @@ class Beacon:
 def add_beacon_list(uuid: str, r_address: str, hostname: str,
                     operating_system: str, last_beacon, timer,
                     jitter, config) -> None:
+    """
+    Adds a new beacon to the global beacon dictionary.
+    Args:        
+        uuid (str): Unique identifier for the beacon
+        r_address (str): IP address of the beacon
+        hostname (str): Hostname of the beacon
+        operating_system (str): Operating system of the beacon
+        last_beacon (float): Timestamp of the last beacon check-in
+        timer (float): Interval for beacon check-ins
+        jitter (float): Jitter percentage for beacon check-ins
+        config (dict): Configuration dictionary
+    Returns:
+        None
+    """
     logger.debug(f"Adding beacon with UUID: {uuid}")
     logger.debug(f"Beacon address: {r_address}")
     logger.debug(f"Beacon hostname: {hostname}")
@@ -303,6 +376,16 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
 
 def add_beacon_command_list(beacon_uuid: str, command_uuid: str,
                             command: str, command_data: json = {}) -> None:
+    """
+    Adds a new command to the global command dictionary for a specific beacon.
+    Args:        
+        beacon_uuid (str): Unique identifier for the beacon
+        command_uuid (str): Unique identifier for the command
+        command (str): The command to be executed
+        command_data (json): Additional data for the command
+    Returns:
+        None
+    """
     logger.debug(f"Adding command for beacon UUID: {beacon_uuid}")
     logger.debug(f"Command UUID: {command_uuid}")
     logger.debug(f"Command: {command}")
@@ -318,7 +401,11 @@ def add_beacon_command_list(beacon_uuid: str, command_uuid: str,
 
 def remove_beacon_list(uuid: str) -> None:
     """
-    Removes beacon from the global beacon dictionary.
+    Removes a beacon from the global beacon dictionary.
+    Args:        
+        uuid (str): Unique identifier for the beacon
+    Returns:
+        None
     """
     logger.debug(f"Removing beacon with UUID: {uuid}")
     if uuid in beacon_list:

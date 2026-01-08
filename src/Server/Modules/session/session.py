@@ -12,7 +12,19 @@ from .commands.control_commands import ControlCommands
 
 
 class Session(ControlCommands):
-    """Session object that composes command handlers."""
+    """
+    Represents a session with a connected client.
+    Args:
+        address (Tuple[str, int]): The address of the connected client
+        details (ssl.SSLSocket): The SSL socket connection object
+        hostname (str): The hostname of the connected client
+        operating_system (str): The operating system of the connected client
+        mode (str): The mode of the session (e.g., interactive, beacon)
+        modules (list): List of loaded modules for this session
+        config (dict): Configuration object for database and settings
+    Returns:
+        None
+    """
     def __init__(
         self,
         address,
@@ -49,14 +61,34 @@ def add_connection_list(
     modules: list,
     config
 ) -> None:
-    """Adds a new session to the global sessions dictionary."""
+    """Adds a new session to the global sessions dictionary.
+    Args:
+        conn (ssl.SSLSocket): The SSL socket connection object
+        r_address (Tuple[str, int]): The address of the connected client
+        host (str): The hostname of the connected client
+        operating_system (str): The operating system of the connected client
+        user_id (str): The unique identifier for the session
+        mode (str): The mode of the session (e.g., interactive, beacon)
+        modules (list): List of loaded modules for this session
+        config (dict): Configuration object for database and settings
+    Returns:
+        None
+    """
+
     logger.info(f"Adding connection {r_address[0]} ({host}) to sessions list.")
     new_session = Session(r_address, conn, host, operating_system, mode, modules, config)
     sessions_list[user_id] = new_session
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:
-    """Removes a session from the global sessions dictionary by its address."""
+    """Removes a session from the global sessions dictionary based on address.
+    Args:
+        r_address (Tuple[str, int]): The address of the connected client to
+            remove
+    Returns:
+        None
+    """
+
     key_to_remove = None
     for key, session_obj in sessions_list.items():
         if session_obj.address == r_address:

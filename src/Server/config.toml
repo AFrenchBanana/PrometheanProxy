@@ -81,9 +81,9 @@ Execute local system commands:
     e.g \\grep
 """
 
-[database]
+[command_database]
 # where the database file will be created/ used
-file = "~/ServerDatabase/database.db"
+file = "~/.PrometheanProxy/db/database.db"
 # add data True will insert data to the database, false will not
 addData = true
 
@@ -125,8 +125,8 @@ name = "Disk"
 schema = "IP text, Disk Usage, Time text"
 
 
-[userDatabase]
-file = "~/ServerDatabase/user.db"
+[user_database]
+file = "~/.PrometheanProxy/db/user.db"
 addData = true
 
 # This is where you can add new tables to the database. 

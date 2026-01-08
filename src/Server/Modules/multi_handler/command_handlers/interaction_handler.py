@@ -16,13 +16,25 @@ import os
 
 
 class InteractionHandler:
-    """Handles direct interaction with sessions and beacons."""
+    """
+    Handles interaction commands for sessions and beacons in the multi-handler module.
+    Args:
+        None
+    Returns:
+        None
+    """
 
     def current_client_session(self, conn: ssl.SSLSocket,
                                r_address: Tuple[str, int], user_ID) -> None:
-        """
-        Function that interacts with an individual session, from here
-        commands on the target can be run.
+        """"
+        Function that interacts with an individual session,
+        passing connection details through to the current_client function.
+        Args:
+            conn (ssl.SSLSocket): The SSL socket connection to the client
+            r_address (Tuple[str, int]): The remote address of the client
+            user_ID: The unique identifier for the session
+        Returns:
+            None
         """
         session_obj = sessions_list.get(user_ID)
         if not session_obj:
@@ -40,7 +52,22 @@ class InteractionHandler:
         # so even if on-disk discovery fails we still check/load before running.
         for cmd in dynamic_commands or []:
             def _session_dyn_handler(mod=cmd):
+                """
+                 Handles dynamic session commands with module loading checks.
+                Args:
+                    mod: The module name for the command
+                Returns:
+                    None"""
+
                 def _inner():
+
+                    """
+                    Executes the session plugin command after ensuring the module is loaded.
+                    Args:
+                        None
+                    Returns:
+                        None
+                    """
                     try:
                         # If the module is already loaded, just refresh plugins and run.
                         if hasattr(session_obj, 'loaded_modules') and mod in getattr(session_obj, 'loaded_modules', set()):
@@ -137,9 +164,15 @@ class InteractionHandler:
 
     def use_beacon(self, UserID, IPAddress) -> None:
         """
-        Function that interacts with an individual beacon, queuing commands
-        for the next check-in.
+        Function that interacts with an individual beacon,
+        passing connection details through to the use_beacon function.
+        Args:
+            UserID: The unique identifier for the beacon
+            IPAddress: The IP address of the beacon
+        Returns:
+            None
         """
+        
         logger.info(f"Using beacon with UserID: {UserID} and IPAddress: {IPAddress}")
         beaconClass = beacon_list.get(UserID)
         if not beaconClass:
