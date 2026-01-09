@@ -68,8 +68,10 @@ class MultiHandler:
                 args=(config,),
                 daemon=True
             ).start()
-        except KeyError:
+        except KeyError as e:
             warn("Multiplayer configuration not found, continuing in singleplayer mode")
+            traceback.print_exc()
+            warn(e)
             logger.info("Server: Continuing in singleplayer mode")
             
     def create_hmac(self):
@@ -164,6 +166,7 @@ class MultiHandler:
                 keyfile=os.path.join(cert_dir, tls_key))
             logger.debug("SSL context loaded with certificate and key")
             socket_clear = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+            socket_clear.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             logger.debug("Creating clear socket")
             SSL_Socket = context.wrap_socket(socket_clear, server_side=True)
             logger.debug("Wrapping socket with SSL context")

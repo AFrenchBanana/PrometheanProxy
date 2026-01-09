@@ -98,7 +98,7 @@ class DatabaseClass:
             print(err)
             return
 
-        if self.config['database']['addData']:
+        if self.config[self.database]['addData']:
             try:
                 logger.debug(f"DatabaseClass: Inserting into table {safe_table} values {values}")
                 placeholders = ','.join(['?'] * len(values))
@@ -116,6 +116,9 @@ class DatabaseClass:
                      column: str, value: str) -> str:
         """Search query for database searching using parameterized queries and identifier validation.
         
+        Populates into a query as follows:
+        SELECT {selectval} FROM {table} WHERE {column} = {value}
+
         Args:
             selectval (str): The value(s) to select (e.g., "*", "name, age")
             table (str): The table to search in
@@ -156,3 +159,35 @@ class DatabaseClass:
             print(f"Error executing search query: {err}")
             logger.error(f"DatabaseClass: Error executing search query: {err}")
             return None
+
+    def fetch_all(self, table: str, selectval: str = "*") -> list:
+        """
+        Fetch all entries from the specified table.
+        Args:
+            table (str): The table to fetch from.
+            selectval (str): The columns to select (default "*").
+        Returns:
+            list: A list of tuples containing the rows.
+        """
+        if not self.cursor:
+            logger.error("DatabaseClass: Database cursor is not available")
+            print("Database cursor is not available.")
+            return []
+
+        valid_tables = [t['name'] for t in self.config['tables']]
+        try:
+            safe_table = self._safe_identifier(table, valid_tables)
+        except ValueError as err:
+            logger.error(f"DatabaseClass: {err}")
+            print(err)
+            return []
+        
+        try:
+            query = f"SELECT {selectval} FROM {safe_table}"
+            logger.debug(f"DatabaseClass: Executing query: {query}")
+            self.cursor.execute(query)
+            return self.cursor.fetchall()
+        except sqlite3.Error as err:
+            logger.error(f"DatabaseClass: Error fetching all from {safe_table}: {err}")
+            print(f"Error fetching all from {safe_table}: {err}")
+            return []

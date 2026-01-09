@@ -21,7 +21,7 @@ class MultiPlayer (MP_Socket, MP_Users):
         """
         Returns a string representation of the current users in the multiplayer system.
         """
-        return str(self.currentUser())
+        return str(self.currentUserName)
         
     def userMenu(self):
         menu_actions = {

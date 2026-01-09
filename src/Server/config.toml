@@ -132,8 +132,11 @@ addData = true
 # This is where you can add new tables to the database. 
 [[tables]]
 name = "Users"
-schema = "user text, password text, passwordSalt text, admin bool"
+schema = "userID text, user text, password text, passwordSalt text, admin bool"
 
+[[tables]]
+name = "terminal_user"
+schema = "userID text"
 
 
 

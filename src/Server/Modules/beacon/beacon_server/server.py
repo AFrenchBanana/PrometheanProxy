@@ -5,6 +5,10 @@ from Modules.beacon.beacon_server.request_handler import BeaconRequestHandler
 from Modules.global_objects import logger
 
 
+class ReusableHTTPServer(HTTPServer):
+    allow_reuse_address = True
+
+
 def run_http_server(config):
     """
     Starts the HTTP server for handling beacon requests.
@@ -20,7 +24,7 @@ def run_http_server(config):
     # --- REVERTED SSL LOGIC ---
     # The HTTPServer is now created directly without any SSL wrapping
     # to ensure it listens for plain HTTP, as required by the client.
-    httpd = HTTPServer(server_address, BeaconRequestHandler)
+    httpd = ReusableHTTPServer(server_address, BeaconRequestHandler)
     logger.info(f"Starting HTTP beacon server on http://{host}:{port}")
     # --- END REVERSION ---
 
