@@ -86,6 +86,9 @@ class ConnectionHandler:
                     row_color = colorama.Fore.WHITE
                     logger.error(
                         f"Error parsing next beacon time for {beacon.hostname}")
+                if not beacon.loaded_this_instant:
+                    row_color = colorama.Fore.CYAN
+                    row.append("This beacon has not yet loaded this instant.")
                 table.append((row, row_color))
 
             # Print the table with color
@@ -101,7 +104,8 @@ class ConnectionHandler:
                 elif row_color == colorama.Fore.GREEN:
                     fg = "green"
                 cprint(tabulate([row], headers=["Host", "OS", "IP", "ID",
-                                               "Last Callback", "Status"],
+                                               "Last Callback", "Status"] if len(row) == 6 else
+                                               ["Host", "OS", "IP", "ID", "Last Callback", "Status", "Notes"],
                                tablefmt="grid"), fg=fg)
         try:
             multiplayer_enabled = self.config["multiplayer"]["multiplayerEnabled"]

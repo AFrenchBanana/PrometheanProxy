@@ -34,6 +34,7 @@ class Session(ControlCommands):
         mode,
         modules,
         config,
+        from_db=False
     ):
         self.address = address
         self.details = details
@@ -42,9 +43,23 @@ class Session(ControlCommands):
         self.mode = mode
         self.loaded_modules = modules
         self.config = config
-        self.database = DatabaseClass(config)
+        if not from_db:
+            self.loaded_this_instant = True
+        self.database = DatabaseClass(config, "command_database")
         colorama.init(autoreset=True)
 
+        if not from_db:
+            self.database.insert_entry(
+                "sessions",
+                [
+                    self.address,
+                    self.details,
+                    self.hostname,
+                    self.operating_system,
+                    self.mode,
+                    str(self.loaded_modules)
+                ])
+        
         logger.info(
             f"New session created: {self.address[0]}:{self.address[1]} ({self.hostname})"
         )
@@ -59,7 +74,8 @@ def add_connection_list(
     user_id: str,
     mode: str,
     modules: list,
-    config
+    config,
+    from_db=False
 ) -> None:
     """Adds a new session to the global sessions dictionary.
     Args:
@@ -71,12 +87,13 @@ def add_connection_list(
         mode (str): The mode of the session (e.g., interactive, beacon)
         modules (list): List of loaded modules for this session
         config (dict): Configuration object for database and settings
+        from_db (bool): Whether the session is being loaded from the database
     Returns:
         None
     """
 
     logger.info(f"Adding connection {r_address[0]} ({host}) to sessions list.")
-    new_session = Session(r_address, conn, host, operating_system, mode, modules, config)
+    new_session = Session(r_address, conn, host, operating_system, mode, modules, config, from_db=from_db)
     sessions_list[user_id] = new_session
 
 
@@ -99,4 +116,4 @@ def remove_connection_list(r_address: Tuple[str, int]) -> None:
         sessions_list.pop(key_to_remove)
         logger.info(f"Removed session {r_address[0]} from list.")
     else:
-        logger.warning(f"Could not find session with address {r_address} to remove.")
+        logger.warning(f"Could not find session with address {r_address} to remove.")       

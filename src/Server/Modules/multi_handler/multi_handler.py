@@ -8,8 +8,10 @@ import traceback
 import colorama
 import readline
 import json
+import ast
+import uuid
 
-from datetime import datetime
+from datetime import datetime, time
 from ..utils.authentication import Authentication
 from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
@@ -17,6 +19,7 @@ from ServerDatabase.database import DatabaseClass
 from Modules.multiplayer.multiplayer import MultiPlayer
 
 from ..session.session import add_connection_list
+from ..beacon.beacon import add_beacon_list
 from ..session.transfer import receive_data, send_data
 from ..global_objects import (
     sessions_list,
@@ -33,8 +36,8 @@ from Modules.utils.console import cprint, warn, error as c_error
 
 class MultiHandler:
     """
-    Main MultiHandler class that sets up the server,
-    handles connections, and manages multiplayer mode.
+    This class manages multiple sessions and beacons,
+    providing a command interface for user interaction.
     Args:
         None
     Returns:
@@ -49,7 +52,7 @@ class MultiHandler:
         self.database = DatabaseClass(config, "command_database")
         self.create_certificate()
         self.create_hmac()
-
+        self.load_db_implants()
         colorama.init(autoreset=True)
         if config['packetsniffer']['active']:
             sniffer = PacketSniffer()
@@ -73,6 +76,108 @@ class MultiHandler:
             traceback.print_exc()
             warn(e)
             logger.info("Server: Continuing in singleplayer mode")
+
+    def load_db_implants(self):
+        """
+        Loads implants from the database into the obfuscation map.
+        Args:
+            None
+        Returns:
+            None
+        """
+        logger.info("Loading implants from database")
+        try:
+            # Load Beacons
+            # Schema: uuid text, IP text, Hostname text, OS text, LastBeacon text, NextBeacon text, Timer real, Jitter real, modules list
+            beacons = self.database.fetch_all("beacons")
+            if beacons:
+                for beacon in beacons:
+                    try:
+                        uuid_val = beacon[0]
+                        ip = beacon[1]
+                        hostname = beacon[2]
+                        os_val = beacon[3]
+                        # last_beacon stored as text in DB? Beacon expects float.
+                        try:
+                            last_beacon = beacon[4]
+                        except (ValueError, TypeError):
+                            last_beacon = float(beacon[4]) if beacon[4] else 0.0
+                        timer = float(beacon[6]) if beacon[6] else 0.0
+                        jitter = float(beacon[7]) if beacon[7] else 0.0
+                        
+                        modules_data = beacon[8]
+                        if isinstance(modules_data, str):
+                            try:
+                                modules = ast.literal_eval(modules_data)
+                            except (ValueError, SyntaxError):
+                                modules = []
+                        else:
+                            modules = modules_data if isinstance(modules_data, list) else []
+                        add_beacon_list(
+                            uuid_val, 
+                            ip, 
+                            hostname, 
+                            os_val, 
+                            last_beacon, 
+                            timer, 
+                            jitter, 
+                            config, 
+                            self.database,
+                            modules,
+                            from_db=True
+                        )
+                    except Exception as e:
+                        logger.error(f"Error loading beacon {beacon}: {e}")
+                        continue
+
+            # Load Sessions
+            # Schema: address text, details text, hostname text, operating_system text, mode text, modules list
+            sessions = self.database.fetch_all("sessions")
+            if sessions:
+                for session in sessions:
+                    try:
+                        address_data = session[0]
+                        if isinstance(address_data, str):
+                            try:
+                                address = ast.literal_eval(address_data)
+                            except (ValueError, SyntaxError):
+                                address = (address_data, 0)
+                        else:
+                            address = address_data
+
+                        details = session[1]
+                        hostname = session[2]
+                        operating_system = session[3]
+                        mode = session[4]
+                        
+                        modules_data = session[5]
+                        if isinstance(modules_data, str):
+                            try:
+                                modules = ast.literal_eval(modules_data)
+                            except (ValueError, SyntaxError):
+                                modules = []
+                        else:
+                            modules = modules_data if isinstance(modules_data, list) else []
+
+                        user_id = str(uuid.uuid4())
+                        
+                        add_connection_list(
+                            details, 
+                            address, 
+                            hostname, 
+                            operating_system, 
+                            user_id, 
+                            mode, 
+                            modules, 
+                            config,
+                            from_db=True
+                        )
+                    except Exception as e:
+                         logger.error(f"Error loading session {session}: {e}")
+                         continue
+
+        except Exception as e:
+            logger.error(f"Failed to load implants from DB: {e}")
             
     def create_hmac(self):
         """

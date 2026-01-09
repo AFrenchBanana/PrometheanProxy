@@ -83,38 +83,38 @@ Execute local system commands:
 
 [command_database]
 # where the database file will be created/ used
-file = "~/.PrometheanProxy/db/database.db"
+file = "~/.PrometheanProxy/db/implants.db"
 # add data True will insert data to the database, false will not
 addData = true
 
 # This is where you can add new tables to the database. 
 [[tables]]
 name = "Addresses"
-schema = "IP text, Port integer, Hostname text, OS text, Date text"
+schema = "uuid text, IP text, Port integer, Hostname text, OS text, Date text"
 
 [[tables]]
 name = "Shell"
-schema = "IP text, Date text, Command text, Response Text"
+schema = "uuid text, IP text, Date text, Command text, Response Text"
 
 [[tables]]
 name = "Processes"
-schema = "IP text , Processes text, Time text"
+schema = "uuid text, IP text , Processes text, Time text"
 
 [[tables]]
 name = "Services"
-schema = "IP text, Services text, Time text"
+schema = "uuid text,IP text, Services text, Time text"
 
 [[tables]]
 name = "Netstat"
-schema = "IP text, Netstat text, Time text"
+schema = "uuid text, IP text, Netstat text, Time text"
 
 [[tables]]
 name = "Whoami"
-schema = "IP text, Whoami text, Time text"
+schema = "uuid text, IP text, Whoami text, Time text"
 
 [[tables]]
 name = "SystemInfo"
-schema = "IP Text, SystemInfo text, Time text"
+schema = "uuid text,IP Text, SystemInfo text, Time text"
 
 [[tables]]
 name = "Hashes"
@@ -122,14 +122,22 @@ schema = "Filename text, Hash text"
 
 [[tables]]
 name = "Disk"
-schema = "IP text, Disk Usage, Time text"
+schema = "uuid text, IP text, Disk Usage, Time text"
+
+[[tables]]
+name = "beacons"
+schema = "uuid text, IP text, Hostname text, OS text, LastBeacon text, NextBeacon text, Timer real, Jitter real, modules list"
+
+[[tables]]
+name = "sessions"
+schema = "address text, details text, hostname text, operating_system text, mode text, modules list"
+
 
 
 [user_database]
 file = "~/.PrometheanProxy/db/user.db"
 addData = true
 
-# This is where you can add new tables to the database. 
 [[tables]]
 name = "Users"
 schema = "userID text, user text, password text, passwordSalt text, admin bool"

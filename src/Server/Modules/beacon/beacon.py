@@ -1,4 +1,5 @@
 import readline
+import time
 from ServerDatabase.database import DatabaseClass
 from ..utils.file_manager import FileManagerClass
 from ..global_objects import (
@@ -33,7 +34,7 @@ class beacon_command:
 
 class Beacon:
     """
-    Class that represents a beacon/implant connection.
+    Class that represents a beacon connection.
     Args:        
         uuid (str): Unique identifier for the beacon
         address (str): IP address of the beacon
@@ -49,27 +50,53 @@ class Beacon:
     """
 
     def __init__(self, uuid: str, address: str, hostname: str, operating_system: str,
-                 last_beacon: float, timer: float, jitter: float, modules: list, config: dict):
+                 last_beacon: float, timer: float, jitter: float, modules: list, config: dict, database: DatabaseClass, from_db: bool = False):
         logger.debug(f"Creating beacon with UUID: {uuid}")
         self.uuid = uuid
-        self.database = DatabaseClass(config)
+        self.database = database
         self.file_manager = FileManagerClass(config, uuid)
         self.address = address
-        logger.debug(f"Beacon address: {address}")
         self.hostname = hostname
-        logger.debug(f"Beacon hostname: {hostname}")
         self.operating_system = operating_system
-        logger.debug(f"Beacon operating system: {operating_system}")
-        self.last_beacon = last_beacon
-        logger.debug(f"Beacon last beacon: {last_beacon}")
-        self.next_beacon = str(last_beacon) + str(timer)
-        logger.debug(f"Beacon next beacon: {self.next_beacon}")
+        
+        lb_float = 0.0
+        if isinstance(last_beacon, (float, int)):
+            lb_float = float(last_beacon)
+        elif isinstance(last_beacon, str):
+            try:
+                lb_float = time.mktime(time.strptime(last_beacon, "%a %b %d %H:%M:%S %Y"))
+            except ValueError:
+                try:
+                    lb_float = time.mktime(time.strptime(last_beacon, "%Y-%m-%d %H:%M:%S"))
+                except ValueError:
+                    logger.warning(f"Invalid last_beacon format: {last_beacon}. Using current time.")
+                    lb_float = time.time()
+        else:
+             lb_float = time.time()
+
+        self.last_beacon = time.asctime(time.localtime(lb_float))
+        self.next_beacon = time.asctime(time.localtime(lb_float + timer))
+        
         self.timer = timer
-        logger.debug(f"Beacon timer: {timer}")
         self.jitter = jitter
-        logger.debug(f"Beacon jitter: {jitter}")
         self.config = config
         self.loaded_modules = modules
+        self.loaded_this_instant = False
+        if not from_db:
+            self.loaded_this_instant = True
+            self.database.insert_entry(
+                "beacons",
+                [
+                    self.uuid,
+                    self.address,
+                    self.hostname,
+                    self.operating_system,
+                    self.last_beacon,
+                    self.next_beacon,
+                    self.timer,
+                    self.jitter,
+                    str(self.loaded_modules)
+                ])
         colorama.init(autoreset=True)
 
     def close_connection(self, userID) -> None:
@@ -345,8 +372,8 @@ class Beacon:
 
 
 def add_beacon_list(uuid: str, r_address: str, hostname: str,
-                    operating_system: str, last_beacon, timer,
-                    jitter, config) -> None:
+                    operating_system: str, last_beacon: float, timer: float,
+                    jitter: int, config, database: DatabaseClass, modules=None, from_db=False) -> None:
     """
     Adds a new beacon to the global beacon dictionary.
     Args:        
@@ -358,6 +385,9 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
         timer (float): Interval for beacon check-ins
         jitter (float): Jitter percentage for beacon check-ins
         config (dict): Configuration dictionary
+        database (DatabaseClass): Database connection instance
+        modules (list): List of loaded modules. Defaults to ["shell", "close", "session"]
+        from_db (bool): Whether the beacon is being loaded from the database
     Returns:
         None
     """
@@ -368,8 +398,12 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
     logger.debug(f"Beacon last beacon: {last_beacon}")
     logger.debug(f"Beacon timer: {timer}")
     logger.debug(f"Beacon jitter: {jitter}")
+    
+    if modules is None:
+        modules = ["shell", "close", "session"]
+    
     new_beacon = Beacon(
-        uuid, r_address, hostname, operating_system, last_beacon, timer, jitter, ["shell", "close", "session"], config,
+        uuid, r_address, hostname, operating_system, last_beacon, timer, jitter, modules, config, database, from_db=from_db
     )
     beacon_list[uuid] = new_beacon
 

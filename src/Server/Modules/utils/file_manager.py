@@ -50,25 +50,11 @@ class FileManagerClass:
         current_node = data
         found_path = True
 
-        # Check if the root of the JSON matches the first path component
-        # The C++ code's root JSON structure doesn't explicitly name the root directory,
-        # it just contains its 'directories' and 'files'.
-        # We assume 'data' itself represents the root of the traversal.
-        # If the user provides a path like "C:\\Users", we need to ensure the
-        # first component "C:" is implicitly handled as the root of the JSON.
-
-        # If the first component is a drive letter (e.g., 'C:'), we assume the JSON
-        # 'data' is the content of that drive.
-        # If the path starts with a drive letter, we effectively skip matching the
-        # first component against a named directory in the JSON, as the JSON's root
-        # already represents that drive.
+       
 
         start_index = 0
         if path_components and os.path.splitdrive(normalized_path)[0]:
-            # If the target path has a drive, assume the JSON's root is that drive.
-            # We don't need to find a 'C:' directory *inside* the JSON's root.
-            # So, we start matching from the second component.
-            # This is a simplification based on the C++ output structure.
+          
             start_index = 1
 
         for i in range(start_index, len(path_components)):

@@ -10,9 +10,10 @@ from Modules.global_objects import config, logger, obfuscation_map
 from Modules.beacon.beacon import add_beacon_list
 
 from Modules.beacon.beacon_server.utils import process_request_data
+from ServerDatabase.database import DatabaseClass
 
 
-def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
+def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict, ):
     """
     Handles a new connection request from a beacon.
     Args:
@@ -51,8 +52,8 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict):
         logger.info(f"New connection from {name_val} on {os_val} at {address_val} with UUID {userID}")
 
         add_beacon_list(
-            userID, address_val, name_val, os_val, time.strftime('%Y-%m-%d %H:%M:%S'),
-            config['beacon']["interval"], config['beacon']['jitter'], config
+            userID, address_val, name_val, os_val, time.time(),
+            config['beacon']["interval"], config['beacon']['jitter'], config, DatabaseClass(config, "command_database"), "Modules need to add", False
         )
 
         # determine the JSON keys to use in the response; prefer explicit mapping from generic, then implant_info, then defaults
@@ -104,8 +105,8 @@ def handle_reconnect(handler: BaseHTTPRequestHandler, match: dict):
     required_keys = ["name", "os", "address", "id", "timer", "jitter"]
     if all(key in data for key in required_keys):
         add_beacon_list(
-            data['id'], data['address'], data['name'], data['os'], time.asctime(),
-            float(data['timer']), float(data['jitter']), config
+            data['id'], data['address'], data['name'], data['os'], time.time(),
+            float(data['timer']), float(data['jitter']), config, from_db=False
         )
         logger.info(f"Beacon list updated for reconnection ID: {data['id']}")
         response_body = json.dumps({"x": True}).encode('utf-8')
