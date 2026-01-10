@@ -16,6 +16,7 @@ import colorama
 import json
 import traceback
 import os
+import ast
 
 
 class beacon_command:
@@ -29,7 +30,12 @@ class beacon_command:
         self.command_output = command_output
         self.executed = executed
         self.command_data = command_data
-        logger.debug(f"Command data: {command_data}")
+        
+        # Avoid logging potentially large command data
+        if isinstance(command_data, dict) and 'data' in command_data and len(command_data['data']) > 100:
+             logger.debug(f"Command data (truncated): {{... 'data': <{len(command_data['data'])} bytes> ...}}")
+        else:
+             logger.debug(f"Command data: {command_data}")
 
 
 class Beacon:
@@ -80,7 +86,16 @@ class Beacon:
         self.timer = timer
         self.jitter = jitter
         self.config = config
-        self.loaded_modules = modules
+        
+        if isinstance(modules, str):
+            try:
+                self.loaded_modules = ast.literal_eval(modules)
+            except (ValueError, SyntaxError):
+                logger.warning(f"Failed to parse modules string: {modules}. Defaulting to empty list.")
+                self.loaded_modules = []
+        else:
+            self.loaded_modules = modules if modules is not None else []
+
         self.loaded_this_instant = False
         if not from_db:
             self.loaded_this_instant = True
@@ -97,7 +112,6 @@ class Beacon:
                     self.jitter,
                     str(self.loaded_modules)
                 ])
-        colorama.init(autoreset=True)
 
     def close_connection(self, userID) -> None:
         """
@@ -409,21 +423,29 @@ def add_beacon_list(uuid: str, r_address: str, hostname: str,
 
 
 def add_beacon_command_list(beacon_uuid: str, command_uuid: str,
-                            command: str, command_data: json = {}) -> None:
+                            command: str, command_data: dict = None) -> None:
     """
     Adds a new command to the global command dictionary for a specific beacon.
     Args:        
         beacon_uuid (str): Unique identifier for the beacon
         command_uuid (str): Unique identifier for the command
         command (str): The command to be executed
-        command_data (json): Additional data for the command
+        command_data (dict): Additional data for the command
     Returns:
         None
     """
+    if command_data is None:
+        command_data = {}
     logger.debug(f"Adding command for beacon UUID: {beacon_uuid}")
     logger.debug(f"Command UUID: {command_uuid}")
     logger.debug(f"Command: {command}")
-    logger.debug(f"Command data: {command_data}")
+    
+    # Avoid logging potentially large command data
+    if isinstance(command_data, dict) and 'data' in command_data and len(command_data['data']) > 100:
+            logger.debug(f"Command data (truncated): {{... 'data': <{len(command_data['data'])} bytes> ...}}")
+    else:
+            logger.debug(f"Command data: {command_data}")
+
     if not command_uuid or command_uuid == "":
         command_uuid = str(uuid.uuid4())
         logger.debug(f"Generated new command UUID: {command_uuid}")

@@ -397,7 +397,12 @@ class MultiHandler:
                         c_error("No beacons connected")
                         logger.warning("No beacons connected")
                     elif len(beacon_list) > 1:
-                        index = int(input("Enter the index of the beacon: "))
+                        try:
+                            index = int(input("Enter the index of the beacon: "))
+                        except ValueError:
+                            c_error("Invalid index input")
+                            logger.error("Invalid index input for beacon selection")
+                            return
                         logger.debug(f"Selected beacon index: {index}")
                         try:
                             beacon = list(beacon_list.values())[index]

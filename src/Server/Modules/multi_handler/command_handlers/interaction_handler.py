@@ -139,7 +139,6 @@ class InteractionHandler:
             cprint("Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]), fg="yellow")
 
         while True:
-            colorama.init(autoreset=True)
             readline.parse_and_bind("tab: complete")
             readline.set_completer(
                 lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))
@@ -183,103 +182,160 @@ class InteractionHandler:
         cprint(f"Interacting with beacon {beaconClass.hostname} ({beaconClass.uuid})", fg="yellow")
         logger.info(f"Beacon {beaconClass.hostname} ({beaconClass.uuid}) found")
 
-        # Only static; all other commands are plugins
-        command_handlers = {
-            "close": lambda: beaconClass.close_connection(UserID),
-            "module": lambda: beaconClass.load_module_beacon(UserID),
-            "session": lambda: beaconClass.switch_session(UserID)
-        }
+        def get_command_handlers():
+            # Only static; all other commands are plugins
+            command_handlers = {
+                "close": lambda: beaconClass.close_connection(UserID),
+                "module": lambda: beaconClass.load_module_beacon(UserID),
+                "session": lambda: beaconClass.switch_session(UserID)
+            }
 
-        # Merge in dynamic beacon plugins via MultiHandlerCommands
-        try:
-            dynamic_beacon = getattr(self, "list_loaded_beacon_commands")()
-        except Exception:
-            dynamic_beacon = []
+            # Merge in dynamic beacon plugins via MultiHandlerCommands
+            try:
+                dynamic_beacon = getattr(self, "list_loaded_beacon_commands")()
+            except Exception:
+                dynamic_beacon = []
 
-        for cmd in dynamic_beacon or []:
-            if cmd not in command_handlers:
-                # Wrap dynamic beacon commands with a module-aware handler so we prompt
-                # to load missing modules before attempting to run the plugin.
-                def _beacon_dyn_handler(mod=cmd):
+            for cmd in dynamic_beacon or []:
+                if cmd not in command_handlers:
+                    # Wrap dynamic beacon commands with a module-aware handler so we prompt
+                    # to load missing modules before attempting to run the plugin.
+                    def _beacon_dyn_handler(mod=cmd):
+                        def _inner():
+                            try:
+                                if hasattr(beaconClass, 'loaded_modules') and mod in getattr(beaconClass, 'loaded_modules', set()):
+                                    try:
+                                        getattr(self, "load_plugins")()
+                                    except Exception:
+                                        pass
+                                    if self.run_beacon_plugin(mod, UserID):
+                                        cprint(f"Queued beacon plugin '{mod}' for {UserID}.", fg="green")
+                                    return
+
+                                choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
+                                if choice.startswith('y'):
+                                    beaconClass.load_module_direct_beacon(UserID, mod)
+                                    try:
+                                        getattr(self, "load_plugins")()
+                                    except Exception:
+                                        pass
+                                    if self.run_beacon_plugin(mod, UserID):
+                                        cprint(f"Queued beacon plugin {mod} for {UserID} after loading module.", fg="green")
+                                else:
+                                    warn("Cancelled.")
+                            except Exception as e:
+                                logger.error(f"Failed to handle beacon plugin '{mod}': {e}")
+                                if not self.config['server']['quiet_mode']:
+                                    c_error(f"An error occurred: {e}")
+                        return _inner
+                    command_handlers[cmd] = _beacon_dyn_handler()
+
+            # Discover on-disk modules and wire commands
+            def _resolve_module_base() -> str:
+                """
+                Resolves the base directory for modules, preferring unified structure.
+                Returns:
+                    str: Path to the module base directory  
+                """
+                candidates = [
+                    os.path.expanduser(beaconClass.config['server'].get('module_location', '')),
+                    os.path.expanduser('~/.PrometheanProxy/plugins'),
+                ]
+                for c in candidates:
+                    if c and os.path.isdir(c):
+                        return c
+                return os.path.expanduser('~/.PrometheanProxy/plugins')
+
+            command_location = _resolve_module_base()
+            repo_plugins = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../Plugins")) 
+            try:
+                os_str = str(beaconClass.operating_system).lower()
+                platform_folder = 'windows' if 'windows' in os_str else 'linux'
+                ext = '.dll' if platform_folder == 'windows' else '.so'
+                channel = 'debug' if 'debug' in os_str else 'release'
+                module_names = []
+
+                # Legacy structure has OS folders at root (linux/windows/<channel>/*.ext)
+                legacy_linux = os.path.join(command_location, 'linux')
+                legacy_windows = os.path.join(command_location, 'windows')
+                if os.path.isdir(legacy_linux) or os.path.isdir(legacy_windows):
+                    files = []
+                    for ch in ('release', 'debug'):
+                        d = os.path.join(command_location, platform_folder, ch)
+                        if os.path.isdir(d):
+                            files.extend([f for f in os.listdir(d) if f.endswith(ext)])
+                    module_names = [os.path.splitext(f)[0].removesuffix('-debug') for f in files]
+                else:
+                    # Unified structure: <name>/{release,debug}/{name}[ -debug].ext
+                    if os.path.isdir(command_location):
+                        for name in os.listdir(command_location):
+                            full = os.path.join(command_location, name)
+                            if not os.path.isdir(full):
+                                continue
+                            fname = f"{name}{'-debug' if channel == 'debug' else ''}{ext}"
+                            cand = os.path.join(full, channel, fname)
+                            if os.path.isfile(cand):
+                                module_names.append(name)
+
+                    # Fallback to repo tree if none found in user directory
+                    if not module_names and os.path.isdir(repo_plugins):
+                        for name in os.listdir(repo_plugins):
+                            full = os.path.join(repo_plugins, name)
+                            if not os.path.isdir(full):
+                                continue
+                            fname = f"{name}{'-debug' if channel == 'debug' else ''}{ext}"
+                            cand = os.path.join(full, channel, fname)
+                            if os.path.isfile(cand):
+                                module_names.append(name)
+
+            except Exception as e:
+                logger.error(f"Error listing modules: {e}")
+                module_names = []
+
+            for m in module_names:
+                # Always override with a module-aware handler so we can prompt to load if needed
+                def _beacon_module_handler(mod=m):
                     def _inner():
-                        try:
-                            if hasattr(beaconClass, 'loaded_modules') and mod in getattr(beaconClass, 'loaded_modules', set()):
-                                try:
-                                    getattr(self, "load_plugins")()
-                                except Exception:
-                                    pass
+                        if mod in beaconClass.loaded_modules:
+                            # Ensure plugins are discovered, then run the plugin command
+                            try:
+                                getattr(self, "load_plugins")()
                                 if self.run_beacon_plugin(mod, UserID):
                                     cprint(f"Queued beacon plugin '{mod}' for {UserID}.", fg="green")
-                                return
-
-                            choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
-                            if choice.startswith('y'):
-                                beaconClass.load_module_direct_beacon(UserID, mod)
-                                try:
-                                    getattr(self, "load_plugins")()
-                                except Exception:
-                                    pass
+                                    return
+                            except Exception as e:
+                                logger.error(f"Failed to run beacon plugin '{mod}' after detecting loaded module: {e}")
+                            
+                            # Fallback if no plugin handled it
+                            add_beacon_command_list(UserID, None, mod, {})
+                            cprint(f"Queued command '{mod}' for {UserID}.", fg="green")
+                            return
+                        
+                        # Ask to load the module, then run the plugin command
+                        choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
+                        if choice.startswith('y'):
+                            beaconClass.load_module_direct_beacon(UserID, mod)
+                            try:
+                                getattr(self, "load_plugins")()
                                 if self.run_beacon_plugin(mod, UserID):
                                     cprint(f"Queued beacon plugin {mod} for {UserID} after loading module.", fg="green")
-                            else:
-                                warn("Cancelled.")
-                        except Exception as e:
-                            logger.error(f"Failed to handle beacon plugin '{mod}': {e}")
-                            if not self.config['server']['quiet_mode']:
-                                c_error(f"An error occurred: {e}")
+                            except Exception as e:
+                                logger.error(f"Failed to run beacon plugin '{mod}' after loading module: {e}")
+                        else:
+                            warn("Cancelled.")
                     return _inner
-                command_handlers[cmd] = _beacon_dyn_handler()
+                if m not in command_handlers:
+                    command_handlers[m] = _beacon_module_handler()
+            
+            return command_handlers
 
-        # Discover on-disk modules and wire commands
-        try:
-            platform_folder = 'windows' if 'windows' in beaconClass.operating_system else 'linux'
-            ext = '.dll' if platform_folder == 'windows' else '.so'
-            channel = 'debug' if 'debug' in beaconClass.operating_system else 'release'
-            module_base = os.path.expanduser(beaconClass.config['server']['module_location'])
-            module_dir = os.path.abspath(os.path.join(module_base, platform_folder, channel))
-            files = [f for f in os.listdir(module_dir) if f.endswith(ext)]
-            module_names = [os.path.splitext(f)[0] for f in files]
-        except Exception:
-            module_names = []
-        if module_names:
-            print("Loaded modules:")
-            for m in module_names:
-                print(f" - {m}")
-        for m in module_names:
-            # Always override with a module-aware handler so we can prompt to load if needed
-            def _beacon_module_handler(mod=m):
-                def _inner():
-                    if mod in beaconClass.loaded_modules:
-                        cprint(f"Module '{mod}' is already loaded.", fg="green")
-                        # Ensure plugins are discovered, then run the plugin command
-                        try:
-                            getattr(self, "load_plugins")()
-                            if self.run_beacon_plugin(mod, UserID):
-                                cprint(f"Queued beacon plugin '{mod}' for {UserID}.", fg="green")
-                        except Exception as e:
-                            logger.error(f"Failed to run beacon plugin '{mod}' after detecting loaded module: {e}")
-                        return
-                    # Ask to load the module, then run the plugin command
-                    choice = input(f"Module '{mod}' is not loaded. Load now? [y/N]: ").strip().lower()
-                    if choice.startswith('y'):
-                        beaconClass.load_module_direct_beacon(UserID, mod)
-                        try:
-                            getattr(self, "load_plugins")()
-                            if self.run_beacon_plugin(mod, UserID):
-                                cprint(f"Queued beacon plugin {mod} for {UserID} after loading module.", fg="green")
-                        except Exception as e:
-                            logger.error(f"Failed to run beacon plugin '{mod}' after loading module: {e}")
-                    else:
-                        warn("Cancelled.")
-                return _inner
-            command_handlers[m] = _beacon_module_handler()
+        command_handlers = get_command_handlers() # Initial load
 
         # Optional: show available commands once when entering the beacon menu
         if command_handlers:
             cprint("Available commands: " + ", ".join(sorted(command_handlers.keys()) + ["exit"]), fg="yellow")
 
         while True:
-            colorama.init(autoreset=True)
             readline.parse_and_bind("tab: complete")
             readline.set_completer(
                 lambda text, state: tab_completion(text, state, list(command_handlers.keys()) + ["exit"]))

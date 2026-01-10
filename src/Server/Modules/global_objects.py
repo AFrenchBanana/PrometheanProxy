@@ -10,16 +10,21 @@ can handle bytes and strings.
 from .utils.content_handler import TomlFiles
 from .utils.logging import LoggingClass as Logger
 from tomlkit.exceptions import InvalidCharInStringError
-
 import os
 import sys
 import json
+from typing import TYPE_CHECKING, Dict, Any
 
-beacon_list = {}
-command_list = {}
-sessions_list = {}
+if TYPE_CHECKING:
+    from .beacon.beacon import Beacon, beacon_command
+    from .session.session import Session
+    from .multiplayer.http.mp_http import HTTPClientSession
+
+beacon_list: Dict[str, "Beacon"] = {}
+command_list: Dict[str, "beacon_command"] = {}
+sessions_list: Dict[str, "Session"] = {}
 multiplayer_connections = {}
-obfuscation_map = {}
+obfuscation_map: Dict[str, Any] = {}
 
 if getattr(sys, "frozen", False):
     base_dir = os.path.expanduser("~/.PrometheanProxy")

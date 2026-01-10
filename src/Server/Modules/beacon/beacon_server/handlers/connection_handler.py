@@ -53,7 +53,7 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict, ):
 
         add_beacon_list(
             userID, address_val, name_val, os_val, time.time(),
-            config['beacon']["interval"], config['beacon']['jitter'], config, DatabaseClass(config, "command_database"), "Modules need to add", False
+            config['beacon']["interval"], config['beacon']['jitter'], config, DatabaseClass(config, "command_database"), None, False
         )
 
         # determine the JSON keys to use in the response; prefer explicit mapping from generic, then implant_info, then defaults
@@ -106,7 +106,7 @@ def handle_reconnect(handler: BaseHTTPRequestHandler, match: dict):
     if all(key in data for key in required_keys):
         add_beacon_list(
             data['id'], data['address'], data['name'], data['os'], time.time(),
-            float(data['timer']), float(data['jitter']), config, from_db=False
+            float(data['timer']), float(data['jitter']), config, DatabaseClass(config, "command_database"), from_db=False
         )
         logger.info(f"Beacon list updated for reconnection ID: {data['id']}")
         response_body = json.dumps({"x": True}).encode('utf-8')

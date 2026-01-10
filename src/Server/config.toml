@@ -132,6 +132,9 @@ schema = "uuid text, IP text, Hostname text, OS text, LastBeacon text, NextBeaco
 name = "sessions"
 schema = "address text, details text, hostname text, operating_system text, mode text, modules list"
 
+[[tables]]
+name = "commands"
+schema = "command text"
 
 
 [user_database]

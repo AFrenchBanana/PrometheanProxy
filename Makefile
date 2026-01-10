@@ -85,18 +85,6 @@ server: venv plugins py-plugins
 # Alias for clarity; produces an ELF on Linux via PyInstaller
 server-elf: server
 
-# Windows build of the Python server using py2exe. Run on Windows only.
-server-windows: venv
-	@echo "--> Building Python server .exe with py2exe (Windows-only)..."
-	@echo "    Note: py2exe only works on Windows. Run this target on a Windows host."
-	. venv/bin/activate && pip install -q --upgrade py2exe || true
-	. venv/bin/activate && python src/Server/setup_py2exe.py py2exe
-	@mkdir -p $(OUTPUT_DIR)
-	@if [ -f "dist/PrometheanProxy.exe" ]; then \
-		mv -f dist/PrometheanProxy.exe $(OUTPUT_DIR)/promethean-server-windows-amd64.exe; \
-	fi
-
-
 $(OUTPUT_LINUX_RELEASE):
 	@echo "--> Building Go client for Linux (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
@@ -176,20 +164,20 @@ install-all-plugins: install-plugins install-py-plugins
 
 # Install compiled Go plugin artifacts into the user's plugins directory for source runs
 install-plugins: plugins
-	@echo "--> Installing compiled plugins to $$HOME/.PrometheanProxy/plugins ..."
-	@dest="$$HOME/.PrometheanProxy/plugins"; \
-	mkdir -p "$$dest"; \
-	for p in $(PLUGIN_DIRS); do \
-		for ch in release debug; do \
-			src_dir="$(PLUGINS_SRC_DIR)/$$p/$$ch"; \
-			out_dir="$$dest/$$p/$$ch"; \
-			if [ -d "$$src_dir" ]; then \
-				mkdir -p "$$out_dir"; \
-				find "$$src_dir" -maxdepth 1 -type f \( -name '*.so' -o -name '*.dll' \) -exec cp -f {} "$$out_dir/" \; ; \
-			fi; \
-		done; \
+	@echo "--> Installing compiled plugins to $(OUTPUT_DIR)/Plugins ..."
+	@for p in $(PLUGIN_DIRS); do \
+		dest_linux="$(OUTPUT_DIR)/Plugins/Linux/$$p"; \
+		dest_windows="$(OUTPUT_DIR)/Plugins/Windows/$$p"; \
+		mkdir -p "$$dest_linux/release" "$$dest_windows/release"; \
+		find "$(PLUGINS_SRC_DIR)/$$p/release" -maxdepth 1 -name '*.so' -exec cp -f {} "$$dest_linux/release/" \; ; \
+		find "$(PLUGINS_SRC_DIR)/$$p/release" -maxdepth 1 -name '*.dll' -exec cp -f {} "$$dest_windows/release/" \; ; \
+		mkdir -p "$$dest_linux/debug" "$$dest_windows/debug"; \
+		find "$(PLUGINS_SRC_DIR)/$$p/debug" -maxdepth 1 -name '*.so' -exec cp -f {} "$$dest_linux/debug/" \; ; \
+		find "$(PLUGINS_SRC_DIR)/$$p/debug" -maxdepth 1 -name '*.dll' -exec cp -f {} "$$dest_windows/debug/" \; ; \
 	done; \
-	echo "--> Plugins installed under $$dest"
+	echo "--> Plugins installed under $(OUTPUT_DIR)/Plugins"
+
+
 
 
 
