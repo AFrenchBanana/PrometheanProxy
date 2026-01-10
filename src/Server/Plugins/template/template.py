@@ -38,7 +38,7 @@ class Template:
             except Exception:
                 pass
 
-        self.database = DatabaseClass(config)
+        self.database = DatabaseClass(config, "command_database")
 
     def beacon(self, beacon: dict) -> None:
         """Queue system info command for a beacon by userID."""

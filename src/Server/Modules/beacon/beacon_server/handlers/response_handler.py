@@ -2,6 +2,7 @@ import os
 from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import command_list, logger, obfuscation_map
+from ServerDatabase.database import command_database
 from Modules.beacon.beacon_server.utils import process_request_data
 
 
@@ -37,10 +38,20 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
         cid = report['command_uuid']
         output = report['output']
         command = command_list.get(cid)
+        
 
         if not command:
             logger.error(f"Command with UUID {cid} not found in command list.")
             continue
+
+        command_database.update_entry(
+            "beacon_commands",
+            "executed=?, command_output=?",
+            (True, output),
+            "command_uuid=?",
+            (cid,)
+        )
+
 
         command.command_output = output
         print(f"Command output for {cid}: {output}")

@@ -26,6 +26,7 @@ sessions_list: Dict[str, "Session"] = {}
 multiplayer_connections = {}
 obfuscation_map: Dict[str, Any] = {}
 
+
 if getattr(sys, "frozen", False):
     base_dir = os.path.expanduser("~/.PrometheanProxy")
     plugin_dir = os.path.join(base_dir, "Plugins")

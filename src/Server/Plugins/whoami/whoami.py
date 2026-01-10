@@ -32,13 +32,13 @@ class Whoami:
             except Exception:
                 pass
 
-        self.database = DatabaseClass(config)
+        self.database = DatabaseClass(config, "command_database")
 
     def beacon(self, beacon: dict) -> None:
         """Queue whoami command for a beacon by userID."""
-        add_beacon_command_list(beacon.userID, None, self.command, "")
+        add_beacon_command_list(beacon.userID, None, self.command, self.database, "")
         logger.debug(
-            f"Whoami command added to command list for userID: {beacon.userID}"
+            f"Whoami command added to commandError loading modulelist for userID: {beacon.userID}"
         )
 
     def session(self, session: dict) -> None:

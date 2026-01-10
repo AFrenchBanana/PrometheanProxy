@@ -2,6 +2,9 @@ import sqlite3
 import os
 from Modules.global_objects import logger
 
+# Only used when can't import during web server runtime to avoid circular imports
+command_database: "DatabaseClass" = None
+
 
 class DatabaseClass:
     def _safe_identifier(self, identifier, valid_list):
@@ -110,6 +113,44 @@ class DatabaseClass:
                 if not self.config["server"]["quiet_mode"]:
                     logger.error(f"DatabaseClass: Error inserting into table {safe_table}: {err}")
                     print(f"Error inserting into table {safe_table}: {err}")
+        return
+
+    def update_entry(self, table: str, set_clause: str, set_values: tuple, where_clause: str, where_values: tuple) -> None:
+        """
+        Updates entries in the specified table.
+        Args:
+            table (str): The table to update
+            set_clause (str): The SET clause (e.g., "col1=?, col2=?")
+            set_values (tuple): The values for the SET clause
+            where_clause (str): The WHERE clause (e.g., "id=?")
+            where_values (tuple): The values for the WHERE clause
+        Returns:
+            None
+        """
+        if not self.cursor:
+            logger.error("DatabaseClass: Database cursor is not available")
+            print("Database cursor is not available.")
+            return
+
+        valid_tables = [t['name'] for t in self.config['tables']]
+        try:
+            safe_table = self._safe_identifier(table, valid_tables)
+        except ValueError as err:
+            logger.error(f"DatabaseClass: {err}")
+            print(err)
+            return
+
+        if self.config[self.database]['addData']:
+            try:
+                query = f"UPDATE {safe_table} SET {set_clause} WHERE {where_clause}"
+                combined_values = set_values + where_values
+                logger.debug(f"DatabaseClass: Executing update: {query} with values {combined_values}")
+                self.cursor.execute(query, combined_values)
+                self.dbconnection.commit()
+            except sqlite3.Error as err:
+                if not self.config["server"]["quiet_mode"]:
+                    logger.error(f"DatabaseClass: Error updating table {safe_table}: {err}")
+                    print(f"Error updating table {safe_table}: {err}")
         return
 
     def search_query(self, selectval: str, table: str,

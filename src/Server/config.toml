@@ -133,8 +133,12 @@ name = "sessions"
 schema = "address text, details text, hostname text, operating_system text, mode text, modules list"
 
 [[tables]]
-name = "commands"
-schema = "command text"
+name = "beacon_commands"
+schema = "command text, command_uuid text, beacon_uuid text, command_data text, executed bool, command_output text"
+
+[[tables]]
+name = "session_commands"
+schema = "command text, command_uuid text, session_address text, command_data text, executed bool, command_output text"
 
 
 [user_database]

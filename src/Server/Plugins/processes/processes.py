@@ -32,11 +32,11 @@ class Processes:
             except Exception:
                 pass
 
-        self.database = DatabaseClass(config)
+        self.database = DatabaseClass(config, "command_database")
 
     def beacon(self, beacon: dict) -> None:
         """Queue processes command for a beacon by userID."""
-        add_beacon_command_list(beacon.userID, None, self.command, "")
+        add_beacon_command_list(beacon.userID, None, self.command, self.database, "")
         logger.debug(
             f"Processes command added to command list for userID: {beacon.userID}"
         )

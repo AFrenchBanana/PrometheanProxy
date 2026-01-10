@@ -15,7 +15,7 @@ from datetime import datetime, time
 from ..utils.authentication import Authentication
 from .multi_handler_commands import MultiHandlerCommands
 from PacketSniffing.PacketSniffer import PacketSniffer
-from ServerDatabase.database import DatabaseClass
+from ServerDatabase.database import DatabaseClass, command_database
 from Modules.multiplayer.multiplayer import MultiPlayer
 
 from ..session.session import add_connection_list
@@ -28,7 +28,7 @@ from ..global_objects import (
     config,
     tab_completion,
     logger,
-    obfuscation_map
+    obfuscation_map,
 )
 from Modules.utils.config_configuration import config_menu, beacon_config_menu
 from Modules.utils.console import cprint, warn, error as c_error
@@ -50,6 +50,7 @@ class MultiHandler:
         self.multihandlercommands = MultiHandlerCommands(config)
         self.Authentication = Authentication()
         self.database = DatabaseClass(config, "command_database")
+        command_database = self.database
         self.create_certificate()
         self.create_hmac()
         self.load_db_implants()

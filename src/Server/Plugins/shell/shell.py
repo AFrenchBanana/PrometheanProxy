@@ -18,7 +18,7 @@ class Shell:
         self.command = "shell"
         # as this is a core module the obfuscation sits in the main obfuscation file.
 
-        self.database = DatabaseClass(config)
+        self.database = DatabaseClass(config, "command_database")
 
     def beacon(self, beacon: dict) -> None:
         """Queue shell command for a beacon by userID."""
