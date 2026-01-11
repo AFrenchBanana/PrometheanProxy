@@ -117,6 +117,66 @@ class ControlCommands:
     # Module Management Methods
     # ========================================================================
 
+    def history(
+        self,
+        r_address: Tuple[str, int]
+    ) -> None:
+        """
+        Display command history for this session from the database.
+        
+        Retrieves and displays all executed commands for this session including
+        command strings, execution status, and output from the database.
+        
+        Args:
+            r_address: Remote address tuple (host, port)
+        """
+        logger.debug(f"Retrieving command history for session: {r_address}")
+        
+        try:
+            # Convert address tuple to string for database lookup
+            address_str = str(r_address)
+            
+            # Query database for all commands for this session
+            query = "SELECT command, command_uuid, executed, command_output FROM session_commands WHERE session_address = ?"
+            self.database.cursor.execute(query, (address_str,))
+            commands = self.database.cursor.fetchall()
+            
+            if not commands:
+                cprint(f"No command history found for session {r_address[0]}:{r_address[1]}", fg="yellow")
+                logger.info(f"No command history found for session {r_address}")
+                return
+            
+            # Display header
+            cprint("\n" + "="*80, fg="cyan")
+            cprint(f"Command History for Session: {r_address[0]}:{r_address[1]}", fg="cyan")
+            cprint("="*80, fg="cyan")
+            
+            # Display each command
+            for idx, (command, cmd_uuid, executed, output) in enumerate(commands, 1):
+                status_color = "green" if executed else "yellow"
+                status_text = "Executed" if executed else "Pending"
+                
+                print(f"\n{colorama.Fore.WHITE}[{idx}] Command: {colorama.Fore.MAGENTA}{command}")
+                print(f"    UUID: {colorama.Fore.BLUE}{cmd_uuid}")
+                cprint(f"    Status: {status_text}", fg=status_color)
+                
+                if executed and output:
+                    # Truncate long output for readability
+                    max_output_len = 200
+                    display_output = output if len(output) <= max_output_len else output[:max_output_len] + "..."
+                    print(f"    Output: {colorama.Fore.WHITE}{display_output}")
+                else:
+                    cprint(f"    Output: Awaiting Response", fg="yellow")
+            
+            cprint("\n" + "="*80 + "\n", fg="cyan")
+            logger.info(f"Displayed {len(commands)} commands from history for session {r_address}")
+            
+        except Exception as e:
+            logger.error(f"Error retrieving command history for session {r_address}: {e}")
+            c_error(f"Error retrieving command history: {e}")
+        
+        return
+
     def load_module_session(
         self,
         conn: ssl.SSLSocket,

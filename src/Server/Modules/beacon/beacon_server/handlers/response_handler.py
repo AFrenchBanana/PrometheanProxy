@@ -1,4 +1,5 @@
 import os
+import colorama
 from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import command_list, logger, obfuscation_map, command_database
@@ -51,12 +52,14 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
                 "command_uuid=?",
                 (cid,)
             )
+            logger.debug(f"Updated command {cid} status to 'Completed' with output")
         else:
             logger.warning(f"Command database not initialized yet, skipping database update for command {cid}")
 
 
         command.command_output = output
-        print(f"Command output for {cid}: {output}")
+        # Print status update with color coding
+        print(f"{colorama.Fore.GREEN}[COMPLETED]{colorama.Fore.WHITE} Command output for {colorama.Fore.BLUE}{cid}{colorama.Fore.WHITE}: {output}")
         if command.command == "module":
             command.data = ""
     

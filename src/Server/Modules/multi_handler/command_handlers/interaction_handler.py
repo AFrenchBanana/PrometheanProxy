@@ -43,6 +43,10 @@ class InteractionHandler:
 
         # Only dynamic plugin commands for sessions
         command_handlers = {}
+        
+        # Add static commands
+        command_handlers["history"] = lambda: session_obj.history(r_address)
+        
         try:
             dynamic_commands = getattr(self, "list_loaded_session_commands")()
         except Exception:
@@ -187,7 +191,8 @@ class InteractionHandler:
             command_handlers = {
                 "close": lambda: beaconClass.close_connection(UserID),
                 "module": lambda: beaconClass.load_module_beacon(UserID),
-                "session": lambda: beaconClass.switch_session(UserID)
+                "session": lambda: beaconClass.switch_session(UserID),
+                "history": lambda: beaconClass.history(UserID)
             }
 
             # Merge in dynamic beacon plugins via MultiHandlerCommands

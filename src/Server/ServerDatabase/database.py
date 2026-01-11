@@ -61,7 +61,7 @@ class DatabaseClass:
             print("Database cursor is not available.")
             return
 
-        for table in self.config['tables']:  # load tables as in self.config file
+        for table in self.config[self.database]['tables']:  # load tables from the specific database section
             try:
                 table_query = (
                     "CREATE TABLE IF NOT EXISTS " +
@@ -90,7 +90,7 @@ class DatabaseClass:
             return
 
         # Validate table name
-        valid_tables = [t['name'] for t in self.config['tables']]
+        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
@@ -129,7 +129,7 @@ class DatabaseClass:
             print("Database cursor is not available.")
             return
 
-        valid_tables = [t['name'] for t in self.config['tables']]
+        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
@@ -173,11 +173,11 @@ class DatabaseClass:
             return None
 
         # Validate table and column names
-        valid_tables = [t['name'] for t in self.config['tables']]
+        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
             # Find the table schema and get valid columns
-            table_schema = next((t['schema'] for t in self.config['tables'] if t['name'] == safe_table), None)
+            table_schema = next((t['schema'] for t in self.config[self.database]['tables'] if t['name'] == safe_table), None)
             if not table_schema:
                 raise ValueError(f"No schema found for table {safe_table}")
             # Extract column names from schema string (format: 'id INTEGER PRIMARY KEY, name TEXT, ...')
@@ -212,7 +212,7 @@ class DatabaseClass:
             print("Database cursor is not available.")
             return []
 
-        valid_tables = [t['name'] for t in self.config['tables']]
+        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
@@ -229,3 +229,99 @@ class DatabaseClass:
             logger.error(f"DatabaseClass: Error fetching all from {safe_table}: {err}")
             print(f"Error fetching all from {safe_table}: {err}")
             return []
+
+    def clear_table(self, table: str) -> bool:
+        """
+        Clear all data from a specific table.
+        Args:
+            table (str): The table to clear.
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if not self.cursor:
+            logger.error("DatabaseClass: Database cursor is not available")
+            print("Database cursor is not available.")
+            return False
+
+        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        try:
+            safe_table = self._safe_identifier(table, valid_tables)
+        except ValueError as err:
+            logger.error(f"DatabaseClass: {err}")
+            print(err)
+            return False
+        
+        try:
+            query = f"DELETE FROM {safe_table}"
+            logger.debug(f"DatabaseClass: Executing query: {query}")
+            self.cursor.execute(query)
+            self.dbconnection.commit()
+            logger.info(f"DatabaseClass: Cleared table {safe_table}")
+            return True
+        except sqlite3.Error as err:
+            logger.error(f"DatabaseClass: Error clearing table {safe_table}: {err}")
+            print(f"Error clearing table {safe_table}: {err}")
+            return False
+
+    def drop_table(self, table: str) -> bool:
+        """
+        Drop a specific table from the database.
+        Args:
+            table (str): The table to drop.
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if not self.cursor:
+            logger.error("DatabaseClass: Database cursor is not available")
+            print("Database cursor is not available.")
+            return False
+
+        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        try:
+            safe_table = self._safe_identifier(table, valid_tables)
+        except ValueError as err:
+            logger.error(f"DatabaseClass: {err}")
+            print(err)
+            return False
+        
+        try:
+            query = f"DROP TABLE IF EXISTS {safe_table}"
+            logger.debug(f"DatabaseClass: Executing query: {query}")
+            self.cursor.execute(query)
+            self.dbconnection.commit()
+            logger.info(f"DatabaseClass: Dropped table {safe_table}")
+            return True
+        except sqlite3.Error as err:
+            logger.error(f"DatabaseClass: Error dropping table {safe_table}: {err}")
+            print(f"Error dropping table {safe_table}: {err}")
+            return False
+
+    def clear_all_tables(self) -> bool:
+        """
+        Clear all data from all tables in the database.
+        Returns:
+            bool: True if all tables cleared successfully, False otherwise.
+        """
+        if not self.cursor:
+            logger.error("DatabaseClass: Database cursor is not available")
+            print("Database cursor is not available.")
+            return False
+
+        success = True
+        for table in self.config[self.database]['tables']:
+            table_name = table['name']
+            if not self.clear_table(table_name):
+                success = False
+                logger.warning(f"DatabaseClass: Failed to clear table {table_name}")
+        
+        if success:
+            logger.info("DatabaseClass: All tables cleared successfully")
+        return success
+
+    def get_table_list(self) -> list:
+        """
+        Get a list of all table names in the current database.
+        Returns:
+            list: List of table names.
+        """
+        return [t['name'] for t in self.config[self.database]['tables']]

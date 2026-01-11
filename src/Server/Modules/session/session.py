@@ -49,16 +49,21 @@ class Session(ControlCommands):
         colorama.init(autoreset=True)
 
         if not from_db:
-            self.database.insert_entry(
-                "sessions",
-                [
-                    self.address,
-                    self.details,
-                    self.hostname,
-                    self.operating_system,
-                    self.mode,
-                    str(self.loaded_modules)
-                ])
+            # Check if persistent sessions are enabled in config
+            persist_sessions = config.get("command_database", {}).get("persist_sessions", True)
+            if persist_sessions:
+                self.database.insert_entry(
+                    "sessions",
+                    [
+                        self.address,
+                        self.details,
+                        self.hostname,
+                        self.operating_system,
+                        self.mode,
+                        str(self.loaded_modules)
+                    ])
+            else:
+                logger.debug(f"Session {self.address}: Not persisting to database (persist_sessions=False)")
         
         logger.info(
             f"New session created: {self.address[0]}:{self.address[1]} ({self.hostname})"

@@ -86,57 +86,61 @@ Execute local system commands:
 file = "~/.PrometheanProxy/db/implants.db"
 # add data True will insert data to the database, false will not
 addData = true
+# persist beacons in database (if false, beacons won't be added to DB)
+persist_beacons = false
+# persist sessions in database (if false, sessions won't be added to DB)
+persist_sessions = true
 
-# This is where you can add new tables to the database. 
-[[tables]]
+# This is where you can add new tables to the command database. 
+[[command_database.tables]]
 name = "Addresses"
 schema = "uuid text, IP text, Port integer, Hostname text, OS text, Date text"
 
-[[tables]]
+[[command_database.tables]]
 name = "Shell"
 schema = "uuid text, IP text, Date text, Command text, Response Text"
 
-[[tables]]
+[[command_database.tables]]
 name = "Processes"
 schema = "uuid text, IP text , Processes text, Time text"
 
-[[tables]]
+[[command_database.tables]]
 name = "Services"
 schema = "uuid text,IP text, Services text, Time text"
 
-[[tables]]
+[[command_database.tables]]
 name = "Netstat"
 schema = "uuid text, IP text, Netstat text, Time text"
 
-[[tables]]
+[[command_database.tables]]
 name = "Whoami"
 schema = "uuid text, IP text, Whoami text, Time text"
 
-[[tables]]
+[[command_database.tables]]
 name = "SystemInfo"
 schema = "uuid text,IP Text, SystemInfo text, Time text"
 
-[[tables]]
+[[command_database.tables]]
 name = "Hashes"
 schema = "Filename text, Hash text"
 
-[[tables]]
+[[command_database.tables]]
 name = "Disk"
 schema = "uuid text, IP text, Disk Usage, Time text"
 
-[[tables]]
+[[command_database.tables]]
 name = "beacons"
 schema = "uuid text, IP text, Hostname text, OS text, LastBeacon text, NextBeacon text, Timer real, Jitter real, modules list"
 
-[[tables]]
+[[command_database.tables]]
 name = "sessions"
 schema = "address text, details text, hostname text, operating_system text, mode text, modules list"
 
-[[tables]]
+[[command_database.tables]]
 name = "beacon_commands"
 schema = "command text, command_uuid text, beacon_uuid text, command_data text, executed bool, command_output text"
 
-[[tables]]
+[[command_database.tables]]
 name = "session_commands"
 schema = "command text, command_uuid text, session_address text, command_data text, executed bool, command_output text"
 
@@ -145,11 +149,11 @@ schema = "command text, command_uuid text, session_address text, command_data te
 file = "~/.PrometheanProxy/db/user.db"
 addData = true
 
-[[tables]]
+[[user_database.tables]]
 name = "Users"
 schema = "userID text, user text, password text, passwordSalt text, admin bool"
 
-[[tables]]
+[[user_database.tables]]
 name = "terminal_user"
 schema = "userID text"
 

@@ -16,12 +16,13 @@ def config_menu() -> None:
         print("Config Menu")
         print("1. Show Config")
         print("2. Edit Config")
-        print("3. Exit")
+        print("3. Database Management")
+        print("4. Exit")
         readline.parse_and_bind("tab: complete")
         readline.set_completer(
             lambda text, state: tab_completion(
                 text, state, [
-                    "1", "2", "3"]))
+                    "1", "2", "3", "4"]))
         inp = input("Enter Option: ")
         if inp == "1":
             logger.debug("Showing config")
@@ -31,6 +32,9 @@ def config_menu() -> None:
             logger.debug("Editing config")
             edit_config()
         if inp == "3":
+            logger.debug("Opening database management menu")
+            database_management_menu()
+        if inp == "4":
             logger.debug("Exiting config menu")
             return
 
@@ -203,3 +207,158 @@ def beacon_config_menu() -> None:
         if inp == "3":
             logger.debug("Exiting beacon config menu")
             return
+
+
+def database_management_menu() -> None:
+    """
+    Database Management Menu
+    Provides options to clear databases and tables.
+    """
+    from ..global_objects import command_database
+    from ServerDatabase.database import DatabaseClass
+    
+    # Initialize user database
+    user_database = DatabaseClass(loadedConfig, "user_database")
+    
+    while True:
+        logger.debug("Database management menu started")
+        print("\nDatabase Management Menu")
+        print("=" * 50)
+        print("1. Clear All Tables (Command Database)")
+        print("2. Clear All Tables (User Database)")
+        print("3. Clear Specific Table")
+        print("4. List All Tables")
+        print("5. Toggle Persistent Beacons")
+        print("6. Toggle Persistent Sessions")
+        print("7. Exit")
+        print("=" * 50)
+        
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(
+            lambda text, state: tab_completion(
+                text, state, [
+                    "1", "2", "3", "4", "5", "6", "7"]))
+        
+        inp = input("Enter Option: ")
+        logger.debug(f"Database management menu input: {inp}")
+        
+        if inp == "1":
+            logger.debug("Clearing all tables in command database")
+            confirm = input("Are you sure you want to clear all tables in the command database? (yes/no): ")
+            if confirm.lower() == "yes":
+                if command_database and command_database.clear_all_tables():
+                    print("Successfully cleared all tables in command database.")
+                    logger.info("Cleared all tables in command database")
+                else:
+                    print("Failed to clear tables in command database.")
+            else:
+                print("Operation cancelled.")
+                
+        elif inp == "2":
+            logger.debug("Clearing all tables in user database")
+            confirm = input("Are you sure you want to clear all tables in the user database? (yes/no): ")
+            if confirm.lower() == "yes":
+                if user_database.clear_all_tables():
+                    print("Successfully cleared all tables in user database.")
+                    logger.info("Cleared all tables in user database")
+                else:
+                    print("Failed to clear tables in user database.")
+            else:
+                print("Operation cancelled.")
+                
+        elif inp == "3":
+            logger.debug("Clearing specific table")
+            print("\nSelect Database:")
+            print("1. Command Database")
+            print("2. User Database")
+            db_choice = input("Enter choice: ")
+            
+            if db_choice == "1":
+                db = command_database
+                db_name = "command database"
+            elif db_choice == "2":
+                db = user_database
+                db_name = "user database"
+            else:
+                print("Invalid choice.")
+                continue
+            
+            if not db:
+                print(f"Database not available.")
+                continue
+                
+            tables = db.get_table_list()
+            print(f"\nAvailable tables in {db_name}:")
+            for i, table in enumerate(tables, 1):
+                print(f"{i}. {table}")
+            
+            table_choice = input("Enter table number to clear: ")
+            try:
+                table_idx = int(table_choice) - 1
+                if 0 <= table_idx < len(tables):
+                    table_name = tables[table_idx]
+                    confirm = input(f"Are you sure you want to clear table '{table_name}'? (yes/no): ")
+                    if confirm.lower() == "yes":
+                        if db.clear_table(table_name):
+                            print(f"Successfully cleared table '{table_name}'.")
+                            logger.info(f"Cleared table {table_name} in {db_name}")
+                        else:
+                            print(f"Failed to clear table '{table_name}'.")
+                    else:
+                        print("Operation cancelled.")
+                else:
+                    print("Invalid table number.")
+            except ValueError:
+                print("Invalid input.")
+                
+        elif inp == "4":
+            logger.debug("Listing all tables")
+            print("\nCommand Database Tables:")
+            if command_database:
+                for table in command_database.get_table_list():
+                    print(f"  - {table}")
+            else:
+                print("  Command database not available.")
+            
+            print("\nUser Database Tables:")
+            for table in user_database.get_table_list():
+                print(f"  - {table}")
+                
+        elif inp == "5":
+            logger.debug("Toggling persistent beacons")
+            current_value = loadedConfig.get("command_database", {}).get("persist_beacons", True)
+            print(f"\nCurrent setting: persist_beacons = {current_value}")
+            new_value = not current_value
+            confirm = input(f"Change to {new_value}? (yes/no): ")
+            if confirm.lower() == "yes":
+                toml_file = TomlFiles(CONFIG_FILE_PATH)
+                toml_file.update_config("command_database", "persist_beacons", new_value)
+                loadedConfig["command_database"]["persist_beacons"] = new_value
+                print(f"persist_beacons set to {new_value}")
+                logger.info(f"Updated command_database.persist_beacons to {new_value}")
+                print("Note: Existing beacons are not affected. This applies to new beacons only.")
+            else:
+                print("Operation cancelled.")
+                
+        elif inp == "6":
+            logger.debug("Toggling persistent sessions")
+            current_value = loadedConfig.get("command_database", {}).get("persist_sessions", True)
+            print(f"\nCurrent setting: persist_sessions = {current_value}")
+            new_value = not current_value
+            confirm = input(f"Change to {new_value}? (yes/no): ")
+            if confirm.lower() == "yes":
+                toml_file = TomlFiles(CONFIG_FILE_PATH)
+                toml_file.update_config("command_database", "persist_sessions", new_value)
+                loadedConfig["command_database"]["persist_sessions"] = new_value
+                print(f"persist_sessions set to {new_value}")
+                logger.info(f"Updated command_database.persist_sessions to {new_value}")
+                print("Note: Existing sessions are not affected. This applies to new sessions only.")
+            else:
+                print("Operation cancelled.")
+                
+        elif inp == "7":
+            logger.debug("Exiting database management menu")
+            return
+        else:
+            print("Invalid option. Please try again.")
+
