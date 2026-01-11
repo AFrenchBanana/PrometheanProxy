@@ -2,9 +2,6 @@ import sqlite3
 import os
 from Modules.global_objects import logger
 
-# Only used when can't import during web server runtime to avoid circular imports
-command_database: "DatabaseClass" = None
-
 
 class DatabaseClass:
     def _safe_identifier(self, identifier, valid_list):

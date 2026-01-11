@@ -19,12 +19,14 @@ if TYPE_CHECKING:
     from .beacon.beacon import Beacon, beacon_command
     from .session.session import Session
     from .multiplayer.http.mp_http import HTTPClientSession
+    from ServerDatabase.database import DatabaseClass
 
 beacon_list: Dict[str, "Beacon"] = {}
 command_list: Dict[str, "beacon_command"] = {}
 sessions_list: Dict[str, "Session"] = {}
 multiplayer_connections = {}
 obfuscation_map: Dict[str, Any] = {}
+command_database: "DatabaseClass" = None
 
 
 if getattr(sys, "frozen", False):
