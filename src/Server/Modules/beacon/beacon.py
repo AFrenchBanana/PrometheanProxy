@@ -745,6 +745,9 @@ def add_beacon_list(
         modules: List of loaded modules (default: ["shell", "close", "session"])
         from_db: Whether beacon is being loaded from database
     """
+    from Modules.utils.ui_manager import log_connection_event, update_connection_stats
+    from Modules.global_objects import beacon_list, sessions_list
+    
     logger.debug(f"Adding beacon with UUID: {uuid}")
     logger.debug(f"Beacon address: {r_address}")
     logger.debug(f"Beacon hostname: {hostname}")
@@ -761,6 +764,16 @@ def add_beacon_list(
         jitter, modules, config, database, from_db=from_db
     )
     beacon_list[uuid] = new_beacon
+    
+    # Log the new beacon connection
+    if not from_db:
+        log_connection_event(
+            "beacon",
+            f"New beacon from {hostname} ({r_address}) - {operating_system}",
+            {"host": hostname, "ip": r_address, "os": operating_system, "timer": timer, "uuid": uuid}
+        )
+        # Update connection stats
+        update_connection_stats(len(sessions_list), len(beacon_list))
 
 
 def add_beacon_command_list(

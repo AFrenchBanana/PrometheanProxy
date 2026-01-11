@@ -44,16 +44,20 @@ module_location = "~/.PrometheanProxy/plugins"
 
 [MultiHandlerCommands]
 help = """List of available commands: 
--------------------------------------c
+-------------------------------------
 list - show available sessions
 sessions - connect to a session
-close - close a client connections
+beacons - connect to a beacon
+close - close a client connection
 closeall - close all connections
+status - show live connection stats and activity feed
 hashfiles - make a list of reference hashes
-exit - exits server
 config - shows current config variables
+configBeacon - configure beacon settings
+logs - view server logs
+exit - exits server
 Execute local system commands:
-    Availble commands: 
+    Available commands: 
         "ls", "cat", "pwd", "ping", "curl", "whoami", "clear"
     If you need to use other commands, start with \\ 
     e.g \\grep

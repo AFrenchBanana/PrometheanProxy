@@ -1,4 +1,3 @@
-
 import time
 import json
 import colorama
@@ -17,6 +16,9 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     Returns:
         None
     """
+    from Modules.utils.ui_manager import log_connection_event, update_connection_stats
+    from Modules.global_objects import sessions_list
+    
     logger.info(f"Beacon call-in from {handler.path}")
 
     query_components = parse_qs(urlparse(handler.path).query)
@@ -39,6 +41,14 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     beacon.last_beacon = time.asctime()
     beacon.next_beacon = time.asctime(time.localtime(time.time() + beacon.timer))
     logger.info(f"Beacon {beacon_id} updated. Next check-in: {beacon.next_beacon}")
+    
+    # Log beacon check-in to activity feed
+    log_connection_event(
+        "beacon",
+        f"Beacon check-in: {beacon.hostname} ({beacon.address})",
+        {"uuid": beacon_id, "host": beacon.hostname, "ip": beacon.address}
+    )
+    update_connection_stats(len(sessions_list), len(beacon_list))
 
     # Check for commands to send
     commands_to_send = []
@@ -88,6 +98,13 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                     )
                     logger.info(f"Command {cmd_id} ({command.command}) picked up by beacon {beacon_id}")
                     print(f"{colorama.Fore.CYAN}[RECEIVED]{colorama.Fore.WHITE} Command {colorama.Fore.BLUE}{cmd_id}{colorama.Fore.WHITE} ({colorama.Fore.MAGENTA}{command.command}{colorama.Fore.WHITE}) picked up by beacon")
+                    
+                    # Log command pickup to activity feed
+                    log_connection_event(
+                        "command",
+                        f"Beacon command: {command.command} → {beacon.hostname}",
+                        {"uuid": cmd_id, "command": command.command, "beacon": beacon_id}
+                    )
                 except Exception as e:
                     logger.error(f"Failed to update command status to 'Received': {e}")
                     

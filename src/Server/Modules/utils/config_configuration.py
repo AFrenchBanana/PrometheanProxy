@@ -1,5 +1,7 @@
 import readline
-from tabulate import tabulate
+from rich.table import Table
+from rich import box
+from .ui_manager import get_ui_manager
 
 from .content_handler import TomlFiles
 from ..global_objects import tab_completion
@@ -47,9 +49,15 @@ def show_config(indexKey) -> None:
         logger.warning(f"No configuration found for {indexKey}")
         print("No configuration found.")
         return
-    table = [[key, value] for key, value in config.items()]
-    logger.debug(f"Config table: {table}")
-    print(tabulate(table, headers=["Key", "Value"], tablefmt='grid'))
+    
+    rich_table = Table(box=box.ROUNDED, header_style="bold cyan", border_style="bright_blue")
+    rich_table.add_column("Key", style="yellow")
+    rich_table.add_column("Value", style="white")
+    
+    for key, value in config.items():
+        rich_table.add_row(str(key), str(value))
+    
+    get_ui_manager().console.print(rich_table)
 
 
 def edit_config() -> bool:

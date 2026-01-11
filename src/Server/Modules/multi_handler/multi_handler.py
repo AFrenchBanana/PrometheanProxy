@@ -21,6 +21,10 @@ from datetime import datetime, time
 
 # Third-Party Imports
 import colorama
+from prompt_toolkit import PromptSession
+from prompt_toolkit.patch_stdout import patch_stdout
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.formatted_text import ANSI, HTML
 
 # Local Module Imports
 from ..utils.authentication import Authentication
@@ -41,7 +45,14 @@ from ..global_objects import (
     obfuscation_map,
 )
 from Modules.utils.config_configuration import config_menu, beacon_config_menu
-from Modules.utils.console import cprint, warn, error as c_error
+from Modules.utils.console import (
+    cprint, warn, error as c_error, success, info, colorize
+)
+from Modules.utils.ui_manager import (
+    get_ui_manager,
+    log_connection_event,
+    update_connection_stats
+)
 
 
 # ============================================================================
@@ -73,6 +84,10 @@ class MultiHandler:
         
         logger.info("Starting MultiHandler")
         
+        # Initialize UI Manager
+        self.ui_manager = get_ui_manager()
+        self.prompt_session = PromptSession()
+        
         # Initialize core components
         self.multihandlercommands = MultiHandlerCommands(config)
         self.Authentication = Authentication()
@@ -94,6 +109,7 @@ class MultiHandler:
             sniffer = PacketSniffer()
             sniffer.start_raw_socket()
             logger.info("PacketSniffer started")
+            log_connection_event("info", "PacketSniffer started")
 
         # Initialize multiplayer mode if enabled
         self.isMultiplayer = False
@@ -102,8 +118,9 @@ class MultiHandler:
                 self.isMultiplayer = True
                 self.multiplayer = MultiPlayer(config)
                 self.multihandlercommands = MultiHandlerCommands(config)
-                cprint("Multiplayer mode enabled", fg="green")
+                success("Multiplayer mode enabled")
                 logger.info("Server: Multiplayer mode enabled")
+                log_connection_event("info", "Multiplayer mode enabled")
                 threading.Thread(
                     target=self.multiplayer.start(),
                     args=(config,),
@@ -112,7 +129,7 @@ class MultiHandler:
         except KeyError as e:
             warn("Multiplayer configuration not found, continuing in singleplayer mode")
             traceback.print_exc()
-            warn(e)
+            warn(str(e))
             logger.info("Server: Continuing in singleplayer mode")
 
     # ========================================================================
@@ -499,45 +516,68 @@ class MultiHandler:
         """
         logger.info("Starting MultiHandler menu")
         
+        # Start the UI display
+        self.ui_manager.start_display()
+        
+        # Update initial stats
+        update_connection_stats(len(sessions_list), len(beacon_list))
+        
+        # Log initial server start
+        log_connection_event("info", f"Server listening on {self.address[0]}:{self.address[1]}")
+        
         try:
-            cprint(
-                f"Awaiting connection on port {self.address[0]}:{self.address[1]}",
-                fg="yellow"
-            )
+            info(f"Awaiting connection on port {self.address[0]}:{self.address[1]}")
+            
             if config['packetsniffer']['active']:
-                cprint(
-                    "PacketSniffing active on port " +
-                    str(config['packetsniffer']['port']),
-                    fg="green"
-                )
+                info(f"PacketSniffing active on port {config['packetsniffer']['port']}")
                 logger.info("PacketSniffing is active")
             
             # Main command loop
+            # Configure tab completion
+            available_commands = [
+                "list", "sessions", "beacons",
+                "close", "closeall",
+                "users" if self.isMultiplayer else None,
+                "configbeacon",
+                "command", "hashfiles",
+                "config", "configBeacon", "logs", "help", "status", "clear", "exit",
+            ]
+            available_commands = [cmd for cmd in available_commands if cmd is not None]
+            completer = WordCompleter(available_commands, ignore_case=True)
+
             while True:
-                # Configure tab completion
-                readline.parse_and_bind("tab: complete")
-                readline.set_completer(
-                    lambda text, state:
-                        tab_completion(
-                            text, state,
-                            [
-                                "list", "sessions", "beacons",
-                                "close", "closeall",
-                                "users" if self.isMultiplayer else None,
-                                "configbeacon",
-                                "command", "hashfiles",
-                                "config", "configBeacon", "logs", "help", "exit",
-                            ]
-                        )
-                )
-                
-                # Get user command
-                command = input("MultiHandler: ").lower()
+                # Get user command with styled prompt
+                try:
+                    with patch_stdout():
+                        # Use bottom toolbar to show stats
+                        command = self.prompt_session.prompt(
+                            ANSI(colorize("MultiHandler ❯ ", fg="bright_magenta", bold=True)),
+                            completer=completer,
+                            bottom_toolbar=self.ui_manager.get_bottom_toolbar,
+                            refresh_interval=0.5
+                        ).lower().strip()
+                except EOFError:
+                    c_error("\nUse 'exit' command to quit")
+                    continue
+                    
+                if not command:
+                    continue
+                    
                 logger.debug(f"Received command: {command}")
+                
+                # Status command - show activity panel
+                if command == "status":
+                    self.ui_manager.console.print()
+                    self.ui_manager.print_activity_sidebar()
+                    self.ui_manager.console.print()
+                    continue
+                
+                log_connection_event("command", f"Executing: {command}")
                 
                 # Exit command - shutdown server
                 if command == "exit":
                     c_error("Closing connections")
+                    log_connection_event("info", "Server shutting down")
                     break
 
                 # --------------------------------------------------------
@@ -602,6 +642,7 @@ class MultiHandler:
                         else (lambda: c_error("Multiplayer mode is not enabled"))
                     ),
                     "logs": self.multihandlercommands.view_logs,
+                    "clear": self.ui_manager.clear_screen,
                 }
 
                 # Execute command
@@ -622,4 +663,7 @@ class MultiHandler:
         except KeyboardInterrupt:
             logger.warning("KeyboardInterrupt received, exiting MultiHandler")
             c_error("\nUse exit next time")
+        finally:
+            # Stop the live display
+            self.ui_manager.stop_display()
         return

@@ -12,9 +12,11 @@ import time
 
 # Third-Party Imports
 import colorama
-from tabulate import tabulate
+from rich.table import Table
+from rich import box
 
 # Local Module Imports
+from ...utils.ui_manager import get_ui_manager
 from ...session.transfer import send_data, receive_data
 from ...session.session import remove_connection_list
 from ...beacon.beacon import remove_beacon_list
@@ -65,25 +67,29 @@ class ConnectionHandler:
         if len(sessions_list) == 0:
             c_error("No Active Sessions")
         else:
-            print("Sessions:")
-            table = []
             logger.info("Creating sessions table")
-            for userID, session in sessions_list.items():
-                table.append((
-                    userID,
-                    session.hostname,
-                    session.address,
-                    session.operating_system
-                ))
-            logger.info("Printing sessions table")
-            cprint(
-                tabulate(
-                    table,
-                    headers=["UUID", "Hostname", "Address", "OS"],
-                    tablefmt="grid"
-                ),
-                fg="white"
+            
+            session_table = Table(
+                title="Active Sessions", 
+                box=box.ROUNDED, 
+                header_style="bold bright_cyan",
+                border_style="bright_blue"
             )
+            session_table.add_column("UUID", style="cyan")
+            session_table.add_column("Hostname", style="white")
+            session_table.add_column("Address", style="green")
+            session_table.add_column("OS", style="yellow")
+            
+            for userID, session in sessions_list.items():
+                session_table.add_row(
+                    str(userID),
+                    str(session.hostname),
+                    str(session.address),
+                    str(session.operating_system)
+                )
+                
+            logger.info("Printing sessions table")
+            get_ui_manager().console.print(session_table)
 
         # ----------------------------------------------------------------
         # Display Active Beacons
@@ -92,16 +98,32 @@ class ConnectionHandler:
             logger.info("No active beacons found")
             c_error("No Active Beacons")
         else:
-            print("Beacons:")
-            table = []
+            beacon_table = Table(
+                title="Active Beacons",
+                box=box.ROUNDED,
+                header_style="bold bright_cyan",
+                border_style="bright_blue"
+            )
+            beacon_table.add_column("Host", style="white")
+            beacon_table.add_column("OS", style="white")
+            beacon_table.add_column("IP", style="green")
+            beacon_table.add_column("ID", style="cyan")
+            beacon_table.add_column("Last Callback")
+            beacon_table.add_column("Status")
+            beacon_table.add_column("Notes", style="italic dim")
+
             for userID, beacon in beacon_list.items():
-                row = [
-                    beacon.hostname,
-                    beacon.operating_system,
-                    beacon.address,
-                    beacon.uuid,
-                    beacon.last_beacon
+                row_base = [
+                    str(beacon.hostname),
+                    str(beacon.operating_system),
+                    str(beacon.address),
+                    str(beacon.uuid),
+                    str(beacon.last_beacon)
                 ]
+                
+                status_text = ""
+                notes_text = ""
+                row_style = "white"
                 
                 # Calculate beacon timing status
                 try:
@@ -119,62 +141,43 @@ class ConnectionHandler:
                             time.mktime(next_beacon_time)
                         )
                         if time_diff < beacon.jitter:
-                            row.append(
+                            status_text = (
                                 f"Expected Callback was {beacon.next_beacon}. "
                                 f"It is {int(time_diff)} seconds late. (Within Jitter)"
                             )
-                            row_color = colorama.Fore.YELLOW
+                            row_style = "yellow"
                         else:
-                            row.append(
+                            status_text = (
                                 f"Expected Callback was {beacon.last_beacon}. "
                                 f"It is {int(time_diff)} seconds late"
                             )
-                            row_color = colorama.Fore.RED
+                            row_style = "red"
                     else:
                         # Beacon is on time
                         time_until = (
                             int(time.mktime(next_beacon_time) -
                                 time.mktime(current_time))
                         )
-                        row.append(
+                        status_text = (
                             f"Next Callback expected {beacon.next_beacon} "
                             f"in {time_until} seconds"
                         )
-                        row_color = colorama.Fore.WHITE
+                        row_style = "white" # default or green
                 except (ValueError, TypeError):
-                    row.append("Awaiting first call")
-                    row_color = colorama.Fore.WHITE
+                    status_text = "Awaiting first call"
+                    row_style = "white"
                     logger.error(
                         f"Error parsing next beacon time for {beacon.hostname}"
                     )
                 
                 # Mark beacons loaded from database
                 if not beacon.loaded_this_instant:
-                    row_color = colorama.Fore.CYAN
-                    row.append("This beacon has not yet loaded this instant.")
+                    row_style = "cyan"
+                    notes_text = "This beacon has not yet loaded this instant."
                 
-                table.append((row, row_color))
+                beacon_table.add_row(*row_base, status_text, notes_text, style=row_style)
 
-            # Print the beacon table with color coding
-            for row, row_color in table:
-                # Map colorama Fore value to our helper fg names
-                fg = "white"
-                if row_color == colorama.Fore.RED:
-                    fg = "red"
-                elif row_color == colorama.Fore.YELLOW:
-                    fg = "yellow"
-                elif row_color == colorama.Fore.CYAN:
-                    fg = "cyan"
-                elif row_color == colorama.Fore.GREEN:
-                    fg = "green"
-                
-                # Determine table headers based on row length
-                headers = (
-                    ["Host", "OS", "IP", "ID", "Last Callback", "Status"]
-                    if len(row) == 6
-                    else ["Host", "OS", "IP", "ID", "Last Callback", "Status", "Notes"]
-                )
-                cprint(tabulate([row], headers=headers, tablefmt="grid"), fg=fg)
+            get_ui_manager().console.print(beacon_table)
         
         # ----------------------------------------------------------------
         # Display Multiplayer Connections (if enabled)

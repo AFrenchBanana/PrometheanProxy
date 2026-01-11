@@ -96,10 +96,22 @@ def add_connection_list(
     Returns:
         None
     """
+    from Modules.utils.ui_manager import log_connection_event, update_connection_stats
+    from Modules.global_objects import sessions_list, beacon_list
 
     logger.info(f"Adding connection {r_address[0]} ({host}) to sessions list.")
     new_session = Session(r_address, conn, host, operating_system, mode, modules, config, from_db=from_db)
     sessions_list[user_id] = new_session
+    
+    # Log the new session connection
+    if not from_db:
+        log_connection_event(
+            "session",
+            f"New session from {host} ({r_address[0]}) - {operating_system}",
+            {"host": host, "ip": r_address[0], "os": operating_system, "mode": mode}
+        )
+        # Update connection stats
+        update_connection_stats(len(sessions_list), len(beacon_list))
 
 
 def remove_connection_list(r_address: Tuple[str, int]) -> None:
@@ -110,6 +122,8 @@ def remove_connection_list(r_address: Tuple[str, int]) -> None:
     Returns:
         None
     """
+    from Modules.utils.ui_manager import log_connection_event, update_connection_stats
+    from Modules.global_objects import sessions_list, beacon_list
 
     key_to_remove = None
     for key, session_obj in sessions_list.items():
@@ -118,6 +132,12 @@ def remove_connection_list(r_address: Tuple[str, int]) -> None:
             break
             
     if key_to_remove:
+        session_info = sessions_list[key_to_remove]
+        log_connection_event(
+            "disconnect",
+            f"Session disconnected: {session_info.hostname} ({r_address[0]})",
+            {"host": session_info.hostname, "ip": r_address[0]}
+        )
         sessions_list.pop(key_to_remove)
         logger.info(f"Removed session {r_address[0]} from list.")
     else:
