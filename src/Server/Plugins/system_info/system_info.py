@@ -1,7 +1,6 @@
 """System Info plugin for beacon and session.
 
-Imports are written to work both when executing from the project root
-as well as when running the server from inside src/Server.
+Retrieves system information from remote implants.
 """
 from Modules.beacon.beacon import add_beacon_command_list
 from Modules.global_objects import logger, config, obfuscation_map
@@ -14,6 +13,8 @@ from pathlib import Path
 
 
 class SystemInfo:
+    """Retrieve system information from beacon or session targets."""
+
     def __init__(self):
         self.command = "system_info"
 
@@ -23,13 +24,11 @@ class SystemInfo:
             with obf_path.open("r", encoding="utf-8") as f:
                 obfuscation = json.load(f)
         except Exception as e:
-            logger.error(
-                f"Netstat: could not load obfuscate.json (falling back to plain command). Error: {e}"
-            )
+            logger.error(f"SystemInfo: could not load obfuscate.json. Error: {e}")
             obfuscation = {}
 
         nested = obfuscation.get("system_info") or {}
-        self.obf_name = nested.get("obfuscation_name") if isinstance(nested, dict) else ValueError("Invalid obfuscate.json format")
+        self.obf_name = nested.get("obfuscation_name") if isinstance(nested, dict) else None
 
         if obfuscation:
             try:
@@ -40,14 +39,12 @@ class SystemInfo:
         self.database = DatabaseClass(config, "command_database")
 
     def beacon(self, beacon: dict) -> None:
-        """Queue system info command for a beacon by userID."""
+        """Queue system info command for a beacon."""
         add_beacon_command_list(beacon.userID, None, self.command, self.database, "")
-        logger.debug(
-            f"Systeminfo command added to command list for userID: {beacon.userID}"
-        )
+        logger.debug(f"SystemInfo command added for beacon: {beacon.userID}")
 
     def session(self, session: dict) -> None:
-        """Request system info from a live session and store the result."""
+        """Request system info from a live session."""
         logger.info(f"Requesting system info from {session['userID']}")
         send_data(session['conn'], self.command)
         data = receive_data(session['conn'])

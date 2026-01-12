@@ -38,15 +38,10 @@ from ...utils.console import cprint, warn, error as c_error
 class ConnectionHandler:
     """
     Handles connection-related commands for the multi-handler module.
-    
+
     Provides methods for listing active connections, connecting to sessions,
     and closing individual or all connections.
     """
-
-    # ========================================================================
-    # Connection Listing Methods
-    # ========================================================================
-
 
     # ========================================================================
     # Connection Listing Methods

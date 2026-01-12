@@ -31,6 +31,31 @@ from ..global_objects import (
 
 
 # ============================================================================
+# Module Resolution Helper
+# ============================================================================
+
+
+def _resolve_module_base(config: dict) -> str:
+    """
+    Resolve the base directory for modules.
+
+    Prefers unified structure under ~/.PrometheanProxy/plugins but
+    falls back to configured module location.
+
+    Returns:
+        Path to the module base directory
+    """
+    candidates = [
+        os.path.expanduser(config['server'].get('module_location', '')),
+        os.path.expanduser('~/.PrometheanProxy/plugins'),
+    ]
+    for c in candidates:
+        if c and os.path.isdir(c):
+            return c
+    return os.path.expanduser('~/.PrometheanProxy/plugins')
+
+
+# ============================================================================
 # Beacon Command Class
 # ============================================================================
 
@@ -254,34 +279,11 @@ class Beacon:
     def load_module_beacon(self, userID) -> None:
         """
         Interactively load a module onto the beacon.
-        
+
         Presents the user with a list of available modules for the beacon's
         operating system and loads the selected module.
-        
-        Args:
-            userID: Unique identifier for the beacon
         """
-        def _resolve_module_base() -> str:
-            """
-            Resolve the base directory for modules.
-            
-            Prefers unified structure under ~/.PrometheanProxy/plugins but
-            falls back to configured module location.
-            
-            Returns:
-                str: Path to the module base directory
-            """
-            candidates = [
-                os.path.expanduser(self.config['server'].get('module_location', '')),
-                os.path.expanduser('~/.PrometheanProxy/plugins'),
-            ]
-            for c in candidates:
-                if c and os.path.isdir(c):
-                    return c
-            # Default to unified location if nothing exists yet
-            return os.path.expanduser('~/.PrometheanProxy/plugins')
-
-        command_location = _resolve_module_base()
+        command_location = _resolve_module_base(self.config)
         repo_plugins = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../../Plugins")
         )
@@ -368,34 +370,11 @@ class Beacon:
     def load_module_direct_beacon(self, userID, module_name) -> None:
         """
         Load a specified module onto the beacon without user interaction.
-        
+
         Resolves the module file path, reads the module binary, encodes it,
         and queues it as a command for the beacon to load.
-        
-        Args:
-            userID: Unique identifier for the beacon
-            module_name: Name of the module to load
         """
-        # ----------------------------------------------------------------
-        # Resolve Module Path
-        # ----------------------------------------------------------------
-        def _resolve_module_base() -> str:
-            """
-            Resolve the base directory for modules.
-            
-            Returns:
-                str: Path to the module base directory
-            """
-            candidates = [
-                os.path.expanduser(self.config['server'].get('module_location', '')),
-                os.path.expanduser('~/.PrometheanProxy/plugins'),
-            ]
-            for c in candidates:
-                if c and os.path.isdir(c):
-                    return c
-            return os.path.expanduser('~/.PrometheanProxy/plugins')
-
-        command_location = os.path.abspath(_resolve_module_base())
+        command_location = os.path.abspath(_resolve_module_base(self.config))
         repo_plugins = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../../Plugins")
         )

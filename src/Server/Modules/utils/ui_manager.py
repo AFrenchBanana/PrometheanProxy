@@ -60,91 +60,39 @@ class UIManager:
             "server_uptime": datetime.now()
         }
         
+    # Event type styling configuration
+    EVENT_STYLES = {
+        "session":        ("🔗", "bright_green", "SESSION"),
+        "beacon":         ("📡", "bright_cyan", "BEACON"),
+        "command":        ("⚡", "bright_yellow", "CMD"),
+        "command_sent":   ("📤", "yellow", "CMD SENT"),
+        "command_output": ("📥", "cyan", "CMD OUT"),
+        "command_error":  ("⚠️", "bright_red", "CMD ERR"),
+        "download":       ("⬇️", "bright_blue", "DOWNLOAD"),
+        "upload":         ("⬆️", "bright_magenta", "UPLOAD"),
+        "disconnect":     ("❌", "bright_red", "DISCONN"),
+        "warning":        ("⚠️", "yellow", "WARNING"),
+        "error":          ("❗", "red", "ERROR"),
+        "success":        ("✅", "green", "SUCCESS"),
+        "info":           ("ℹ️", "bright_blue", "INFO"),
+    }
+    DEFAULT_STYLE = ("•", "white", "EVENT")
+
     def add_event(self, event_type: str, message: str, details: Optional[Dict] = None):
-        """
-        Add a new event to the live feed.
-        
-        Args:
-            event_type: Type of event (session, beacon, command, etc.)
-            message: Event message to display
-            details: Optional additional details
-        """
+        """Add a new event to the live feed."""
         with self.lock:
             timestamp = datetime.now().strftime("%H:%M:%S")
-            
-            # Enhanced color coding and icons based on event type
-            if event_type == "session":
-                icon = "🔗"
-                color = "bright_green"
-                prefix = "SESSION"
-            elif event_type == "beacon":
-                icon = "📡"
-                color = "bright_cyan"
-                prefix = "BEACON"
-            elif event_type == "command":
-                icon = "⚡"
-                color = "bright_yellow"
-                prefix = "CMD"
-            elif event_type == "command_sent":
-                icon = "📤"
-                color = "yellow"
-                prefix = "CMD SENT"
-            elif event_type == "command_output":
-                icon = "📥"
-                color = "cyan"
-                prefix = "CMD OUT"
-            elif event_type == "command_error":
-                icon = "⚠️"
-                color = "bright_red"
-                prefix = "CMD ERR"
-            elif event_type == "download":
-                icon = "⬇️"
-                color = "bright_blue"
-                prefix = "DOWNLOAD"
-            elif event_type == "upload":
-                icon = "⬆️"
-                color = "bright_magenta"
-                prefix = "UPLOAD"
-            elif event_type == "disconnect":
-                icon = "❌"
-                color = "bright_red"
-                prefix = "DISCONN"
-            elif event_type == "warning":
-                icon = "⚠️"
-                color = "yellow"
-                prefix = "WARNING"
-            elif event_type == "error":
-                icon = "❗"
-                color = "red"
-                prefix = "ERROR"
-            elif event_type == "success":
-                icon = "✅"
-                color = "green"
-                prefix = "SUCCESS"
-            elif event_type == "info":
-                icon = "ℹ️"
-                color = "bright_blue"
-                prefix = "INFO"
-            else:
-                icon = "•"
-                color = "white"
-                prefix = "EVENT"
-            
-            event_entry = {
+            icon, color, prefix = self.EVENT_STYLES.get(event_type, self.DEFAULT_STYLE)
+
+            self.events.append({
                 "timestamp": timestamp,
                 "icon": icon,
                 "color": color,
                 "prefix": prefix,
                 "message": message,
                 "details": details or {}
-            }
-            
-            self.events.append(event_entry)
+            })
             self.stats["last_activity"] = timestamp
-            
-            # Trigger update immediately
-            # if self.active:
-            #     self._refresh_header_display()
 
     def update_stats(self, sessions: int, beacons: int):
         """

@@ -136,11 +136,6 @@ class MultiHandler:
     # Database Loading Methods
     # ========================================================================
 
-
-    # ========================================================================
-    # Database Loading Methods
-    # ========================================================================
-
     def load_db_implants(self):
         """
         Load implants from the database into memory.
@@ -265,10 +260,6 @@ class MultiHandler:
     # Security Configuration Methods
     # ========================================================================
 
-    # ========================================================================
-    # Security Configuration Methods
-    # ========================================================================
-
     def create_hmac(self):
         """
         Create or verify HMAC authentication key.
@@ -339,11 +330,6 @@ class MultiHandler:
                 f"{cert_dir}{tls_key} and {cert_dir}{tls_cert}",
                 fg="green"
             )
-
-    # ========================================================================
-    # Socket Server Methods
-    # ========================================================================
-
 
     # ========================================================================
     # Socket Server Methods
@@ -428,7 +414,6 @@ class MultiHandler:
         logger.debug("Starting listener thread for accepting connections")
         listenerthread.daemon = True
         listenerthread.start()
-        return
 
     def accept_connection(self) -> None:
         """
@@ -493,11 +478,6 @@ class MultiHandler:
                 )
             else:
                 conn.close()
-
-    # ========================================================================
-    # Command Interface Methods
-    # ========================================================================
-
 
     # ========================================================================
     # Command Interface Methods

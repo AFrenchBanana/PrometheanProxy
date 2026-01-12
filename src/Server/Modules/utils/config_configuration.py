@@ -12,6 +12,12 @@ from ..global_objects import config as loadedConfig, logger
 CONFIG_FILE_PATH = 'config.toml'
 
 
+def _setup_completer(options: list) -> None:
+    """Configure readline tab completion with the given options."""
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(lambda text, state: tab_completion(text, state, options))
+
+
 def config_menu() -> None:
     logger.debug("Config menu started")
     while True:
@@ -20,23 +26,19 @@ def config_menu() -> None:
         print("2. Edit Config")
         print("3. Database Management")
         print("4. Exit")
-        readline.parse_and_bind("tab: complete")
-        readline.set_completer(
-            lambda text, state: tab_completion(
-                text, state, [
-                    "1", "2", "3", "4"]))
+        _setup_completer(["1", "2", "3", "4"])
         inp = input("Enter Option: ")
         if inp == "1":
             logger.debug("Showing config")
-            list(map(lambda x: show_config(x), ["server", "authentication",
-                                                "packetsniffer", "beacon"]))
-        if inp == "2":
+            for section in ["server", "authentication", "packetsniffer", "beacon"]:
+                show_config(section)
+        elif inp == "2":
             logger.debug("Editing config")
             edit_config()
-        if inp == "3":
+        elif inp == "3":
             logger.debug("Opening database management menu")
             database_management_menu()
-        if inp == "4":
+        elif inp == "4":
             logger.debug("Exiting config menu")
             return
 
@@ -63,51 +65,29 @@ def show_config(indexKey) -> None:
 def edit_config() -> bool:
     logger.debug("Starting edit config")
     main_keys = ["server", "authentication", "packetsniffer", "exit"]
-    server_keys = [
-        "listenaddress",
-        "port",
-        "TLSCertificateDir",
-        "TLSCertificate",
-        "TLSkey",
-        "GUI",
-        "quiet_mode"]
-    authentication_keys = ["keylength"]
-    packetsniffer_keys = [
-        "active",
-        "listenaddress",
-        "port",
-        "TLSCertificate",
-        "TLSKey",
-        "debugPrint"]
+    subkey_map = {
+        "server": [
+            "listenaddress", "port", "TLSCertificateDir",
+            "TLSCertificate", "TLSkey", "GUI", "quiet_mode"
+        ],
+        "authentication": ["keylength"],
+        "packetsniffer": [
+            "active", "listenaddress", "port",
+            "TLSCertificate", "TLSKey", "debugPrint"
+        ],
+    }
     toml_file = TomlFiles(CONFIG_FILE_PATH)
     with toml_file as config:
         logger.debug("Config file opened for editing")
         while True:
-            readline.parse_and_bind("tab: complete")
-            readline.set_completer(
-                lambda text, state: tab_completion(
-                    text, state, main_keys))
+            _setup_completer(main_keys)
             key = input("Enter key: ")
             if key == "exit":
                 return False
             if key not in main_keys:
                 print("Not a valid key")
-                pass
-            if key == "server":
-                readline.parse_and_bind("tab: complete")
-                readline.set_completer(
-                    lambda text, state: tab_completion(
-                        text, state, server_keys))
-            elif key == "authentication":
-                readline.parse_and_bind("tab: complete")
-                readline.set_completer(
-                    lambda text, state: tab_completion(
-                        text, state, authentication_keys))
-            elif key == "packetsniffer":
-                readline.parse_and_bind("tab: complete")
-                readline.set_completer(
-                    lambda text, state: tab_completion(
-                        text, state, packetsniffer_keys))
+                continue
+            _setup_completer(subkey_map.get(key, []))
             subkey = input("Enter sub-key to change: ")
             if subkey not in config[key]:
                 print("Invalid subkey")
@@ -156,27 +136,18 @@ def edit_config() -> bool:
 
 def edit_beacon_config() -> None:
     logger.debug("Editing beacon config")
-    beacon_keys = [
-        "interval",
-        "jitter",
-    ]
-    readline.set_completer(
-        lambda text, state: tab_completion(
-            text, state, beacon_keys))
+    beacon_keys = ["interval", "jitter"]
+    _setup_completer(beacon_keys)
     key = input("Enter key: ").lower()
     logger.debug(f"Editing beacon config key: {key}")
     if key not in beacon_keys:
         print("Not a valid key")
         logger.warning(f"Invalid beacon key entered: {key}")
         return
-    print("""
-          Times are in seconds, this will not update live beacons
-          only new beacons.
-          You can edit live beacons in the beacon menu.
-          """)
+    print("Times are in seconds. This will not update live beacons, only new ones.")
+    print("You can edit live beacons in the beacon menu.")
     print("Current value: ", loadedConfig["beacon"][key])
-    readline.set_completer(lambda text, state: tab_completion(
-        text, state, ""))
+    _setup_completer([])
     new_value = input("Enter new value: ")
     logger.debug(f"New value for {key}: {new_value}")
     if isinstance(loadedConfig["beacon"][key], int):
@@ -187,49 +158,40 @@ def edit_beacon_config() -> None:
             return
     loadedConfig["beacon"][key] = new_value
     logger.info(f"Updated beacon.{key} to {new_value}")
-    toml_file = TomlFiles(CONFIG_FILE_PATH)
-    toml_file.update_config("beacon", key, new_value)
+    TomlFiles(CONFIG_FILE_PATH).update_config("beacon", key, new_value)
     print("Changes saved successfully!")
 
 
 def beacon_config_menu() -> None:
+    logger.debug("Beacon config menu started")
     while True:
-        logger.debug("Beacon config menu started")
         print("Beacon Config Menu")
         print("1. Show Beacon Config")
         print("2. Edit Beacon Config")
         print("3. Exit")
-        readline.parse_and_bind("tab: complete")
-        readline.set_completer(
-            lambda text, state: tab_completion(
-                text, state, [
-                    "1", "2", "3"]))
+        _setup_completer(["1", "2", "3"])
         inp = input("Enter Option: ")
         logger.debug(f"Beacon config menu input: {inp}")
         if inp == "1":
             logger.debug("Showing beacon config")
             show_config("beacon")
-        if inp == "2":
+        elif inp == "2":
             edit_beacon_config()
             logger.debug("Edited beacon config")
-        if inp == "3":
+        elif inp == "3":
             logger.debug("Exiting beacon config menu")
             return
 
 
 def database_management_menu() -> None:
-    """
-    Database Management Menu
-    Provides options to clear databases and tables.
-    """
+    """Database Management Menu - provides options to clear databases and tables."""
     from ..global_objects import command_database
     from ServerDatabase.database import DatabaseClass
-    
-    # Initialize user database
+
     user_database = DatabaseClass(loadedConfig, "user_database")
-    
+    logger.debug("Database management menu started")
+
     while True:
-        logger.debug("Database management menu started")
         print("\nDatabase Management Menu")
         print("=" * 50)
         print("1. Clear All Tables (Command Database)")
@@ -240,12 +202,7 @@ def database_management_menu() -> None:
         print("6. Toggle Persistent Sessions")
         print("7. Exit")
         print("=" * 50)
-        
-        readline.parse_and_bind("tab: complete")
-        readline.set_completer(
-            lambda text, state: tab_completion(
-                text, state, [
-                    "1", "2", "3", "4", "5", "6", "7"]))
+        _setup_completer(["1", "2", "3", "4", "5", "6", "7"])
         
         inp = input("Enter Option: ")
         logger.debug(f"Database management menu input: {inp}")

@@ -1,7 +1,6 @@
-"""System Info plugin for beacon and session.
+"""Template plugin for beacon and session.
 
-Imports are written to work both when executing from the project root
-as well as when running the server from inside src/Server.
+Copy this file as a starting point for new plugins.
 """
 from Modules.beacon.beacon import add_beacon_command_list
 from Modules.global_objects import logger, config, obfuscation_map
@@ -14,6 +13,8 @@ from pathlib import Path
 
 
 class Template:
+    """Template plugin - copy and modify for new plugins."""
+
     def __init__(self):
         self.command = "template"
 
@@ -23,15 +24,12 @@ class Template:
             with obf_path.open("r", encoding="utf-8") as f:
                 obfuscation = json.load(f)
         except Exception as e:
-            logger.error(
-                f"Netstat: could not load obfuscate.json (falling back to plain command). Error: {e}"
-            )
+            logger.error(f"Template: could not load obfuscate.json. Error: {e}")
             obfuscation = {}
 
-      
-        nested = obfuscation.get("netstat") or {}
+        nested = obfuscation.get("template") or {}
         self.obf_name = nested.get("obfuscation_name") if isinstance(nested, dict) else None
-      
+
         if obfuscation:
             try:
                 obfuscation_map.update(obfuscation)
@@ -41,14 +39,12 @@ class Template:
         self.database = DatabaseClass(config, "command_database")
 
     def beacon(self, beacon: dict) -> None:
-        """Queue system info command for a beacon by userID."""
-        add_beacon_command_list(beacon.userID, None, self.command, "")
-        logger.debug(
-            f"Template command added to command list for userID: {beacon.userID}"
-        )
+        """Queue template command for a beacon."""
+        add_beacon_command_list(beacon.userID, None, self.command, self.database, "")
+        logger.debug(f"Template command added for beacon: {beacon.userID}")
 
     def session(self, session: dict) -> None:
-        """Request template from a live session and store the result."""
+        """Request template data from a live session."""
         logger.info(f"Requesting template from {session['userID']}")
         send_data(session['conn'], self.command)
         data = receive_data(session['conn'])
