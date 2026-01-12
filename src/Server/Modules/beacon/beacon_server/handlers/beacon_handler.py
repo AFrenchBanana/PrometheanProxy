@@ -5,6 +5,11 @@ from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import beacon_list, command_list, logger, obfuscation_map
+from Modules.utils.ui_manager import (
+    log_beacon_checkin,
+    log_command,
+    update_connection_stats,
+)
 
 
 def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
@@ -16,9 +21,8 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     Returns:
         None
     """
-    from Modules.utils.ui_manager import log_connection_event, update_connection_stats
     from Modules.global_objects import sessions_list
-    
+
     logger.info(f"Beacon call-in from {handler.path}")
 
     query_components = parse_qs(urlparse(handler.path).query)
@@ -41,13 +45,9 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     beacon.last_beacon = time.asctime()
     beacon.next_beacon = time.asctime(time.localtime(time.time() + beacon.timer))
     logger.info(f"Beacon {beacon_id} updated. Next check-in: {beacon.next_beacon}")
-    
-    # Log beacon check-in to activity feed
-    log_connection_event(
-        "beacon",
-        f"Beacon check-in: {beacon.hostname} ({beacon.address})",
-        {"uuid": beacon_id, "host": beacon.hostname, "ip": beacon.address}
-    )
+
+    # Log beacon check-in to live events feed
+    log_beacon_checkin(beacon.hostname, beacon.address, beacon_id)
     update_connection_stats(len(sessions_list), len(beacon_list))
 
     # Check for commands to send
@@ -85,7 +85,7 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                 command_obf.get("data"): getattr(command, "command_data", None)
             })
             command.executed = True
-            
+
             # Update database status to "Received" when beacon picks up the command
             if beacon.database:
                 try:
@@ -97,17 +97,12 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                         (cmd_id,)
                     )
                     logger.info(f"Command {cmd_id} ({command.command}) picked up by beacon {beacon_id}")
-                    print(f"{colorama.Fore.CYAN}[RECEIVED]{colorama.Fore.WHITE} Command {colorama.Fore.BLUE}{cmd_id}{colorama.Fore.WHITE} ({colorama.Fore.MAGENTA}{command.command}{colorama.Fore.WHITE}) picked up by beacon")
-                    
-                    # Log command pickup to activity feed
-                    log_connection_event(
-                        "command",
-                        f"Beacon command: {command.command} → {beacon.hostname}",
-                        {"uuid": cmd_id, "command": command.command, "beacon": beacon_id}
-                    )
+
+                    # Log command pickup to live events feed
+                    log_command(command.command, beacon.hostname, "sent")
                 except Exception as e:
                     logger.error(f"Failed to update command status to 'Received': {e}")
-                    
+
         if command.command == "Module":
             command.data = "Module Sent"
         if command.command == "Shell":

@@ -3,17 +3,20 @@
 """
 Initial file that starts the socket and multi handler.
 """
+
+import io
+import logging
+import os
+import random
 import readline
-import colorama
+import shutil
 import sys
 import threading
-import random
-import traceback
-import logging
-import io
 import time
-import os
-import shutil
+import traceback
+
+import colorama
+
 
 def _extract_embedded_assets():
     """Ensure ~/.PrometheanProxy/config.toml exists and copy embedded plugins if bundled.
@@ -21,22 +24,22 @@ def _extract_embedded_assets():
     - If running as a PyInstaller bundle, copy from embedded paths.
     - If running from source, copy default config from repo (src/Server/config.toml).
     """
-    user_root = os.path.expanduser('~/.PrometheanProxy')
+    user_root = os.path.expanduser("~/.PrometheanProxy")
     os.makedirs(user_root, exist_ok=True)
-    config_dst = os.path.join(user_root, 'config.toml')
+    config_dst = os.path.join(user_root, "config.toml")
     # Unified destination: put compiled modules and Python plugins under one root
-    plugins_dst_root = os.path.join(user_root, 'plugins')
+    plugins_dst_root = os.path.join(user_root, "plugins")
     os.makedirs(plugins_dst_root, exist_ok=True)
 
-    base = getattr(sys, '_MEIPASS', None)
+    base = getattr(sys, "_MEIPASS", None)
     if base:
         # Paths inside bundle as added by Makefile --add-data
-        embedded_root = os.path.join(base, 'embedded')
-        config_src = os.path.join(embedded_root, 'config.toml')
+        embedded_root = os.path.join(base, "embedded")
+        config_src = os.path.join(embedded_root, "config.toml")
         # Compiled plugin artifacts staged by Makefile under embedded/plugins/<name>/{release,debug}
-        plugins_root = os.path.join(embedded_root, 'plugins')
+        plugins_root = os.path.join(embedded_root, "plugins")
         # Python plugin sources staged by Makefile under embedded/pyplugins
-        pyplugins_src = os.path.join(embedded_root, 'pyplugins')
+        pyplugins_src = os.path.join(embedded_root, "pyplugins")
 
         # Copy config.toml if missing
         try:
@@ -44,7 +47,6 @@ def _extract_embedded_assets():
                 shutil.copy2(config_src, config_dst)
         except Exception:
             pass
-
 
         try:
             if os.path.isdir(plugins_root):
@@ -89,7 +91,7 @@ def _extract_embedded_assets():
             pass
     else:
         # Running from source: copy default config from repo if missing
-        repo_config = os.path.join(os.path.dirname(__file__), 'config.toml')
+        repo_config = os.path.join(os.path.dirname(__file__), "config.toml")
         try:
             if os.path.isfile(repo_config) and not os.path.exists(config_dst):
                 shutil.copy2(repo_config, config_dst)
@@ -97,7 +99,7 @@ def _extract_embedded_assets():
             pass
 
         try:
-            legacy_root = os.path.join(user_root, 'plugins', 'Plugins')
+            legacy_root = os.path.join(user_root, "plugins", "Plugins")
             if os.path.isdir(legacy_root):
                 for name in os.listdir(legacy_root):
                     src_dir = os.path.join(legacy_root, name)
@@ -109,7 +111,10 @@ def _extract_embedded_assets():
                             os.makedirs(out_root, exist_ok=True)
                             for fname in files:
                                 try:
-                                    shutil.copy2(os.path.join(root, fname), os.path.join(out_root, fname))
+                                    shutil.copy2(
+                                        os.path.join(root, fname),
+                                        os.path.join(out_root, fname),
+                                    )
                                 except Exception:
                                     pass
                 try:
@@ -123,17 +128,19 @@ def _extract_embedded_assets():
 _extract_embedded_assets()
 
 # Defer heavy imports that rely on config until after extraction
-from Modules.multi_handler.multi_handler import MultiHandler
-from Modules.global_objects import config, logger
-from Modules.utils.console import banner, error as c_error, cprint
 from Modules.beacon.beacon_server.server import start_beacon_server
+from Modules.global_objects import config, logger
+from Modules.multi_handler.multi_handler import MultiHandler
+from Modules.utils.console import banner, cprint
+from Modules.utils.console import error as c_error
+from Modules.utils.ui_manager import get_ui_manager
+
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
+logging.getLogger("socketio").setLevel(logging.ERROR)
+logging.getLogger("engineio").setLevel(logging.ERROR)
 
 
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
-logging.getLogger('socketio').setLevel(logging.ERROR)
-logging.getLogger('engineio').setLevel(logging.ERROR)
-
-readline.parse_and_bind('tab: complete')
+readline.parse_and_bind("tab: complete")
 
 if __name__ in {"__main__", "__mp_main__"}:
     logger.info("Starting server...")
@@ -142,21 +149,18 @@ if __name__ in {"__main__", "__mp_main__"}:
 
         logger.debug("Server: Starting beacon server thread")
 
-        # --- Beacon erver Thread ---
+        # --- Beacon Server Thread ---
         threading.Thread(
-            target=start_beacon_server,
-            args=(config,),
-            daemon=True
+            target=start_beacon_server, args=(config,), daemon=True
         ).start()
-
 
         multi_handler.startsocket()
         logger.debug("Server: Background server threads started successfully")
 
-        if not config['server']['quiet_mode']:
-            art_key = f'art{random.randint(1, 5)}'
+        if not config["server"]["quiet_mode"]:
+            art_key = f"art{random.randint(1, 5)}"
             logger.info(f"Server: Displaying ASCII art with key {art_key}")
-            banner(config['ASCII'][art_key])
+            banner(config["ASCII"][art_key])
         else:
             cprint("Quiet Mode On", bg="red")
 
@@ -166,9 +170,10 @@ if __name__ in {"__main__", "__mp_main__"}:
     except Exception as e:
         logger.error(f"Server: Error occurred - {e}")
         c_error(f"Error: {e}")
-        if not config['server']['quiet_mode']:
-            c_error("Traceback:")
+        if not config["server"]["quiet_mode"]:
             traceback.print_exc()
-        print("\nUse 'exit' or 'quit' next time.")
-        logger.critical("Server: Exiting due to error")
-        sys.exit()
+    except KeyboardInterrupt:
+        logger.info("Server: Keyboard interrupt received, shutting down...")
+        cprint("\nShutting down server...", fg="yellow")
+    finally:
+        logger.info("Server: Exiting...")

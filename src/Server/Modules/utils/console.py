@@ -93,7 +93,14 @@ def colorize(
     return f"{style}{bg_map.get(bg)}{fg_map.get(fg)}{text}{Style.RESET_ALL if _HAS_COLOR else ''}"
 
 
-def cprint(text: str, *, fg: Optional[str] = None, bg: Optional[str] = None, bold: bool = False, dim: bool = False) -> None:
+def cprint(
+    text: str,
+    *,
+    fg: Optional[str] = None,
+    bg: Optional[str] = None,
+    bold: bool = False,
+    dim: bool = False,
+) -> None:
     print(colorize(text, fg=fg, bg=bg, bold=bold, dim=dim))
 
 
@@ -133,14 +140,17 @@ def banner(text: str) -> None:
     cprint(text, fg="bright_cyan", bold=True)
 
 
+
 def command_output(text: str) -> None:
     """Print command output in bright white."""
     cprint(text, fg="bright_white")
 
 
+
 def prompt(text: str) -> None:
     """Print prompt text in bright magenta."""
     cprint(text, fg="bright_magenta", bold=True)
+
 
 
 def status(text: str, status_type: str = "info") -> None:
@@ -158,4 +168,6 @@ def status(text: str, status_type: str = "info") -> None:
     elif status_type == "warning":
         warn(text)
     else:
+        info(text)
+
         info(text)

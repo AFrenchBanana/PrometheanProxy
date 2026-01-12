@@ -20,7 +20,7 @@ def get_handler(method: str, path: str) -> tuple:
     Retrieves the appropriate handler function for a given HTTP method and path.
     Args:
         method (str): The HTTP method (e.g., 'GET', 'POST')
-        path (str): The request path
+        path (str): The request paths
     Returns:
         tuple: (handler function, match dict) or (None, None) if no match found
     """

@@ -8,8 +8,8 @@ from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import config, logger, obfuscation_map
 from Modules.beacon.beacon import add_beacon_list
-
 from Modules.beacon.beacon_server.utils import process_request_data
+from Modules.utils.ui_manager import log_beacon_connect, log_connection_event, RichPrint
 from ServerDatabase.database import DatabaseClass
 
 
@@ -32,7 +32,7 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict, ):
         handler.send_response(400)
         handler.end_headers()
         return
-    
+
     # Normalize the obfuscation mapping and extract real values from incoming data
     generic = obfuscation_map.get("generic", {})
     implant_info = generic.get("implant_info", {}) if isinstance(generic.get("implant_info", {}), dict) else {}
@@ -55,6 +55,10 @@ def handle_connection_request(handler: BaseHTTPRequestHandler, match: dict, ):
             userID, address_val, name_val, os_val, time.time(),
             config['beacon']["interval"], config['beacon']['jitter'], config, DatabaseClass(config, "command_database"), None, False
         )
+
+        # Log to live events panel and terminal
+        log_beacon_connect(name_val, address_val, os_val, userID)
+        RichPrint.r_print(f"[bright_cyan]📡[/] New beacon: [bright_green]{name_val}[/] ({address_val}) - {os_val}")
 
         # determine the JSON keys to use in the response; prefer explicit mapping from generic, then implant_info, then defaults
         timer_key = generic.get("timer") or implant_info.get("timer") or "timer"
@@ -109,6 +113,14 @@ def handle_reconnect(handler: BaseHTTPRequestHandler, match: dict):
             float(data['timer']), float(data['jitter']), config, DatabaseClass(config, "command_database"), from_db=False
         )
         logger.info(f"Beacon list updated for reconnection ID: {data['id']}")
+
+        # Log reconnection to live events panel
+        log_connection_event(
+            "beacon",
+            f"Beacon reconnected: {data['name']} ({data['address']})",
+            {"host": data['name'], "ip": data['address'], "uuid": data['id']}
+        )
+        RichPrint.r_print(f"[bright_cyan]📡[/] Beacon reconnected: [bright_green]{data['name']}[/] ({data['address']})")
         response_body = json.dumps({"x": True}).encode('utf-8')
         handler.send_response(200)
         handler.send_header('Content-Type', 'application/json')
