@@ -54,9 +54,6 @@ config_file_path = os.path.join(config_dir, "config.toml")
 try:
     with TomlFiles(config_file_path) as f:
         config = f
-except FileNotFoundError:
-    with TomlFiles(config_file_path) as f:
-        config = f
 except InvalidCharInStringError:
     os.remove(config_file_path)
     print("Invalid character found in config file. Regenerating config file.")

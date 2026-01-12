@@ -7,12 +7,7 @@ import (
 	"time"
 )
 
-// unexported logger instance
-type simpleLogger struct{}
-
-var instance = &simpleLogger{}
-
-// unexported helper to get formatted timestamp
+// getCurrentTimestamp returns formatted timestamp for log entries
 func getCurrentTimestamp() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }

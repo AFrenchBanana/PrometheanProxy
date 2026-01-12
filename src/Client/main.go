@@ -77,7 +77,6 @@ func beacon() {
 		}
 
 		logger.Log("Beaconing")
-		var beaconStatus int
 		err, switchSession := beaconHandler.Beacon()
 		if err != nil {
 			logger.Error(fmt.Sprintf("Critical error during beacon: %v", err))
@@ -86,12 +85,6 @@ func beacon() {
 		if switchSession {
 			logger.Log("Switching to session mode")
 			session.SessionHandler()
-			continue
-		}
-
-		if beaconStatus == -1 {
-			logger.Log("Beaconing failed (recoverable), retrying...")
-			time.Sleep(5 * time.Second)
 			continue
 		}
 

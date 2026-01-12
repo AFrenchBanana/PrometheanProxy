@@ -85,7 +85,8 @@ func LoadDynamicCommandFromBeacon(cmdName string, data []byte) error {
 	return nil
 }
 
-// LoadDynamicCommandFromSessionData writes plugin bytes to a temporary file and loads it
+// LoadDynamicCommandFromSession is an alias for LoadDynamicCommandFromBeacon.
+// Both connection modes use the same plugin caching mechanism.
 func LoadDynamicCommandFromSession(cmdName string, data []byte) error {
 	return LoadDynamicCommandFromBeacon(cmdName, data)
 }

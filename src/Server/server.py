@@ -4,14 +4,11 @@
 Initial file that starts the socket and multi handler.
 """
 import readline
-import colorama
 import sys
 import threading
 import random
 import traceback
 import logging
-import io
-import time
 import os
 import shutil
 
