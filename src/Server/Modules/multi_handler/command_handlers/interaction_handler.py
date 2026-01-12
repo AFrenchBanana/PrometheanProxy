@@ -5,15 +5,6 @@ Handles interaction commands for sessions and beacons in the multi-handler modul
 Provides clean terminal output using the UIManager pattern.
 """
 
-import os
-"""
-Interaction Handler Module - Modern UI with Styled Output
-
-Handles interaction commands for sessions and beacons in the multi-handler module.
-Provides clean terminal output using the UIManager pattern.
-"""
-
-import os
 import readline
 import ssl
 import traceback
@@ -32,7 +23,6 @@ from ...utils.ui_manager import get_ui_manager
 class InteractionHandler:
     """
     Handles interaction commands for sessions and beacons in the multi-handler module.
-    Uses modern UIManager for clean, styled terminal output.
     Uses modern UIManager for clean, styled terminal output.
     """
 
@@ -56,8 +46,6 @@ class InteractionHandler:
                 break
 
         if not session_obj:
-            logger.error(f"Session not found for address: {r_address}")
-            ui.print_error(f"Session not found for {r_address[0]}:{r_address[1]}")
             logger.error(f"Session not found for address: {r_address}")
             ui.print_error(f"Session not found for {r_address[0]}:{r_address[1]}")
             return
@@ -102,22 +90,6 @@ class InteractionHandler:
         completer = WordCompleter(all_commands, ignore_case=True)
 
         # Main interaction loop
-        # Add module commands
-        module_names = self._get_session_modules(session_obj)
-        for mod in module_names:
-            if mod not in command_handlers:
-                command_handlers[mod] = self._create_session_module_handler(
-                    mod, session_obj, conn, r_address, session_id
-                )
-
-        # Show available commands
-        self._show_available_commands(command_handlers, "Session")
-
-        # Create completer for prompt
-        all_commands = list(command_handlers.keys()) + ["exit"]
-        completer = WordCompleter(all_commands, ignore_case=True)
-
-        # Main interaction loop
         while True:
             try:
                 command = (
@@ -138,17 +110,11 @@ class InteractionHandler:
             if not command:
                 continue
 
-            if not command:
-                continue
-
             handler = command_handlers.get(command)
             if handler:
                 try:
                     logger.info(f"Executing session command: {command}")
-                    logger.info(f"Executing session command: {command}")
                     handler()
-                    if command == "close":
-                        break
                     if command == "close":
                         break
                 except Exception as e:
@@ -161,27 +127,19 @@ class InteractionHandler:
                 ui.print_info("Type 'exit' to return to main menu")
 
     def use_beacon(self, UserID: str, IPAddress: str) -> None:
-    def use_beacon(self, UserID: str, IPAddress: str) -> None:
         """
         Interact with an individual beacon.
 
         Args:
             UserID: UUID of the beacon
             IPAddress: IP address of the beacon
-            UserID: UUID of the beacon
-            IPAddress: IP address of the beacon
         """
-        ui = get_ui_manager()
         ui = get_ui_manager()
         logger.info(f"Using beacon with UserID: {UserID} and IPAddress: {IPAddress}")
 
         beacon_obj = beacon_list.get(UserID)
         if not beacon_obj:
-
-        beacon_obj = beacon_list.get(UserID)
-        if not beacon_obj:
             logger.error(f"No beacon found with UUID: {UserID}")
-            ui.print_error(f"Beacon not found: {UserID}")
             ui.print_error(f"Beacon not found: {UserID}")
             return
 
@@ -521,7 +479,7 @@ class InteractionHandler:
                 if hasattr(session_obj, "execute_module"):
                     session_obj.execute_module(module_name, conn, r_address)
                 else:
-                    ui.print_error(f"Module execution not supported for this session")
+                    ui.print_error("Module execution not supported for this session")
             except Exception as e:
                 ui.print_error(f"Module execution failed: {e}")
                 logger.error(f"Error executing module '{module_name}': {e}")
