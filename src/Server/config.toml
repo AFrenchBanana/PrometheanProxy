@@ -30,8 +30,8 @@ TLSkey = "~/PrometheanProxy/Certificates/key.pem"
 debugPrint = true
 
 [beacon]
-interval = 10
-jitter = 100
+interval = 5
+jitter = 2
 
 [logging]
 log_file = "server.log"
