@@ -7,19 +7,22 @@ Contains error-handled send and receive functions that
 can handle bytes and strings.
 """
 
-from .utils.content_handler import TomlFiles
-from .utils.logging import LoggingClass as Logger
-from tomlkit.exceptions import InvalidCharInStringError
+import json
 import os
 import sys
-import json
-from typing import TYPE_CHECKING, Dict, Any
+from typing import TYPE_CHECKING, Any, Dict
+
+from tomlkit.exceptions import InvalidCharInStringError
+
+from .utils.content_handler import TomlFiles
+from .utils.logging import LoggingClass as Logger
 
 if TYPE_CHECKING:
-    from .beacon.beacon import Beacon, beacon_command
-    from .session.session import Session
-    from .multiplayer.http.mp_http import HTTPClientSession
     from ServerDatabase.database import DatabaseClass
+
+    from .beacon.beacon import Beacon, beacon_command
+    from .multiplayer.mp_server.utils import HTTPClientSession
+    from .session.session import Session
 
 beacon_list: Dict[str, "Beacon"] = {}
 command_list: Dict[str, "beacon_command"] = {}
@@ -89,7 +92,7 @@ logger = Logger(
     level=config["logging"]["level"],
     fmt=config["logging"]["fmt"],
     datefmt=config["logging"]["datefmt"],
-    max_size=config["logging"]["max_size"]
+    max_size=config["logging"]["max_size"],
 )
 
 

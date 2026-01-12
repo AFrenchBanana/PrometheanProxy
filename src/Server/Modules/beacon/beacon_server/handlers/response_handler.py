@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler
 
 from Modules.global_objects import command_list, logger, obfuscation_map, command_database
 from Modules.beacon.beacon_server.utils import process_request_data
+from Modules.utils.ui_manager import log_connection_event, RichPrint
 
 
 def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
@@ -38,7 +39,7 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
         cid = report['command_uuid']
         output = report['output']
         command = command_list.get(cid)
-        
+
 
         if not command:
             logger.error(f"Command with UUID {cid} not found in command list.")
@@ -58,10 +59,18 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
 
 
         command.command_output = output
-        # Print status update with color coding
-        print(f"{colorama.Fore.GREEN}[COMPLETED]{colorama.Fore.WHITE} Command output for {colorama.Fore.BLUE}{cid}{colorama.Fore.WHITE}: {output}")
+
+        # Log to live events panel and terminal
+        truncated_output = output[:50] + "..." if len(output) > 50 else output
+        log_connection_event(
+            "command_output",
+            f"{command.command}: {truncated_output}",
+            {"command_uuid": cid, "command": command.command, "output": output}
+        )
+        RichPrint.r_print(f"[bright_green]✓[/] Command [bright_cyan]{command.command}[/] completed")
+
         if command.command == "module":
             command.data = ""
-    
+
     handler.send_response(200)
     handler.end_headers()
