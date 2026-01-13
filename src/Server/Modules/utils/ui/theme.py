@@ -31,7 +31,6 @@ EVENT_STYLES = {
     "session_new": ("◉", "bright_green", "NEW SESSION"),
     "beacon": ("◆", "bright_cyan", "BEACON"),
     "beacon_new": ("◇", "bright_cyan", "NEW BEACON"),
-    "beacon_checkin": ("↻", "cyan", "CHECK-IN"),
     "command": ("▶", "bright_yellow", "COMMAND"),
     "command_sent": ("↑", "yellow", "SENT"),
     "command_output": ("↓", "bright_blue", "OUTPUT"),

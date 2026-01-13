@@ -25,41 +25,42 @@ class ModulesMixin:
     commands for beacons to execute.
     """
 
-    def load_module_beacon(self, userID: str) -> None:
+    def _resolve_module_base(self) -> str:
         """
-        Interactively load a module onto the beacon.
+        Resolve the base directory for modules.
 
-        Presents the user with a list of available modules for the beacon's
-        operating system and loads the selected module.
+        Prefers unified structure under ~/.PrometheanProxy/plugins but
+        falls back to configured module location.
 
-        Args:
-            userID: Unique identifier for the beacon
+        Returns:
+            str: Path to the module base directory
         """
+        candidates = [
+            os.path.expanduser(self.config["server"].get("module_location", "")),
+            os.path.expanduser("~/.PrometheanProxy/plugins"),
+        ]
+        for c in candidates:
+            if c and os.path.isdir(c):
+                return c
+        # Default to unified location if nothing exists yet
+        return os.path.expanduser("~/.PrometheanProxy/plugins")
 
-        def _resolve_module_base() -> str:
-            """
-            Resolve the base directory for modules.
+    def get_available_modules(self) -> list[str]:
+        """
+        Discover available modules for this beacon's operating system.
 
-            Prefers unified structure under ~/.PrometheanProxy/plugins but
-            falls back to configured module location.
+        Searches for modules in the configured module location and repo plugins
+        directory, supporting both legacy and unified directory structures.
 
-            Returns:
-                str: Path to the module base directory
-            """
-            candidates = [
-                os.path.expanduser(self.config["server"].get("module_location", "")),
-                os.path.expanduser("~/.PrometheanProxy/plugins"),
-            ]
-            for c in candidates:
-                if c and os.path.isdir(c):
-                    return c
-            # Default to unified location if nothing exists yet
-            return os.path.expanduser("~/.PrometheanProxy/plugins")
-
-        command_location = _resolve_module_base()
+        Returns:
+            List of available module names
+        """
+        command_location = self._resolve_module_base()
         repo_plugins = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../../Plugins")
         )
+
+        module_names: list[str] = []
 
         try:
             # ----------------------------------------------------------------
@@ -69,7 +70,6 @@ class ModulesMixin:
             platform_folder = "windows" if "windows" in os_str else "linux"
             ext = ".dll" if platform_folder == "windows" else ".so"
             channel = "debug" if "debug" in os_str else "release"
-            module_names: list[str] = []
 
             # ----------------------------------------------------------------
             # Discover Available Modules
@@ -90,14 +90,15 @@ class ModulesMixin:
                 ]
             else:
                 # Unified structure: <name>/{release,debug}/{name}[-debug].ext
-                for name in os.listdir(command_location):
-                    full = os.path.join(command_location, name)
-                    if not os.path.isdir(full):
-                        continue
-                    fname = f"{name}{'-debug' if channel == 'debug' else ''}{ext}"
-                    cand = os.path.join(full, channel, fname)
-                    if os.path.isfile(cand):
-                        module_names.append(name)
+                if os.path.isdir(command_location):
+                    for name in os.listdir(command_location):
+                        full = os.path.join(command_location, name)
+                        if not os.path.isdir(full):
+                            continue
+                        fname = f"{name}{'-debug' if channel == 'debug' else ''}{ext}"
+                        cand = os.path.join(full, channel, fname)
+                        if os.path.isfile(cand):
+                            module_names.append(name)
 
                 # Fallback to repo tree if none found in user directory
                 if not module_names and os.path.isdir(repo_plugins):
@@ -110,9 +111,41 @@ class ModulesMixin:
                         if os.path.isfile(cand):
                             module_names.append(name)
 
+        except Exception as e:
+            logger.error(f"Error discovering modules: {e}")
+
+        return sorted(set(module_names))
+
+    def is_module_available(self, module_name: str) -> bool:
+        """
+        Check if a module is available for loading.
+
+        Args:
+            module_name: Name of the module to check
+
+        Returns:
+            True if the module is available, False otherwise
+        """
+        return module_name in self.get_available_modules()
+
+    def load_module_beacon(self, userID: str) -> None:
+        """
+        Interactively load a module onto the beacon.
+
+        Presents the user with a list of available modules for the beacon's
+        operating system and loads the selected module.
+
+        Args:
+            userID: Unique identifier for the beacon
+        """
+        command_location = self._resolve_module_base()
+
+        try:
+            module_names = self.get_available_modules()
+
             # Display available modules
             print("Available modules:")
-            for name in sorted(set(module_names)):
+            for name in module_names:
                 print(f" - {name}")
 
         except Exception as e:
@@ -154,23 +187,7 @@ class ModulesMixin:
         # ----------------------------------------------------------------
         # Resolve Module Path
         # ----------------------------------------------------------------
-        def _resolve_module_base() -> str:
-            """
-            Resolve the base directory for modules.
-
-            Returns:
-                str: Path to the module base directory
-            """
-            candidates = [
-                os.path.expanduser(self.config["server"].get("module_location", "")),
-                os.path.expanduser("~/.PrometheanProxy/plugins"),
-            ]
-            for c in candidates:
-                if c and os.path.isdir(c):
-                    return c
-            return os.path.expanduser("~/.PrometheanProxy/plugins")
-
-        command_location = os.path.abspath(_resolve_module_base())
+        command_location = os.path.abspath(self._resolve_module_base())
         repo_plugins = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../../Plugins")
         )
@@ -244,10 +261,11 @@ class ModulesMixin:
                 )
 
             logger.debug(
-                f"Module '{module_name}' added to command list for userID: {userID}"
+                f"Module '{module_name}' queued for loading on userID: {userID}. "
+                "Will be marked as loaded after beacon confirms."
             )
-            if module_name not in self.loaded_modules:
-                self.loaded_modules.append(module_name)
+            # Note: Module is added to loaded_modules in response_handler.py
+            # after the beacon confirms successful loading
 
         except FileNotFoundError:
             logger.error(f"Module file '{module_path}' not found.")

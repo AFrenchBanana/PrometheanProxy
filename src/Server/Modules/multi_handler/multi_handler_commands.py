@@ -243,6 +243,10 @@ class MultiHandlerCommands(
         # Provide the shape expected by plugins: {'userID': str, 'conn': sslSocket}
         session = {"userID": user_id or r_address[0], "conn": conn}
         try:
+            # Call init method if it exists
+            if hasattr(plugin, "init"):
+                plugin.init(session)
+
             logger.info(f"Running session plugin '{command}' for {session['userID']}")
             plugin.session(session)
         except Exception as e:
@@ -324,6 +328,10 @@ class MultiHandlerCommands(
         # Execute plugin
         beacon_like = SimpleNamespace(userID=userID)
         try:
+            # Call init method if it exists
+            if hasattr(plugin, "init"):
+                plugin.init(beacon_like)
+
             logger.info(f"Queueing beacon plugin '{command}' for {userID}")
             plugin.beacon(beacon_like)
             return True

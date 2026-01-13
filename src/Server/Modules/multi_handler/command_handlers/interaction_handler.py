@@ -161,29 +161,48 @@ class InteractionHandler:
             "load_module": lambda: self._beacon_load_module(UserID, beacon_obj),
         }
 
-        # Add dynamic beacon commands from plugins
+        # Discover available modules
+        available_modules = []
+        if hasattr(beacon_obj, "get_available_modules"):
+            try:
+                available_modules = beacon_obj.get_available_modules()
+            except Exception as e:
+                logger.debug(f"Error getting available modules: {e}")
+
+        # Ensure loaded modules are in the available list
+        if hasattr(beacon_obj, "loaded_modules") and beacon_obj.loaded_modules:
+            for mod in beacon_obj.loaded_modules:
+                if mod not in available_modules:
+                    available_modules.append(mod)
+
+        # Add commands from plugins, checking if they are also modules
         try:
             dynamic_commands = getattr(
                 self, "list_loaded_beacon_commands", lambda: []
             )()
             for cmd in dynamic_commands or []:
                 if cmd not in command_handlers:
-                    command_handlers[cmd] = self._create_beacon_handler(
-                        cmd, beacon_obj, UserID
-                    )
+                    # Priority to module handler if command matches an available module
+                    if cmd in available_modules:
+                        command_handlers[cmd] = self._create_beacon_module_handler(
+                            cmd, beacon_obj, UserID
+                        )
+                    else:
+                        command_handlers[cmd] = self._create_beacon_handler(
+                            cmd, beacon_obj, UserID
+                        )
         except Exception as e:
             logger.debug(f"Error loading dynamic beacon commands: {e}")
 
-        # Add loaded module commands
-        if hasattr(beacon_obj, "loaded_modules") and beacon_obj.loaded_modules:
-            for mod in beacon_obj.loaded_modules:
-                if mod not in command_handlers:
-                    command_handlers[mod] = self._create_beacon_module_handler(
-                        mod, beacon_obj, UserID
-                    )
+        # Add remaining modules as commands
+        for mod in available_modules:
+            if mod not in command_handlers:
+                command_handlers[mod] = self._create_beacon_module_handler(
+                    mod, beacon_obj, UserID
+                )
 
         # Show available commands
-        self._show_available_commands(command_handlers, "Beacon")
+        self._show_available_commands(command_handlers, "Beacon", beacon_obj)
 
         # Create completer for prompt
         all_commands = list(command_handlers.keys()) + ["exit", "help"]
@@ -209,7 +228,7 @@ class InteractionHandler:
                 break
 
             if command == "help":
-                self._show_available_commands(command_handlers, "Beacon")
+                self._show_available_commands(command_handlers, "Beacon", beacon_obj)
                 continue
 
             if not command:
@@ -237,15 +256,23 @@ class InteractionHandler:
     # Helper Methods
     # ========================================================================
 
-    def _show_available_commands(self, command_handlers: dict, context: str) -> None:
+    def _show_available_commands(
+        self, command_handlers: dict, context: str, beacon_obj=None
+    ) -> None:
         """
         Display available commands in a styled table.
 
         Args:
             command_handlers: Dictionary of command name to handler function
             context: Context string (e.g., "Session" or "Beacon")
+            beacon_obj: Optional beacon object to check loaded modules
         """
         ui = get_ui_manager()
+
+        # Get loaded modules for status display
+        loaded_modules = []
+        if beacon_obj and hasattr(beacon_obj, "loaded_modules"):
+            loaded_modules = beacon_obj.loaded_modules or []
 
         table = Table(
             title=f"[bold bright_cyan]◆ Available {context} Commands[/]",
@@ -258,6 +285,7 @@ class InteractionHandler:
 
         table.add_column("Command", style="bright_green")
         table.add_column("Description", style="white")
+        table.add_column("Status", style="dim")
 
         # Command descriptions
         descriptions = {
@@ -272,12 +300,25 @@ class InteractionHandler:
             "help": "Show this help message",
         }
 
-        for cmd in sorted(command_handlers.keys()):
-            desc = descriptions.get(cmd, f"Execute {cmd}")
-            table.add_row(cmd, desc)
+        # Built-in commands (non-modules)
+        builtin_commands = set(descriptions.keys())
 
-        table.add_row("[dim]exit[/]", "[dim]Return to main menu[/]")
-        table.add_row("[dim]help[/]", "[dim]Show this help message[/]")
+        for cmd in sorted(command_handlers.keys()):
+            desc = descriptions.get(cmd, f"Execute {cmd} module")
+
+            # Determine status for modules
+            if cmd not in builtin_commands:
+                if cmd in loaded_modules:
+                    status = "[bright_green]● Loaded[/]"
+                else:
+                    status = "[yellow]○ Not loaded[/]"
+            else:
+                status = ""
+
+            table.add_row(cmd, desc, status)
+
+        table.add_row("[dim]exit[/]", "[dim]Return to main menu[/]", "")
+        table.add_row("[dim]help[/]", "[dim]Show this help message[/]", "")
 
         ui.console.print(table)
 
@@ -297,7 +338,9 @@ class InteractionHandler:
                 ui.print_warning("No command entered")
                 return
 
-            add_beacon_command_list(user_id, "shell", {"command": command})
+            add_beacon_command_list(
+                user_id, None, "shell", beacon_obj.database, {"command": command}
+            )
             ui.print_success(f"Shell command queued: {command}")
             logger.info(f"Queued shell command for beacon {user_id}: {command}")
         except (EOFError, KeyboardInterrupt):
@@ -329,7 +372,9 @@ class InteractionHandler:
             if hasattr(beacon_obj, "load_module"):
                 beacon_obj.load_module(user_id, module_name)
             else:
-                add_beacon_command_list(user_id, "module", {"name": module_name})
+                add_beacon_command_list(
+                    user_id, None, "module", beacon_obj.database, {"name": module_name}
+                )
 
             ui.print_success(f"Module load queued: {module_name}")
             logger.info(f"Queued module load for beacon {user_id}: {module_name}")
@@ -352,14 +397,55 @@ class InteractionHandler:
         def handler():
             ui = get_ui_manager()
             try:
-                # Try to get data for the command
+                # Check if this command is actually a module and handle loading
+                is_module = hasattr(
+                    beacon_obj, "is_module_available"
+                ) and beacon_obj.is_module_available(cmd)
+
+                if is_module:
+                    is_loaded = (
+                        hasattr(beacon_obj, "loaded_modules")
+                        and cmd in beacon_obj.loaded_modules
+                    )
+
+                    if not is_loaded:
+                        ui.print_warning(f"Module '{cmd}' is not loaded on this beacon")
+                        load_choice = (
+                            self.prompt_session.prompt(
+                                f"Load module '{cmd}' first? [y/N]: "
+                            )
+                            .strip()
+                            .lower()
+                        )
+
+                        if load_choice != "y":
+                            ui.print_info("Command cancelled")
+                            return
+
+                        ui.print_info(f"Queuing module '{cmd}' for loading...")
+                        if hasattr(beacon_obj, "load_module_direct_beacon"):
+                            beacon_obj.load_module_direct_beacon(user_id, cmd)
+                            ui.print_success(f"Module '{cmd}' queued for loading")
+                        else:
+                            ui.print_error("Cannot load module - method not available")
+                            return
+
+                # Check if this is a plugin command
+                if hasattr(self, "beacon_plugins") and cmd in self.beacon_plugins:
+                    if hasattr(self, "run_beacon_plugin"):
+                        self.run_beacon_plugin(cmd, user_id)
+                        return
+
+                # Fallback to generic command queueing
                 data = None
                 if hasattr(self, "get_command_data"):
                     data = self.get_command_data(cmd)
 
-                add_beacon_command_list(user_id, cmd, data)
+                add_beacon_command_list(user_id, None, cmd, beacon_obj.database, data)
                 ui.print_success(f"Command '{cmd}' queued for beacon")
                 logger.info(f"Queued command '{cmd}' for beacon {user_id}")
+            except (EOFError, KeyboardInterrupt):
+                ui.print_info("Cancelled")
             except Exception as e:
                 ui.print_error(f"Failed to queue command: {e}")
                 logger.error(f"Error queuing command '{cmd}': {e}")
@@ -368,10 +454,13 @@ class InteractionHandler:
 
     def _create_beacon_module_handler(self, module_name: str, beacon_obj, user_id: str):
         """
-        Create a handler function for an already-loaded beacon module.
+        Create a handler function for a beacon module.
+
+        Checks if the module is loaded on the beacon before executing.
+        If not loaded, offers to load it first and then queue the command.
 
         Args:
-            module_name: Name of the loaded module
+            module_name: Name of the module
             beacon_obj: Beacon object
             user_id: UUID of the beacon
 
@@ -382,6 +471,47 @@ class InteractionHandler:
         def handler():
             ui = get_ui_manager()
             try:
+                # Check if module is loaded on the beacon
+                is_loaded = (
+                    hasattr(beacon_obj, "loaded_modules")
+                    and module_name in beacon_obj.loaded_modules
+                )
+
+                if not is_loaded:
+                    # Module not loaded - ask user if they want to load it
+                    ui.print_warning(
+                        f"Module '{module_name}' is not loaded on this beacon"
+                    )
+                    load_choice = (
+                        self.prompt_session.prompt(
+                            f"Load module '{module_name}' first? [y/N]: "
+                        )
+                        .strip()
+                        .lower()
+                    )
+
+                    if load_choice != "y":
+                        ui.print_info("Command cancelled")
+                        return
+
+                    # Load the module first
+                    ui.print_info(f"Queuing module '{module_name}' for loading...")
+                    if hasattr(beacon_obj, "load_module_direct_beacon"):
+                        beacon_obj.load_module_direct_beacon(user_id, module_name)
+                        ui.print_success(f"Module '{module_name}' queued for loading")
+                    else:
+                        ui.print_error("Cannot load module - method not available")
+                        return
+
+                # Check if this is a plugin command
+                if (
+                    hasattr(self, "beacon_plugins")
+                    and module_name in self.beacon_plugins
+                ):
+                    if hasattr(self, "run_beacon_plugin"):
+                        self.run_beacon_plugin(module_name, user_id)
+                        return
+
                 # Prompt for module arguments if needed
                 args = self.prompt_session.prompt(
                     f"Enter arguments for {module_name} (or press Enter for none): "
@@ -391,7 +521,9 @@ class InteractionHandler:
                 if args:
                     data["args"] = args
 
-                add_beacon_command_list(user_id, module_name, data)
+                add_beacon_command_list(
+                    user_id, None, module_name, beacon_obj.database, data
+                )
                 ui.print_success(f"Module '{module_name}' command queued")
                 logger.info(
                     f"Queued module command '{module_name}' for beacon {user_id}"
@@ -441,6 +573,12 @@ class InteractionHandler:
         def handler():
             ui = get_ui_manager()
             try:
+                # Check if this is a plugin command
+                if hasattr(self, "session_plugins") and cmd in self.session_plugins:
+                    if hasattr(self, "run_session_plugin"):
+                        self.run_session_plugin(cmd, conn, r_address, session_id)
+                        return
+
                 # Try to execute the command on the session
                 if hasattr(session_obj, cmd):
                     method = getattr(session_obj, cmd)

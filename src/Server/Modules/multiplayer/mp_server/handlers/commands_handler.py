@@ -69,7 +69,12 @@ def handle_post_command(server):
         return jsonify({"error": "Invalid command for given UUID"}), 400
 
     try:
-        add_beacon_command_list(uuid, command, data)
+        # Get the beacon object to access its database
+        beacon_obj = beacon_list.get(uuid)
+        if not beacon_obj:
+            return jsonify({"error": "Beacon not found"}), 404
+
+        add_beacon_command_list(uuid, None, command, beacon_obj.database, data)
         logger.info(f"Command '{command}' issued to {uuid} by {username}")
     except Exception as e:
         logger.error(f"Failed to add command to beacon/session {uuid}: {e}")
