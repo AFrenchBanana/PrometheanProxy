@@ -1,8 +1,9 @@
+import os
 import readline
 
 import colorama
 
-from ...global_objects import logger, tab_completion
+from ...global_objects import logger, plugin_dir, tab_completion
 from ...utils.console import colorize
 from ...utils.ui_manager import RichPrint
 
@@ -51,7 +52,9 @@ class UtilityHandler:
                 colorize("No logs found for the specified criteria.", fg="yellow")
             )
         if not logs:
-            RichPrint.r_print(colorize("No logs found for the specified criteria.", fg='yellow'))
+            RichPrint.r_print(
+                colorize("No logs found for the specified criteria.", fg="yellow")
+            )
             return
 
         for log in logs:
@@ -59,9 +62,47 @@ class UtilityHandler:
             if "ERROR" in log or "CRITICAL" in log:
                 RichPrint.r_print(colorize(log.rstrip("\n"), fg="red"))
             elif "WARNING" in log:
-                RichPrint.r_print(colorize(log.rstrip("\n"), fg="yellow"))
+                RichPring.r_print(colorize(log.rstrip("\n"), fg="yellow"))
             else:
                 RichPrint.r_print(colorize(log.rstrip("\n"), fg="white"))
 
         logger.info("Displayed log messages to user.")
+        return
+
+    def plugins(self) -> None:
+        """
+        Lists all available plugins and their supported operating systems.
+        """
+        plugins_dir = os.path.expanduser(self.config["server"]["module_location"])
+
+        if not os.path.isdir(plugins_dir):
+            RichPrint.r_print(
+                colorize(f"Plugin directory not found at: {plugins_dir}", fg="red")
+            )
+            return
+
+        RichPrint.r_print(colorize(f"%-20s %-10s" % ("Plugin", "OS"), bold=True))
+        RichPrint.r_print(colorize(f"%-20s %-10s" % ("------", "--"), bold=True))
+
+        for plugin_name in sorted(os.listdir(plugins_dir)):
+            plugin_path = os.path.join(plugins_dir, plugin_name)
+            if (
+                os.path.isdir(plugin_path)
+                and plugin_name != "template"
+                and not plugin_name.endswith("__pycache__")
+            ):
+                go_file = os.path.join(plugin_path, "main.go")
+                if os.path.exists(go_file):
+                    with open(go_file, "r") as f:
+                        for line in f:
+                            if "GOOS:" in line:
+                                os_support = line.split(":")[-1].strip()
+                                RichPrint.r_print(
+                                    f"%-20s %-10s" % (plugin_name, os_support)
+                                )
+                                break
+                        else:
+                            RichPrint.r_print(f"%-20s %-10s" % (plugin_name, "N/A"))
+                else:
+                    RichPrint.r_print(f"%-20s %-10s" % (plugin_name, "python"))
         return

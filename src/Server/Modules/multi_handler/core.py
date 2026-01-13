@@ -165,6 +165,7 @@ class MultiHandler(SecurityMixin, SocketServerMixin, LoaderMixin):
             "config",
             "configBeacon",
             "logs",
+            "plugins",
             "help",
             "status",
             "clear",
@@ -254,6 +255,7 @@ class MultiHandler(SecurityMixin, SocketServerMixin, LoaderMixin):
                 "configbeacon": "Beacon configuration menu",
                 "hashfiles": "Hash local database files",
                 "logs": "View server logs",
+                "plugins": "List available plugins",
                 "status": "Show connection status",
                 "clear": "Clear terminal screen",
                 "exit": "Exit the server",
@@ -289,6 +291,7 @@ class MultiHandler(SecurityMixin, SocketServerMixin, LoaderMixin):
                 )
             ),
             "logs": self.multihandlercommands.view_logs,
+            "plugins": self.multihandlercommands.plugins,
             "clear": handle_clear,
             "status": handle_status,
             "help": handle_help,

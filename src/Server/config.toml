@@ -25,8 +25,8 @@ keylength = 111
 active = false
 listenaddress = "0.0.0.0"
 port = 11001
-TLSCertificate = "~/PrometheanProxy/Certificates/cert.pem"
-TLSkey = "~/PrometheanProxy/Certificates/key.pem"
+TLSCertificate = "~/.PrometheanProxy/Certificates/cert.pem"
+TLSkey = "~/.PrometheanProxy/Certificates/key.pem"
 debugPrint = true
 
 [beacon]

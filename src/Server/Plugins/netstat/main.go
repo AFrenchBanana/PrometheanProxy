@@ -1,47 +1,14 @@
 package main
 
 import (
-	_ "embed"
-	"encoding/json"
+	"bufio"
 	"fmt"
-	"io"
+	"os"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
-
-	"src/Client/generic/config"
-	Logger "src/Client/generic/logger"
-
-	gnet "github.com/shirou/gopsutil/v3/net"
-	"github.com/shirou/gopsutil/v3/process"
-
-	"src/Client/dynamic/shared"
-
-	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
 )
-
-//go:embed obfuscate.json
-var obfuscateJSON []byte
-
-var pluginName string
-
-const pluginKey = "netstat"
-
-func init() {
-	pluginName = pluginKey
-
-	type entry struct {
-		ObfuscatedName string `json:"obfuscation_name"`
-	}
-	var m map[string]entry
-	if err := json.Unmarshal(obfuscateJSON, &m); err == nil {
-		if e, ok := m[pluginKey]; ok {
-			if n := strings.TrimSpace(e.ObfuscatedName); n != "" {
-				pluginName = n
-			}
-		}
-	}
-}
 
 type connectionInfo struct {
 	Proto         string `json:"proto"`
@@ -54,57 +21,195 @@ type connectionInfo struct {
 	ProcessName   string `json:"process"`
 }
 
-// --- Collection helpers ---
+// --- Linux-specific parsing ---
 
-func resolveProcName(pid int32) string {
-	if pid <= 0 {
-		return ""
+func parseHexIP(hex string, isIPv6 bool) string {
+	if isIPv6 {
+		// IPv6 hex format: 128 bits in hex
+		if len(hex) < 32 {
+			return hex
+		}
+		// Convert from little-endian hex format
+		ip := make([]byte, 16)
+		for i := 0; i < 16; i += 4 {
+			for j := 0; j < 4; j++ {
+				pos := (i + (3 - j)) * 2
+				if pos+2 <= len(hex) {
+					val, _ := strconv.ParseUint(hex[pos:pos+2], 16, 8)
+					ip[i+j] = byte(val)
+				}
+			}
+		}
+		return fmt.Sprintf("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+			ip[0], ip[1], ip[2], ip[3], ip[4], ip[5], ip[6], ip[7],
+			ip[8], ip[9], ip[10], ip[11], ip[12], ip[13], ip[14], ip[15])
 	}
-	p, err := process.NewProcess(pid)
-	if err != nil {
-		return ""
+
+	// IPv4: 8 hex chars
+	if len(hex) < 8 {
+		return hex
 	}
-	name, err := p.Name()
-	if err != nil {
-		return ""
-	}
-	return name
+	// Little-endian format
+	b1, _ := strconv.ParseUint(hex[6:8], 16, 8)
+	b2, _ := strconv.ParseUint(hex[4:6], 16, 8)
+	b3, _ := strconv.ParseUint(hex[2:4], 16, 8)
+	b4, _ := strconv.ParseUint(hex[0:2], 16, 8)
+	return fmt.Sprintf("%d.%d.%d.%d", b1, b2, b3, b4)
 }
 
-func collect(kind, proto string) []connectionInfo {
-	conns, err := gnet.Connections(kind)
+func parseHexPort(hex string) uint32 {
+	port, _ := strconv.ParseUint(hex, 16, 32)
+	return uint32(port)
+}
+
+func stateFromHex(hex string) string {
+	state, _ := strconv.ParseInt(hex, 16, 32)
+	states := map[int64]string{
+		0x01: "ESTABLISHED",
+		0x02: "SYN_SENT",
+		0x03: "SYN_RECV",
+		0x04: "FIN_WAIT1",
+		0x05: "FIN_WAIT2",
+		0x06: "TIME_WAIT",
+		0x07: "CLOSE",
+		0x08: "CLOSE_WAIT",
+		0x09: "LAST_ACK",
+		0x0A: "LISTEN",
+		0x0B: "CLOSING",
+	}
+	if s, ok := states[state]; ok {
+		return s
+	}
+	return fmt.Sprintf("UNKNOWN(%d)", state)
+}
+
+func resolveProcNameLinux(inode string) (int32, string) {
+	// Walk /proc to find the process that owns this socket inode
+	entries, err := os.ReadDir("/proc")
 	if err != nil {
-		Logger.Warn(fmt.Sprintf("Could not get %s connections: %v", kind, err))
+		return 0, ""
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		pid, err := strconv.Atoi(entry.Name())
+		if err != nil {
+			continue
+		}
+
+		// Check /proc/[pid]/fd/*
+		fdPath := fmt.Sprintf("/proc/%d/fd", pid)
+		fds, err := os.ReadDir(fdPath)
+		if err != nil {
+			continue
+		}
+
+		for _, fd := range fds {
+			linkPath := fmt.Sprintf("%s/%s", fdPath, fd.Name())
+			target, err := os.Readlink(linkPath)
+			if err != nil {
+				continue
+			}
+
+			// Socket inodes look like "socket:[12345]"
+			expectedSocket := fmt.Sprintf("socket:[%s]", inode)
+			if target == expectedSocket {
+				// Found it! Get process name
+				cmdlinePath := fmt.Sprintf("/proc/%d/cmdline", pid)
+				data, err := os.ReadFile(cmdlinePath)
+				if err == nil && len(data) > 0 {
+					// cmdline is null-separated
+					parts := strings.Split(string(data), "\x00")
+					if len(parts) > 0 && parts[0] != "" {
+						// Get just the basename
+						cmdParts := strings.Split(parts[0], "/")
+						return int32(pid), cmdParts[len(cmdParts)-1]
+					}
+				}
+
+				// Fallback to comm
+				commPath := fmt.Sprintf("/proc/%d/comm", pid)
+				data, err = os.ReadFile(commPath)
+				if err == nil {
+					return int32(pid), strings.TrimSpace(string(data))
+				}
+				return int32(pid), ""
+			}
+		}
+	}
+	return 0, ""
+}
+
+func parseLinuxProcNet(path, proto string, isIPv6 bool) []connectionInfo {
+	file, err := os.Open(path)
+	if err != nil {
 		return nil
 	}
-	results := make([]connectionInfo, 0, len(conns))
-	for _, c := range conns {
-		ci := connectionInfo{
+	defer file.Close()
+
+	var results []connectionInfo
+	scanner := bufio.NewScanner(file)
+
+	// Skip header
+	scanner.Scan()
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		fields := strings.Fields(line)
+		if len(fields) < 10 {
+			continue
+		}
+
+		// Parse local address
+		localParts := strings.Split(fields[1], ":")
+		if len(localParts) != 2 {
+			continue
+		}
+		localAddr := parseHexIP(localParts[0], isIPv6)
+		localPort := parseHexPort(localParts[1])
+
+		// Parse remote address
+		remoteParts := strings.Split(fields[2], ":")
+		if len(remoteParts) != 2 {
+			continue
+		}
+		remoteAddr := parseHexIP(remoteParts[0], isIPv6)
+		remotePort := parseHexPort(remoteParts[1])
+
+		// Parse state
+		state := stateFromHex(fields[3])
+
+		// Parse inode
+		inode := fields[9]
+
+		// Resolve process
+		pid, procName := resolveProcNameLinux(inode)
+
+		results = append(results, connectionInfo{
 			Proto:         proto,
-			LocalAddress:  c.Laddr.IP,
-			LocalPort:     c.Laddr.Port,
-			RemoteAddress: c.Raddr.IP,
-			RemotePort:    c.Raddr.Port,
-			State:         c.Status,
-			PID:           c.Pid,
-		}
-		if ci.ProcessName == "" {
-			ci.ProcessName = resolveProcName(ci.PID)
-		}
-		results = append(results, ci)
+			LocalAddress:  localAddr,
+			LocalPort:     localPort,
+			RemoteAddress: remoteAddr,
+			RemotePort:    remotePort,
+			State:         state,
+			PID:           pid,
+			ProcessName:   procName,
+		})
 	}
+
 	return results
 }
 
-func getAllConnections() []connectionInfo {
-	Logger.Log("Gathering connection list (tcp, tcp6, udp, udp6)...")
+func getAllConnectionsLinux() []connectionInfo {
 	var all []connectionInfo
-	all = append(all, collect("tcp", "tcp")...)
-	all = append(all, collect("tcp6", "tcp6")...)
-	all = append(all, collect("udp", "udp")...)
-	all = append(all, collect("udp6", "udp6")...)
+	all = append(all, parseLinuxProcNet("/proc/net/tcp", "tcp", false)...)
+	all = append(all, parseLinuxProcNet("/proc/net/tcp6", "tcp6", true)...)
+	all = append(all, parseLinuxProcNet("/proc/net/udp", "udp", false)...)
+	all = append(all, parseLinuxProcNet("/proc/net/udp6", "udp6", true)...)
 
-	// Sort for stable output: proto, state, laddr, raddr
+	// Sort for stable output
 	sort.Slice(all, func(i, j int) bool {
 		if all[i].Proto != all[j].Proto {
 			return all[i].Proto < all[j].Proto
@@ -126,8 +231,23 @@ func getAllConnections() []connectionInfo {
 		}
 		return all[i].PID < all[j].PID
 	})
-	Logger.Log(fmt.Sprintf("Collected %d connections", len(all)))
 	return all
+}
+
+func getAllConnections() []connectionInfo {
+	switch runtime.GOOS {
+	case "linux":
+		return getAllConnectionsLinux()
+	default:
+		return []connectionInfo{
+			{
+				Proto:        runtime.GOOS,
+				LocalAddress: "N/A",
+				State:        "Unsupported OS",
+				ProcessName:  "netstat only supports Linux with standard library",
+			},
+		}
+	}
 }
 
 // NetstatString returns a human-readable table of connections similar to `netstat -tunap`.
@@ -146,55 +266,20 @@ func NetstatString() string {
 		if c.RemotePort != 0 {
 			r = fmt.Sprintf("%s:%d", r, c.RemotePort)
 		}
-		line := fmt.Sprintf("%-5s %-22s %-22s %-12s %-7d %s", c.Proto, l, r, c.State, c.PID, c.ProcessName)
+		pidStr := ""
+		if c.PID > 0 {
+			pidStr = fmt.Sprintf("%d", c.PID)
+		}
+		line := fmt.Sprintf("%-5s %-22s %-22s %-12s %-7s %s", c.Proto, l, r, c.State, pidStr, c.ProcessName)
 		lines = append(lines, line)
 	}
 	return strings.Join(lines, "\n")
 }
 
-// NetstatCommand implements the shared.SysinfoCommand interface.
-type NetstatCommand struct{}
-
-func (c *NetstatCommand) Execute(args []string) (string, error) {
-	Logger.Log("NetstatCommand.Execute called (default context)")
+func Execute(args []string) (string, error) {
 	return NetstatString(), nil
 }
 
-func (c *NetstatCommand) ExecuteFromSession(args []string) (string, error) {
-	Logger.Log("NetstatCommand.ExecuteFromSession called")
-	output, err := c.Execute(args)
-	if err != nil {
-		Logger.Error(fmt.Sprintf("Error executing netstat in session context: %v", err))
-		return "", err
-	}
-	return fmt.Sprintf("--- Netstat (Session Context) ---\n%s\n--------------------------------", output), nil
-}
-
-func (c *NetstatCommand) ExecuteFromBeacon(args []string, data string) (string, error) {
-	Logger.Log(fmt.Sprintf("NetstatCommand.ExecuteFromBeacon called with data: %s", data))
-	out, err := c.Execute(args)
-	if err != nil {
-		Logger.Error(fmt.Sprintf("Error executing netstat info in beacon context: %v", err))
-		return "", err
-	}
-	Logger.Log(fmt.Sprintf("Beacon data received: %s", data))
-	return fmt.Sprintf("--- Netstat Info (Beacon Context) ---\nBeacon Data: %s\n%s\n------------------------------------", data, out), nil
-}
-
-func main() {
-	// Silence plugin logs unless in debug
-	var plog hclog.Logger
-	if config.IsDebug() {
-		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin." + pluginName, Level: hclog.Debug})
-	} else {
-		plog = hclog.New(&hclog.LoggerOptions{Name: "plugin." + pluginName, Level: hclog.Off, Output: io.Discard})
-	}
-
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.HandshakeConfig,
-		Plugins: map[string]plugin.Plugin{
-			pluginName: &shared.CommandPlugin{Impl: &NetstatCommand{}},
-		},
-		Logger: plog,
-	})
+func ExecuteFromBeacon(args []string, data string) (string, error) {
+	return NetstatString(), nil
 }

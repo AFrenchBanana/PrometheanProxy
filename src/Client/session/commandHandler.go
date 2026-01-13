@@ -1,14 +1,13 @@
 package session
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net"
 	"src/Client/generic/commands"
 	"src/Client/generic/config"
+	"src/Client/generic/interpreter_client"
 	"src/Client/generic/logger"
-	"src/Client/generic/rpc_client"
 	"src/Client/session/protocol"
 	"strings"
 )
@@ -78,11 +77,8 @@ func processCommand(conn net.Conn, command string) error {
 			logger.Error(fmt.Sprintf("Failed to unmarshal module data: %v", err))
 			response = "Error: Malformed data for 'module' command: " + err.Error()
 		} else {
-			decoded, err := base64.StdEncoding.DecodeString(moduleData.Data)
-			if err != nil {
-				logger.Error(fmt.Sprintf("Failed to decode module data: %v", err))
-				response = "Error: Failed to decode module data: " + err.Error()
-			} else if err := rpc_client.LoadDynamicCommandFromSession(moduleData.Name, decoded); err != nil {
+			// Load interpreted source code
+			if err := interpreter_client.LoadDynamicCommandSource(moduleData.Name, moduleData.Data); err != nil {
 				logger.Error(fmt.Sprintf("Failed to load module %s: %v", moduleData.Name, err))
 				response = fmt.Sprintf("Error loading module %s: %v", moduleData.Name, err)
 			} else {
@@ -90,9 +86,9 @@ func processCommand(conn net.Conn, command string) error {
 			}
 		}
 	default:
-		if rpc_client.HasCommand(cmdName) {
+		if interpreter_client.HasCommand(cmdName) {
 			logger.Log(fmt.Sprintf("Executing dynamic session command: '%s'", cmdName))
-			resp, err := rpc_client.ExecuteFromSession(cmdName, []string{cmdData})
+			resp, err := interpreter_client.ExecuteFromSession(cmdName, []string{cmdData})
 			if err != nil {
 				logger.Error(fmt.Sprintf("Error executing %s: %v", cmdName, err))
 				response = fmt.Sprintf("Error executing %s: %v", cmdName, err)

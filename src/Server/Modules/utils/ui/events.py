@@ -128,16 +128,6 @@ class EventFactory:
         )
 
     @staticmethod
-    def beacon_checkin(hostname: str, ip: str, uuid: str) -> Event:
-        """Create a beacon check-in event."""
-        uuid_short = uuid[:8] if len(uuid) > 8 else uuid
-        return Event(
-            "beacon_checkin",
-            f"[cyan]{hostname}[/] ({ip}) [{uuid_short}...]",
-            {"hostname": hostname, "ip": ip, "uuid": uuid},
-        )
-
-    @staticmethod
     def beacon_disconnect(hostname: str, ip: str) -> Event:
         """Create a beacon disconnection event."""
         return Event(
