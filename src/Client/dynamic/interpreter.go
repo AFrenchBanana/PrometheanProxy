@@ -3,10 +3,12 @@ package dynamic
 import (
 	"fmt"
 	"reflect"
+	"src/Client/generic/commands"
 	"src/Client/generic/logger"
 
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
+	"github.com/traefik/yaegi/stdlib/unsafe"
 )
 
 type Interpreter struct {
@@ -17,11 +19,17 @@ type Interpreter struct {
 }
 
 func NewInterpreter() *Interpreter {
-	i := interp.New(interp.Options{})
+	i := interp.New(interp.Options{
+		GoPath: "", // Use empty string to allow standard library access
+	})
 	i.Use(stdlib.Symbols)
+	i.Use(unsafe.Symbols) // Enable unsafe package for os/exec support
 	i.Use(map[string]map[string]reflect.Value{
 		"main/logger": {
 			"Log": reflect.ValueOf(logger.Log),
+		},
+		"commands/commands": {
+			"RunShellCommand":     reflect.ValueOf(commands.RunShellCommand),
 		},
 	})
 	return &Interpreter{i: i}

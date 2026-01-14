@@ -238,7 +238,13 @@ func HTTPConnection(address string) (float64, string, float64, error) {
 	logger.Log("Obfuscation key for 'address': " + keyAddr)
 	valName := hostname
 	valOS := config.OsIdentifier
-	valAddr := config.URL
+
+	// Get URL safely (auto-decrypts if needed)
+	valAddr, err := config.GetURL()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to get URL: %v", err))
+		valAddr = config.URL // Fallback to direct access
+	}
 
 	// Build dynamic JSON with obfuscated keys
 	payload := map[string]string{
@@ -248,10 +254,10 @@ func HTTPConnection(address string) (float64, string, float64, error) {
 	}
 	logger.Log(fmt.Sprintf("Connection payload: %+v", payload))
 
-	jsonDataBytes, err := json.Marshal(payload)
-	if err != nil {
+	jsonDataBytes, marshalErr := json.Marshal(payload)
+	if marshalErr != nil {
 		logger.Error("Failed to marshal connection request JSON: " + err.Error())
-		return -1, "", -1, fmt.Errorf("failed to marshal connection JSON: %w", err)
+		return -1, "", -1, fmt.Errorf("failed to marshal connection JSON: %w", marshalErr)
 	}
 
 	responseCode, responseBody, postErr := PostRequest(connectURL, string(jsonDataBytes), false)
