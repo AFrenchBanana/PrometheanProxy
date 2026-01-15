@@ -172,9 +172,14 @@ class SocketServerMixin:
                 # Log connection to database
                 threadDB.insert_entry(
                     "Addresses",
-                    f'"{r_address[0]}", "{r_address[1]}", "{hostname}", '
-                    + f'"{data[0]}", '
-                    + f'"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"',
+                    [
+                        client_id,
+                        r_address[0],
+                        r_address[1],
+                        hostname,
+                        os_info,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ],
                 )
             else:
                 conn.close()

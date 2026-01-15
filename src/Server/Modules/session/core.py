@@ -91,16 +91,21 @@ class Session(ControlCommands):
                 "persist_sessions", True
             )
             if persist_sessions:
+                # Convert address tuple to string format "ip:port"
+                address_str = f"{self.address[0]}:{self.address[1]}"
+                # Socket objects cannot be stored in database, use empty string
+                details_str = ""
+
                 self.database.insert_entry(
                     "sessions",
-                    [
-                        self.address,
-                        self.details,
+                    (
+                        address_str,
+                        details_str,
                         self.hostname,
                         self.operating_system,
                         self.mode,
                         str(self.loaded_modules),
-                    ],
+                    ),
                 )
             else:
                 logger.debug(

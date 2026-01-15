@@ -155,7 +155,7 @@ class InteractionHandler:
             "history": lambda: beacon_obj.history(UserID),
             "list_commands": lambda: beacon_obj.list_db_commands(UserID),
             "config": lambda: beacon_obj.beacon_configuration(UserID),
-            "switch_session": lambda: beacon_obj.switch_session(UserID),
+            "session": lambda: self._beacon_switch_session(UserID, beacon_obj),
             "close": lambda: beacon_obj.close_connection(UserID),
             "shell": lambda: self._beacon_shell_command(UserID, beacon_obj),
             "load_module": lambda: self._beacon_load_module(UserID, beacon_obj),
@@ -170,9 +170,11 @@ class InteractionHandler:
                 logger.debug(f"Error getting available modules: {e}")
 
         # Ensure loaded modules are in the available list
+        # Filter out built-in commands that shouldn't be treated as modules
+        builtin_commands = {"session", "shell", "close"}
         if hasattr(beacon_obj, "loaded_modules") and beacon_obj.loaded_modules:
             for mod in beacon_obj.loaded_modules:
-                if mod not in available_modules:
+                if mod not in available_modules and mod not in builtin_commands:
                     available_modules.append(mod)
 
         # Add commands from plugins, checking if they are also modules
@@ -292,7 +294,7 @@ class InteractionHandler:
             "history": "View command history",
             "list_commands": "List queued commands",
             "config": "Configure beacon parameters",
-            "switch_session": "Switch beacon to session mode",
+            "session": "Switch beacon to session mode",
             "close": "Close the connection",
             "shell": "Execute shell command",
             "load_module": "Load a module on the beacon",
@@ -321,6 +323,24 @@ class InteractionHandler:
         table.add_row("[dim]help[/]", "[dim]Show this help message[/]", "")
 
         ui.console.print(table)
+
+    def _beacon_switch_session(self, user_id: str, beacon_obj) -> None:
+        """
+        Queue a command to switch beacon to session mode.
+
+        Args:
+            user_id: UUID of the beacon
+            beacon_obj: Beacon object
+        """
+        ui = get_ui_manager()
+
+        try:
+            beacon_obj.switch_session(user_id)
+            ui.print_success("Session switch command queued")
+            logger.info(f"Queued session switch command for beacon {user_id}")
+        except Exception as e:
+            ui.print_error(f"Failed to queue session switch: {e}")
+            logger.error(f"Error queuing session switch for beacon {user_id}: {e}")
 
     def _beacon_shell_command(self, user_id: str, beacon_obj) -> None:
         """

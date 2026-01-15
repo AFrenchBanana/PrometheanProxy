@@ -7,13 +7,11 @@
 
 # Standard Library Imports
 import ast
-import uuid
 
 from ..beacon.beacon import add_beacon_list
 
 # Local Module Imports
 from ..global_objects import config, logger
-from ..session.session import add_connection_list
 
 
 class LoaderMixin:
@@ -95,61 +93,15 @@ class LoaderMixin:
             # ----------------------------------------------------------------
             # Load Sessions from Database
             # ----------------------------------------------------------------
-            # Schema: address, details, hostname, operating_system,
-            #         mode, modules
-            sessions = self.database.fetch_all("sessions")
-            if sessions:
-                for session in sessions:
-                    try:
-                        # Parse address data
-                        address_data = session[0]
-                        if isinstance(address_data, str):
-                            try:
-                                address = ast.literal_eval(address_data)
-                            except (ValueError, SyntaxError):
-                                address = (address_data, 0)
-                        else:
-                            address = address_data
-
-                        # Parse session details
-                        details = session[1]
-                        hostname = session[2]
-                        operating_system = session[3]
-                        mode = session[4]
-
-                        # Parse modules list
-                        modules_data = session[5]
-                        if isinstance(modules_data, str):
-                            try:
-                                modules = ast.literal_eval(modules_data)
-                            except (ValueError, SyntaxError):
-                                modules = []
-                        else:
-                            modules = (
-                                modules_data if isinstance(modules_data, list) else []
-                            )
-
-                        # Generate user ID for session
-                        user_id = str(uuid.uuid4())
-
-                        # Add session to active list
-                        add_connection_list(
-                            details,
-                            address,
-                            hostname,
-                            operating_system,
-                            user_id,
-                            mode,
-                            modules,
-                            config,
-                            from_db=True,
-                        )
-                        logger.debug(f"Loaded session from DB: {hostname}")
-                    except Exception as e:
-                        logger.error(f"Error loading session {session}: {e}")
-                        continue
-
-                logger.info(f"Loaded {len(sessions)} sessions from database")
+            # Note: Sessions require active SSL connections and cannot be
+            # restored from database. They are persisted only for historical
+            # logging purposes. Unlike beacons which can reconnect via HTTP,
+            # sessions maintain live socket connections that don't persist
+            # across server restarts.
+            logger.debug(
+                "Skipping session restoration from database "
+                "(sessions require active connections)"
+            )
 
         except Exception as e:
             logger.error(f"Failed to load implants from DB: {e}")
