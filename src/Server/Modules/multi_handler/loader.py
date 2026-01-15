@@ -33,32 +33,50 @@ class LoaderMixin:
         logger.info("Loading implants from database")
         try:
             # ----------------------------------------------------------------
-            # Load Beacons from Database
+            # Load Connections from Unified Database Table
             # ----------------------------------------------------------------
-            # Schema: uuid, IP, Hostname, OS, LastBeacon, NextBeacon,
-            #         Timer, Jitter, modules
-            beacons = self.database.fetch_all("beacons")
-            if beacons:
-                for beacon in beacons:
+            # Schema: uuid, ip, hostname, os, connection_type, last_seen,
+            #         next_beacon, timer, jitter, modules, session_address,
+            #         last_mode_switch, created_at
+            connections = self.database.fetch_all("connections")
+            if connections:
+                beacons_loaded = 0
+                for connection in connections:
                     try:
-                        # Parse beacon data from database row
-                        uuid_val = beacon[0]
-                        ip = beacon[1]
-                        hostname = beacon[2]
-                        os_val = beacon[3]
+                        # Parse connection data from database row
+                        uuid_val = connection[0]
+                        ip = connection[1]
+                        hostname = connection[2]
+                        os_val = connection[3]
+                        connection_type = connection[4]
+                        last_seen = connection[5]
+                        next_beacon = connection[6]
+                        timer = connection[7]
+                        jitter = connection[8]
+                        modules_data = connection[9]
+                        # session_address = connection[10]  # Not used for beacons
+                        # last_mode_switch = connection[11]  # Future use
+                        # created_at = connection[12]  # Future use
 
-                        # Handle last_beacon time conversion
+                        # Only load beacons - sessions require active connections
+                        if connection_type != "beacon":
+                            logger.debug(
+                                f"Skipping {connection_type} {uuid_val} "
+                                "(sessions require active connections)"
+                            )
+                            continue
+
+                        # Handle last_seen time conversion
                         try:
-                            last_beacon = beacon[4]
+                            last_beacon = float(last_seen) if last_seen else 0.0
                         except (ValueError, TypeError):
-                            last_beacon = float(beacon[4]) if beacon[4] else 0.0
+                            last_beacon = 0.0
 
                         # Parse timing information
-                        timer = float(beacon[6]) if beacon[6] else 0.0
-                        jitter = float(beacon[7]) if beacon[7] else 0.0
+                        timer_val = float(timer) if timer else 0.0
+                        jitter_val = float(jitter) if jitter else 0.0
 
                         # Parse modules list
-                        modules_data = beacon[8]
                         if isinstance(modules_data, str):
                             try:
                                 modules = ast.literal_eval(modules_data)
@@ -76,32 +94,20 @@ class LoaderMixin:
                             hostname,
                             os_val,
                             last_beacon,
-                            timer,
-                            jitter,
+                            timer_val,
+                            jitter_val,
                             config,
                             self.database,
                             modules,
                             from_db=True,
                         )
                         logger.debug(f"Loaded beacon from DB: {uuid_val}")
+                        beacons_loaded += 1
                     except Exception as e:
-                        logger.error(f"Error loading beacon {beacon}: {e}")
+                        logger.error(f"Error loading connection {connection}: {e}")
                         continue
 
-                logger.info(f"Loaded {len(beacons)} beacons from database")
-
-            # ----------------------------------------------------------------
-            # Load Sessions from Database
-            # ----------------------------------------------------------------
-            # Note: Sessions require active SSL connections and cannot be
-            # restored from database. They are persisted only for historical
-            # logging purposes. Unlike beacons which can reconnect via HTTP,
-            # sessions maintain live socket connections that don't persist
-            # across server restarts.
-            logger.debug(
-                "Skipping session restoration from database "
-                "(sessions require active connections)"
-            )
+                logger.info(f"Loaded {beacons_loaded} beacons from database")
 
         except Exception as e:
             logger.error(f"Failed to load implants from DB: {e}")

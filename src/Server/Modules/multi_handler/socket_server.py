@@ -161,6 +161,28 @@ class SocketServerMixin:
                     send_data(conn, str(config["packetsniffer"]["port"]))
                     logger.debug("Sent packet sniffer port to client")
 
+                # Check if this is a beacon switching to session mode
+                from ..beacon.beacon import remove_beacon_list
+                from ..global_objects import beacon_list
+
+                if client_id and client_id in beacon_list:
+                    logger.info(f"Beacon {client_id} switching to session mode")
+                    # Update database to track mode switch
+                    import time
+
+                    threadDB.update_entry(
+                        "connections",
+                        "connection_type=?, last_mode_switch=?, session_address=?",
+                        ("session", time.time(), f"{r_address[0]}:{r_address[1]}"),
+                        "uuid=?",
+                        (client_id,),
+                    )
+                    # Remove from beacon list
+                    remove_beacon_list(client_id)
+                    logger.info(
+                        f"Removed {client_id} from beacon list, now in session mode"
+                    )
+
                 # Add connection to sessions list
                 add_connection_list(
                     conn, r_address, hostname, os_info, client_id, "session", [], config

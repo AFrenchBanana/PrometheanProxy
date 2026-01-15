@@ -42,9 +42,24 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
         return
 
     # Update beacon timestamps and notify UI
+    current_time = time.time()
     beacon.last_beacon = time.asctime()
-    beacon.next_beacon = time.asctime(time.localtime(time.time() + beacon.timer))
+    beacon.next_beacon = time.asctime(time.localtime(current_time + beacon.timer))
     logger.info(f"Beacon {beacon_id} updated. Next check-in: {beacon.next_beacon}")
+
+    # Update database with last_seen timestamp
+    if beacon.database:
+        try:
+            beacon.database.update_entry(
+                "connections",
+                "last_seen=?, next_beacon=?",
+                (current_time, current_time + beacon.timer),
+                "uuid=?",
+                (beacon_id,),
+            )
+            logger.debug(f"Updated last_seen for beacon {beacon_id} in database")
+        except Exception as e:
+            logger.error(f"Failed to update beacon last_seen in database: {e}")
 
     # Log beacon check-in to live events feed
     update_connection_stats(len(sessions_list), len(beacon_list))

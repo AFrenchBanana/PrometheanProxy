@@ -148,17 +148,21 @@ class Beacon(HistoryMixin, ModulesMixin):
             )
             if persist_beacons:
                 self.database.insert_entry(
-                    "beacons",
+                    "connections",
                     [
                         self.uuid,
                         self.address,
                         self.hostname,
                         self.operating_system,
-                        self.last_beacon,
-                        self.next_beacon,
+                        "beacon",  # connection_type
+                        lb_float,  # last_seen
+                        lb_float + timer,  # next_beacon
                         self.timer,
                         self.jitter,
                         str(self.loaded_modules),
+                        None,  # session_address (null for beacons)
+                        None,  # last_mode_switch (null on creation)
+                        time.time(),  # created_at
                     ],
                 )
             else:

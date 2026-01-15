@@ -53,7 +53,15 @@ def add_connection_list(
 
     logger.info(f"Adding connection {r_address[0]} ({host}) to sessions list.")
     new_session = Session(
-        r_address, conn, host, operating_system, mode, modules, config, from_db=from_db
+        r_address,
+        conn,
+        host,
+        operating_system,
+        mode,
+        modules,
+        config,
+        uuid=user_id,
+        from_db=from_db,
     )
     sessions_list[user_id] = new_session
 

@@ -246,6 +246,12 @@ func HTTPConnection(address string) (float64, string, float64, error) {
 		valAddr = config.URL // Fallback to direct access
 	}
 
+	// If valAddr is still empty, use default
+	if valAddr == "" {
+		valAddr = "http://localhost:" + config.URLPort
+		logger.Warn(fmt.Sprintf("URL was empty, using default: %s", valAddr))
+	}
+
 	// Build dynamic JSON with obfuscated keys
 	payload := map[string]string{
 		keyName: valName,

@@ -55,6 +55,7 @@ class Session(ControlCommands):
         mode: str,
         modules: list,
         config: dict,
+        uuid: str = None,
         from_db: bool = False,
     ):
         """
@@ -68,6 +69,7 @@ class Session(ControlCommands):
             mode: Mode of the session (e.g., interactive, beacon)
             modules: List of loaded modules for this session
             config: Configuration dictionary for database and settings
+            uuid: Unique identifier for the session
             from_db: Whether the session is being loaded from the database
         """
         self.address = address
@@ -77,6 +79,7 @@ class Session(ControlCommands):
         self.mode = mode
         self.loaded_modules = modules
         self.config = config
+        self.uuid = uuid
         self.loaded_this_instant = False
 
         if not from_db:
@@ -91,20 +94,27 @@ class Session(ControlCommands):
                 "persist_sessions", True
             )
             if persist_sessions:
+                import time
+
                 # Convert address tuple to string format "ip:port"
                 address_str = f"{self.address[0]}:{self.address[1]}"
-                # Socket objects cannot be stored in database, use empty string
-                details_str = ""
 
                 self.database.insert_entry(
-                    "sessions",
+                    "connections",
                     (
-                        address_str,
-                        details_str,
+                        self.uuid,
+                        self.address[0],
                         self.hostname,
                         self.operating_system,
-                        self.mode,
+                        "session",  # connection_type
+                        time.time(),  # last_seen
+                        None,  # next_beacon (null for sessions)
+                        None,  # timer (null for sessions)
+                        None,  # jitter (null for sessions)
                         str(self.loaded_modules),
+                        address_str,  # session_address
+                        None,  # last_mode_switch (null on creation)
+                        time.time(),  # created_at
                     ),
                 )
             else:

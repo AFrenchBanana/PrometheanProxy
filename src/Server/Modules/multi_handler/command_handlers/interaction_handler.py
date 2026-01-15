@@ -59,6 +59,7 @@ class InteractionHandler:
         command_handlers = {
             "history": lambda: session_obj.history(r_address),
             "close": lambda: self._close_session(session_obj, session_id),
+            "beacon": lambda: self._session_switch_beacon(session_obj, conn, r_address),
         }
 
         # Add dynamic session commands from plugins
@@ -295,6 +296,7 @@ class InteractionHandler:
             "list_commands": "List queued commands",
             "config": "Configure beacon parameters",
             "session": "Switch beacon to session mode",
+            "beacon": "Switch session to beacon mode",
             "close": "Close the connection",
             "shell": "Execute shell command",
             "load_module": "Load a module on the beacon",
@@ -341,6 +343,29 @@ class InteractionHandler:
         except Exception as e:
             ui.print_error(f"Failed to queue session switch: {e}")
             logger.error(f"Error queuing session switch for beacon {user_id}: {e}")
+
+    def _session_switch_beacon(
+        self, session_obj, conn: ssl.SSLSocket, r_address: Tuple[str, int]
+    ) -> None:
+        """
+        Send command to switch session to beacon mode.
+
+        Args:
+            session_obj: Session object
+            conn: SSL socket connection to the session
+            r_address: Remote address tuple (ip, port)
+        """
+        ui = get_ui_manager()
+
+        try:
+            session_obj.change_beacon(conn, r_address, session_obj.uuid)
+            ui.print_success("Beacon mode switch command sent")
+            logger.info(
+                f"Sent beacon switch command to session {r_address[0]}:{r_address[1]}"
+            )
+        except Exception as e:
+            ui.print_error(f"Failed to send beacon switch command: {e}")
+            logger.error(f"Error sending beacon switch for session {r_address}: {e}")
 
     def _beacon_shell_command(self, user_id: str, beacon_obj) -> None:
         """

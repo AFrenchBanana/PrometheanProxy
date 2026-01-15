@@ -278,6 +278,12 @@ func GenerateConnectionURL() string {
 		baseURL = config.URL // Fallback to direct access
 	}
 
+	// If baseURL is still empty, use default
+	if baseURL == "" {
+		baseURL = "http://localhost:" + config.URLPort
+		logger.Warn(fmt.Sprintf("URL was empty, using default: %s", baseURL))
+	}
+
 	url := fmt.Sprintf("%s/%s/%s/%s/api/v%d?user=%s", baseURL, part1, part2, adParam, version, uuid)
 	logger.Log("generateConnectionURL: Generated Connection URL: " + url)
 	return url
@@ -296,6 +302,12 @@ func GenerateReconnectURL() string {
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to get URL: %v", err))
 		baseURL = config.URL // Fallback to direct access
+	}
+
+	// If baseURL is still empty, use default
+	if baseURL == "" {
+		baseURL = "http://localhost:" + config.URLPort
+		logger.Warn(fmt.Sprintf("URL was empty, using default: %s", baseURL))
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/getLatest?token=%s", baseURL, part1, adParam, uuid)

