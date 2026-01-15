@@ -81,7 +81,6 @@ def add_beacon_list(
         timer: Check-in interval in seconds
         jitter: Jitter percentage for randomizing timing
         config: Configuration dictionary
-        database: Database connection instance
         modules: List of loaded modules (default: ["shell", "close", "session"])
         from_db: Whether beacon is being loaded from database
     """
@@ -109,9 +108,8 @@ def add_beacon_list(
         last_beacon,
         timer,
         jitter,
-        modules,
         config,
-        database,
+        modules=modules,
         from_db=from_db,
     )
     beacon_list[beacon_uuid] = new_beacon
@@ -146,7 +144,7 @@ def add_beacon_command_list(
         beacon_uuid: Unique identifier for the beacon
         cmd_uuid: Unique identifier for the command (auto-generated if None)
         command: Command string to execute
-        database: Database connection instance
+        data: Optional data payload for the command
         command_data: Additional data payload for the command (optional)
     """
     if command_data is None:

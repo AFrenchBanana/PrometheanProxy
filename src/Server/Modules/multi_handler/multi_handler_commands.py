@@ -54,7 +54,10 @@ class MultiHandlerCommands(
         logger.info("Initializing MultiHandlerCommands")
         self.config = config
         self.prompt_session = prompt_session
-        self.database = DatabaseClass(config, "command_database")
+        # Use shared database instance to avoid multiple initializations
+        from Modules import global_objects
+
+        self.database = global_objects.get_database("command_database")
         colorama.init(autoreset=True)
 
         self._plugins_loaded = False

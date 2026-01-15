@@ -1,9 +1,15 @@
-import sqlite3
 import os
+import sqlite3
+
 from Modules.global_objects import logger
 
 
 class DatabaseClass:
+    """Database class with singleton pattern per database type."""
+
+    _instances = {}  # Store instances by database name
+    _initialized = {}  # Track which instances are initialized
+
     def _safe_identifier(self, identifier, valid_list):
         """Ensure identifier (table/column) is valid and whitelisted."""
         if identifier in valid_list:
@@ -12,12 +18,30 @@ class DatabaseClass:
 
     """class that handles the database within the project"""
 
+    def __new__(cls, config, database):
+        """Singleton pattern: return existing instance if available."""
+        if database not in cls._instances:
+            instance = super(DatabaseClass, cls).__new__(cls)
+            cls._instances[database] = instance
+            cls._initialized[database] = False
+        return cls._instances[database]
+
     def __init__(self, config, database) -> None:
+        """Initialize database connection (only once per instance)."""
+        # Skip initialization if already done
+        if self._initialized.get(
+            self.database if hasattr(self, "database") else database, False
+        ):
+            return
+
         logger.debug("DatabaseClass: Initializing database connection")
         self.config = config
         self.database = database
         self.create_db_connection()
         self.initalise_database()
+
+        # Mark as initialized
+        DatabaseClass._initialized[database] = True
 
     def create_db_connection(self) -> None:
         """
@@ -31,11 +55,11 @@ class DatabaseClass:
         try:
             dbPath = os.path.expanduser(f"{self.config[self.database]['file']}")
             if not os.path.exists(dbPath):
-                logger.debug(f"DatabaseClass: Database file {dbPath} does not exist, creating it")
+                logger.debug(
+                    f"DatabaseClass: Database file {dbPath} does not exist, creating it"
+                )
                 os.makedirs(os.path.dirname(dbPath), exist_ok=True)
-            self.dbconnection = sqlite3.connect(
-                dbPath,
-                check_same_thread=False)
+            self.dbconnection = sqlite3.connect(dbPath, check_same_thread=False)
             self.cursor = self.dbconnection.cursor()
             logger.debug("DatabaseClass: Database connection established")
         except sqlite3.Error as err:
@@ -54,24 +78,34 @@ class DatabaseClass:
         Returns:
             None
         """
-    
+        # Skip if already initialized
+        if DatabaseClass._initialized.get(self.database, False):
+            return
+
         logger.debug("DatabaseClass: Initializing database tables")
         if not self.cursor:
             logger.error("DatabaseClass: Database cursor is not available")
             print("Database cursor is not available.")
             return
 
-        for table in self.config[self.database]['tables']:  # load tables from the specific database section
+        for table in self.config[self.database][
+            "tables"
+        ]:  # load tables from the specific database section
             try:
                 table_query = (
-                    "CREATE TABLE IF NOT EXISTS " +
-                    f"{table['name']}({table['schema']})")
+                    "CREATE TABLE IF NOT EXISTS "
+                    + f"{table['name']}({table['schema']})"
+                )
                 self.cursor.execute(table_query)
                 self.dbconnection.commit()  # commits the table creation
-                logger.debug(f"DatabaseClass: Table {table['name']} created successfully")
+                logger.debug(
+                    f"DatabaseClass: Table {table['name']} created successfully"
+                )
             except sqlite3.Error as err:
                 print(f"Error creating table {table['name']}: {err}")
-                logger.error(f"DatabaseClass: Error creating table {table['name']}: {err}")
+                logger.error(
+                    f"DatabaseClass: Error creating table {table['name']}: {err}"
+                )
                 continue
         return
 
@@ -90,7 +124,7 @@ class DatabaseClass:
             return
 
         # Validate table name
-        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        valid_tables = [t["name"] for t in self.config[self.database]["tables"]]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
@@ -98,21 +132,32 @@ class DatabaseClass:
             print(err)
             return
 
-        if self.config[self.database]['addData']:
+        if self.config[self.database]["addData"]:
             try:
-                logger.debug(f"DatabaseClass: Inserting into table {safe_table} values {values}")
-                placeholders = ','.join(['?'] * len(values))
+                logger.debug(
+                    f"DatabaseClass: Inserting into table {safe_table} values {values}"
+                )
+                placeholders = ",".join(["?"] * len(values))
                 table_query = f"INSERT INTO {safe_table} VALUES ({placeholders})"
                 self.cursor.execute(table_query, values)
                 logger.debug(f"DatabaseClass: Query {table_query} with values {values}")
                 self.dbconnection.commit()  # commits the data
             except sqlite3.Error as err:
                 if not self.config["server"]["quiet_mode"]:
-                    logger.error(f"DatabaseClass: Error inserting into table {safe_table}: {err}")
+                    logger.error(
+                        f"DatabaseClass: Error inserting into table {safe_table}: {err}"
+                    )
                     print(f"Error inserting into table {safe_table}: {err}")
         return
 
-    def update_entry(self, table: str, set_clause: str, set_values: tuple, where_clause: str, where_values: tuple) -> None:
+    def update_entry(
+        self,
+        table: str,
+        set_clause: str,
+        set_values: tuple,
+        where_clause: str,
+        where_values: tuple,
+    ) -> None:
         """
         Updates entries in the specified table.
         Args:
@@ -129,7 +174,7 @@ class DatabaseClass:
             print("Database cursor is not available.")
             return
 
-        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        valid_tables = [t["name"] for t in self.config[self.database]["tables"]]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
@@ -137,23 +182,26 @@ class DatabaseClass:
             print(err)
             return
 
-        if self.config[self.database]['addData']:
+        if self.config[self.database]["addData"]:
             try:
                 query = f"UPDATE {safe_table} SET {set_clause} WHERE {where_clause}"
                 combined_values = set_values + where_values
-                logger.debug(f"DatabaseClass: Executing update: {query} with values {combined_values}")
+                logger.debug(
+                    f"DatabaseClass: Executing update: {query} with values {combined_values}"
+                )
                 self.cursor.execute(query, combined_values)
                 self.dbconnection.commit()
             except sqlite3.Error as err:
                 if not self.config["server"]["quiet_mode"]:
-                    logger.error(f"DatabaseClass: Error updating table {safe_table}: {err}")
+                    logger.error(
+                        f"DatabaseClass: Error updating table {safe_table}: {err}"
+                    )
                     print(f"Error updating table {safe_table}: {err}")
         return
 
-    def search_query(self, selectval: str, table: str,
-                     column: str, value: str) -> str:
+    def search_query(self, selectval: str, table: str, column: str, value: str) -> str:
         """Search query for database searching using parameterized queries and identifier validation.
-        
+
         Populates into a query as follows:
         SELECT {selectval} FROM {table} WHERE {column} = {value}
 
@@ -166,22 +214,31 @@ class DatabaseClass:
         Returns:
             str: The first matched result or None if not found
         """
-        logger.debug(f"DatabaseClass: Searching in table {table} for {column} = {value}")
+        logger.debug(
+            f"DatabaseClass: Searching in table {table} for {column} = {value}"
+        )
         if not self.cursor:
             logger.error("DatabaseClass: Database cursor is not available")
             print("Database cursor is not available.")
             return None
 
         # Validate table and column names
-        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        valid_tables = [t["name"] for t in self.config[self.database]["tables"]]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
             # Find the table schema and get valid columns
-            table_schema = next((t['schema'] for t in self.config[self.database]['tables'] if t['name'] == safe_table), None)
+            table_schema = next(
+                (
+                    t["schema"]
+                    for t in self.config[self.database]["tables"]
+                    if t["name"] == safe_table
+                ),
+                None,
+            )
             if not table_schema:
                 raise ValueError(f"No schema found for table {safe_table}")
             # Extract column names from schema string (format: 'id INTEGER PRIMARY KEY, name TEXT, ...')
-            valid_columns = [col.split()[0] for col in table_schema.split(',')]
+            valid_columns = [col.split()[0] for col in table_schema.split(",")]
             safe_column = self._safe_identifier(column, valid_columns)
         except ValueError as err:
             logger.error(f"DatabaseClass: {err}")
@@ -212,14 +269,14 @@ class DatabaseClass:
             print("Database cursor is not available.")
             return []
 
-        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        valid_tables = [t["name"] for t in self.config[self.database]["tables"]]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
             logger.error(f"DatabaseClass: {err}")
             print(err)
             return []
-        
+
         try:
             query = f"SELECT {selectval} FROM {safe_table}"
             logger.debug(f"DatabaseClass: Executing query: {query}")
@@ -243,14 +300,14 @@ class DatabaseClass:
             print("Database cursor is not available.")
             return False
 
-        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        valid_tables = [t["name"] for t in self.config[self.database]["tables"]]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
             logger.error(f"DatabaseClass: {err}")
             print(err)
             return False
-        
+
         try:
             query = f"DELETE FROM {safe_table}"
             logger.debug(f"DatabaseClass: Executing query: {query}")
@@ -276,14 +333,14 @@ class DatabaseClass:
             print("Database cursor is not available.")
             return False
 
-        valid_tables = [t['name'] for t in self.config[self.database]['tables']]
+        valid_tables = [t["name"] for t in self.config[self.database]["tables"]]
         try:
             safe_table = self._safe_identifier(table, valid_tables)
         except ValueError as err:
             logger.error(f"DatabaseClass: {err}")
             print(err)
             return False
-        
+
         try:
             query = f"DROP TABLE IF EXISTS {safe_table}"
             logger.debug(f"DatabaseClass: Executing query: {query}")
@@ -308,12 +365,12 @@ class DatabaseClass:
             return False
 
         success = True
-        for table in self.config[self.database]['tables']:
-            table_name = table['name']
+        for table in self.config[self.database]["tables"]:
+            table_name = table["name"]
             if not self.clear_table(table_name):
                 success = False
                 logger.warning(f"DatabaseClass: Failed to clear table {table_name}")
-        
+
         if success:
             logger.info("DatabaseClass: All tables cleared successfully")
         return success
@@ -324,4 +381,30 @@ class DatabaseClass:
         Returns:
             list: List of table names.
         """
-        return [t['name'] for t in self.config[self.database]['tables']]
+        return [t["name"] for t in self.config[self.database]["tables"]]
+
+    @classmethod
+    def get_instance(cls, config, database):
+        """
+        Get or create a database instance (singleton pattern).
+
+        Args:
+            config: Configuration dictionary
+            database: Database name (e.g., "command_database", "user_database")
+
+        Returns:
+            DatabaseClass: Singleton instance for the specified database
+        """
+        return cls(config, database)
+
+    @classmethod
+    def reset_instances(cls):
+        """Reset all singleton instances (useful for testing)."""
+        for instance in cls._instances.values():
+            if hasattr(instance, "dbconnection") and instance.dbconnection:
+                try:
+                    instance.dbconnection.close()
+                except Exception as e:
+                    logger.debug(f"Error closing database connection: {e}")
+        cls._instances.clear()
+        cls._initialized.clear()

@@ -168,7 +168,10 @@ class MP_Users:
     def __init__(self, config):
         self.users = {}
         self.config = config
-        self.database = DatabaseClass(config, "user_database")
+        # Use shared database instance to avoid multiple initializations
+        from Modules import global_objects
+
+        self.database = global_objects.get_database("user_database")
         self.ui = get_ui_manager()
         self.prompt_session = PromptSession()
         self.load_users()

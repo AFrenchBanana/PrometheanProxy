@@ -30,6 +30,7 @@ sessions_list: Dict[str, "Session"] = {}
 multiplayer_connections = {}
 obfuscation_map: Dict[str, Any] = {}
 command_database: "DatabaseClass" = None
+user_database: "DatabaseClass" = None
 
 
 if getattr(sys, "frozen", False):
@@ -118,3 +119,35 @@ def tab_completion(text: str, state: int, variables: list) -> str:
     """
     options = [var for var in variables if var.startswith(text)]
     return options[state] if state < len(options) else None
+
+
+def get_database(database_name: str) -> "DatabaseClass":
+    """
+    Get or create a shared database instance using singleton pattern.
+
+    This function ensures only one database connection is created per database type,
+    improving efficiency by avoiding multiple initializations.
+
+    Args:
+        database_name: Name of the database ("command_database" or "user_database")
+
+    Returns:
+        DatabaseClass: Shared database instance
+
+    Raises:
+        ValueError: If database_name is not recognized
+    """
+    global command_database, user_database
+
+    from ServerDatabase.database import DatabaseClass
+
+    if database_name == "command_database":
+        if command_database is None:
+            command_database = DatabaseClass.get_instance(config, "command_database")
+        return command_database
+    elif database_name == "user_database":
+        if user_database is None:
+            user_database = DatabaseClass.get_instance(config, "user_database")
+        return user_database
+    else:
+        raise ValueError(f"Unknown database name: {database_name}")

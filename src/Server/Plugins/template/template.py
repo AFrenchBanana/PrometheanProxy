@@ -3,14 +3,14 @@
 Imports are written to work both when executing from the project root
 as well as when running the server from inside src/Server.
 """
-from Modules.beacon.beacon import add_beacon_command_list
-from Modules.global_objects import logger, config, obfuscation_map
-from ServerDatabase.database import DatabaseClass
-from Modules.session.transfer import send_data, receive_data
 
-from datetime import datetime
 import json
+from datetime import datetime
 from pathlib import Path
+
+from Modules.beacon.beacon import add_beacon_command_list
+from Modules.global_objects import config, get_database, logger, obfuscation_map
+from Modules.session.transfer import receive_data, send_data
 
 
 class Template:
@@ -28,17 +28,19 @@ class Template:
             )
             obfuscation = {}
 
-      
         nested = obfuscation.get("netstat") or {}
-        self.obf_name = nested.get("obfuscation_name") if isinstance(nested, dict) else None
-      
+        self.obf_name = (
+            nested.get("obfuscation_name") if isinstance(nested, dict) else None
+        )
+
         if obfuscation:
             try:
                 obfuscation_map.update(obfuscation)
             except Exception:
                 pass
 
-        self.database = DatabaseClass(config, "command_database")
+        # Use shared database instance to avoid multiple initializations
+        self.database = get_database("command_database")
 
     def beacon(self, beacon: dict) -> None:
         """Queue system info command for a beacon by userID."""
@@ -50,10 +52,10 @@ class Template:
     def session(self, session: dict) -> None:
         """Request template from a live session and store the result."""
         logger.info(f"Requesting template from {session['userID']}")
-        send_data(session['conn'], self.command)
-        data = receive_data(session['conn'])
+        send_data(session["conn"], self.command)
+        data = receive_data(session["conn"])
         self.database.insert_entry(
             "Template",
-            f'"{session["userID"]}", "{data.replace("\"", "\"\"")}", "{datetime.now()}"',
+            f'"{session["userID"]}", "{data.replace('"', '""')}", "{datetime.now()}"',
         )
         print(data)

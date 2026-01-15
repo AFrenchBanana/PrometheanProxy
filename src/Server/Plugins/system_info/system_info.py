@@ -9,9 +9,8 @@ from datetime import datetime
 from pathlib import Path
 
 from Modules.beacon.beacon import add_beacon_command_list
-from Modules.global_objects import config, logger, obfuscation_map
+from Modules.global_objects import config, get_database, logger, obfuscation_map
 from Modules.session.transfer import receive_data, send_data
-from ServerDatabase.database import DatabaseClass
 
 
 class SystemInfo:
@@ -66,7 +65,8 @@ class SystemInfo:
             except Exception:
                 pass
 
-        self.database = DatabaseClass(config, "command_database")
+        # Use shared database instance to avoid multiple initializations
+        self.database = get_database("command_database")
 
     def beacon(self, beacon: dict) -> None:
         """Queue system info command for a beacon by userID."""

@@ -122,7 +122,10 @@ class SocketServerMixin:
         """
         global SSL_Socket
 
-        threadDB = DatabaseClass(config, "command_database")
+        # Use shared database instance to avoid multiple initializations
+        from Modules import global_objects
+
+        threadDB = global_objects.get_database("command_database")
         logger.info("Accepting connections on socket")
 
         while True:

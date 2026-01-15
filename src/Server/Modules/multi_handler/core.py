@@ -84,8 +84,8 @@ class MultiHandler(SecurityMixin, SocketServerMixin, LoaderMixin):
         # Initialize core components
         self.multihandlercommands = MultiHandlerCommands(config, self.prompt_session)
         self.Authentication = Authentication()
-        self.database = DatabaseClass(config, "command_database")
-        global_objects.command_database = self.database
+        # Use shared database instance to avoid multiple initializations
+        self.database = global_objects.get_database("command_database")
 
         # Set up security certificates and keys
         self.create_certificate()

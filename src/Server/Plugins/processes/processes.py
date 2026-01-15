@@ -4,14 +4,13 @@ Imports are written to work both when executing from the project root
 as well as when running the server from inside src/Server.
 """
 
-from Modules.beacon.beacon import add_beacon_command_list
-from Modules.global_objects import logger, config, obfuscation_map
-from ServerDatabase.database import DatabaseClass
-from Modules.session.transfer import send_data, receive_data
-
-from datetime import datetime
 import json
+from datetime import datetime
 from pathlib import Path
+
+from Modules.beacon.beacon import add_beacon_command_list
+from Modules.global_objects import config, get_database, logger, obfuscation_map
+from Modules.session.transfer import receive_data, send_data
 
 
 class Processes:
@@ -33,7 +32,8 @@ class Processes:
             except Exception:
                 pass
 
-        self.database = DatabaseClass(config, "command_database")
+        # Use shared database instance to avoid multiple initializations
+        self.database = get_database("command_database")
 
     def beacon(self, beacon: dict) -> None:
         """Queue processes command for a beacon by userID."""

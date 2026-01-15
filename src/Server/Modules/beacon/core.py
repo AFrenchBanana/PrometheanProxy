@@ -9,12 +9,14 @@
 import ast
 import time
 import traceback
+from typing import TYPE_CHECKING, Union
 
 # Third-Party Imports
 import colorama
 
 # Local Module Imports
-from ServerDatabase.database import DatabaseClass
+if TYPE_CHECKING:
+    from ServerDatabase.database import DatabaseClass
 
 from ..global_objects import logger
 from ..utils.file_manager import FileManagerClass
@@ -57,19 +59,19 @@ class Beacon(HistoryMixin, ModulesMixin):
         address: str,
         hostname: str,
         operating_system: str,
-        last_beacon: float,
+        last_beacon: Union[str, float, int],
         timer: float,
         jitter: float,
-        modules: list,
         config: dict,
-        database: DatabaseClass,
+        database: "DatabaseClass" = None,
+        modules: Union[str, list, None] = None,
         from_db: bool = False,
     ):
         """
         Initialize a new Beacon instance.
 
         Args:
-            uuid: Unique identifier for this beacon
+            uuid: Unique identifier for the beacon
             address: IP address of the beacon
             hostname: Hostname of the beacon
             operating_system: Operating system of the beacon
@@ -78,12 +80,18 @@ class Beacon(HistoryMixin, ModulesMixin):
             jitter: Jitter percentage for randomizing timing
             modules: List of loaded modules
             config: Configuration dictionary
-            database: Database connection instance
+            database: Database connection instance (optional, uses shared if None)
             from_db: Whether beacon is being loaded from database
         """
         logger.debug(f"Creating beacon with UUID: {uuid}")
         self.uuid = uuid
-        self.database = database
+        # Use shared database instance if none provided
+        if database is None:
+            from Modules import global_objects
+
+            self.database = global_objects.get_database("command_database")
+        else:
+            self.database = database
         self.file_manager = FileManagerClass(config, uuid)
         self.address = address
         self.hostname = hostname

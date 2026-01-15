@@ -85,7 +85,10 @@ class Session(ControlCommands):
         if not from_db:
             self.loaded_this_instant = True
 
-        self.database = DatabaseClass(config, "command_database")
+        # Use shared database instance to avoid multiple initializations
+        from Modules import global_objects
+
+        self.database = global_objects.get_database("command_database")
         colorama.init(autoreset=True)
 
         if not from_db:

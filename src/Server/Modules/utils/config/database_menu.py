@@ -31,12 +31,13 @@ def database_management_menu() -> None:
     ui = get_ui_manager()
     prompt_session = get_prompt_session()
 
+    # Use shared database instance to avoid multiple initializations
+    from Modules import global_objects
     from ServerDatabase.database import DatabaseClass
 
     from ...global_objects import command_database
 
-    # Initialize user database
-    user_database = DatabaseClass(loadedConfig, "user_database")
+    user_database = global_objects.get_database("user_database")
 
     menu_options = {
         "1": "Show Database Config",
