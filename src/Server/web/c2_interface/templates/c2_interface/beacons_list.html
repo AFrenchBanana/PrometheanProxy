@@ -1,0 +1,348 @@
+{% extends "c2_interface/base.html" %}
+
+{% block content %}
+<div class="space-y-6" x-data="beaconsData()">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Total Beacons</p>
+                    <p class="text-3xl font-bold text-white mt-1" x-text="beacons.length">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-satellite-dish text-green-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Active (5m)</p>
+                    <p class="text-3xl font-bold text-green-500 mt-1" x-text="activeBeacons">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Idle (>5m)</p>
+                    <p class="text-3xl font-bold text-yellow-500 mt-1" x-text="idleBeacons">0</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Lost (>1h)</p>
+                    <p class="text-3xl font-bold text-red-500 mt-1" x-text="lostBeacons">0</p>
+                </div>
+                <div class="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 p-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex-1">
+                <input
+                    type="text"
+                    x-model="searchQuery"
+                    placeholder="Search by UUID, hostname, IP address, or OS..."
+                    class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                >
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <select x-model="filterOS" class="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500">
+                    <option value="">All OS</option>
+                    <option value="Windows">Windows</option>
+                    <option value="Linux">Linux</option>
+                    <option value="MacOS">MacOS</option>
+                    <option value="Android">Android</option>
+                </select>
+
+                <select x-model="filterStatus" class="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="idle">Idle</option>
+                    <option value="lost">Lost</option>
+                </select>
+
+                <button @click="refreshBeacons" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Beacons Table -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-900 border-b border-gray-700">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">UUID</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Hostname</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">IP Address</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">OS</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Seen</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Timer/Jitter</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    <template x-if="loading">
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+                                <p class="text-gray-400 mt-4">Loading beacons...</p>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <template x-if="!loading && filteredBeacons.length === 0">
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <i class="fas fa-satellite-dish text-5xl text-gray-600"></i>
+                                <p class="text-gray-400 mt-4 text-lg">No beacons found</p>
+                                <p class="text-gray-500 text-sm mt-2">Beacons will appear here when they check in</p>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <template x-for="beacon in filteredBeacons" :key="beacon.uuid">
+                        <tr class="hover:bg-gray-700/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <span
+                                        class="w-3 h-3 rounded-full"
+                                        :class="{
+                                            'status-online': getBeaconStatus(beacon) === 'active',
+                                            'status-pending': getBeaconStatus(beacon) === 'idle',
+                                            'status-offline': getBeaconStatus(beacon) === 'lost'
+                                        }"
+                                    ></span>
+                                    <span
+                                        class="ml-2 text-xs font-medium"
+                                        :class="{
+                                            'text-green-400': getBeaconStatus(beacon) === 'active',
+                                            'text-yellow-400': getBeaconStatus(beacon) === 'idle',
+                                            'text-red-400': getBeaconStatus(beacon) === 'lost'
+                                        }"
+                                        x-text="getBeaconStatus(beacon).toUpperCase()"
+                                    ></span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <code class="text-xs text-blue-400 font-mono" x-text="beacon.uuid.substring(0, 8) + '...'"></code>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-white font-medium" x-text="beacon.hostname || 'Unknown'"></span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <code class="text-xs text-gray-300 font-mono" x-text="beacon.address"></code>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <i
+                                        class="mr-2"
+                                        :class="{
+                                            'fab fa-windows text-blue-400': beacon.operating_system?.includes('Windows'),
+                                            'fab fa-linux text-yellow-400': beacon.operating_system?.includes('Linux'),
+                                            'fab fa-apple text-gray-400': beacon.operating_system?.includes('Mac'),
+                                            'fab fa-android text-green-400': beacon.operating_system?.includes('Android'),
+                                            'fas fa-question text-gray-500': !beacon.operating_system
+                                        }"
+                                    ></i>
+                                    <span class="text-sm text-gray-300" x-text="beacon.operating_system || 'Unknown'"></span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm">
+                                    <div class="text-gray-300" x-text="formatTime(beacon.last_beacon)"></div>
+                                    <div class="text-gray-500 text-xs" x-text="formatRelativeTime(beacon.last_beacon)"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-300">
+                                    <span x-text="beacon.timer"></span>s / <span x-text="beacon.jitter"></span>%
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a
+                                        :href="`/beacons/${beacon.uuid}/`"
+                                        class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                                    >
+                                        <i class="fas fa-terminal mr-1"></i>
+                                        Interact
+                                    </a>
+                                    <button
+                                        @click="deleteBeacon(beacon.uuid)"
+                                        class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function beaconsData() {
+    return {
+        beacons: [],
+        loading: true,
+        searchQuery: '',
+        filterOS: '',
+        filterStatus: '',
+        refreshInterval: null,
+
+        init() {
+            this.loadBeacons();
+            // Auto-refresh every 5 seconds
+            this.refreshInterval = setInterval(() => this.loadBeacons(), 5000);
+        },
+
+        async loadBeacons() {
+            try {
+                const response = await apiRequest('/api/beacons/', 'GET');
+                this.beacons = response.beacons || [];
+                this.loading = false;
+            } catch (error) {
+                console.error('Failed to load beacons:', error);
+                showToast('Failed to load beacons', 'error');
+                this.loading = false;
+            }
+        },
+
+        async refreshBeacons() {
+            this.loading = true;
+            await this.loadBeacons();
+        },
+
+        async deleteBeacon(uuid) {
+            if (!confirm('Are you sure you want to delete this beacon?')) {
+                return;
+            }
+
+            try {
+                // Queue shutdown command
+                await apiRequest('/api/commands/execute/', 'POST', {
+                    uuid: uuid,
+                    command: 'shutdown',
+                    data: null
+                });
+                showToast('Shutdown command queued', 'success');
+                await this.loadBeacons();
+            } catch (error) {
+                console.error('Failed to delete beacon:', error);
+                showToast('Failed to delete beacon', 'error');
+            }
+        },
+
+        getBeaconStatus(beacon) {
+            const lastSeen = new Date(beacon.last_beacon);
+            const now = new Date();
+            const diffMinutes = (now - lastSeen) / 1000 / 60;
+
+            if (diffMinutes < 5) return 'active';
+            if (diffMinutes < 60) return 'idle';
+            return 'lost';
+        },
+
+        formatTime(timeStr) {
+            if (!timeStr) return 'Unknown';
+            try {
+                const date = new Date(timeStr);
+                return date.toLocaleString();
+            } catch {
+                return timeStr;
+            }
+        },
+
+        formatRelativeTime(timeStr) {
+            if (!timeStr) return '';
+            try {
+                const date = new Date(timeStr);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 1000 / 60);
+                const diffHours = Math.floor(diffMins / 60);
+                const diffDays = Math.floor(diffHours / 24);
+
+                if (diffMins < 1) return 'Just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+                if (diffHours < 24) return `${diffHours}h ago`;
+                return `${diffDays}d ago`;
+            } catch {
+                return '';
+            }
+        },
+
+        get filteredBeacons() {
+            let filtered = this.beacons;
+
+            // Search filter
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(b =>
+                    b.uuid?.toLowerCase().includes(query) ||
+                    b.hostname?.toLowerCase().includes(query) ||
+                    b.address?.toLowerCase().includes(query) ||
+                    b.operating_system?.toLowerCase().includes(query)
+                );
+            }
+
+            // OS filter
+            if (this.filterOS) {
+                filtered = filtered.filter(b =>
+                    b.operating_system?.includes(this.filterOS)
+                );
+            }
+
+            // Status filter
+            if (this.filterStatus) {
+                filtered = filtered.filter(b =>
+                    this.getBeaconStatus(b) === this.filterStatus
+                );
+            }
+
+            return filtered;
+        },
+
+        get activeBeacons() {
+            return this.beacons.filter(b => this.getBeaconStatus(b) === 'active').length;
+        },
+
+        get idleBeacons() {
+            return this.beacons.filter(b => this.getBeaconStatus(b) === 'idle').length;
+        },
+
+        get lostBeacons() {
+            return this.beacons.filter(b => this.getBeaconStatus(b) === 'lost').length;
+        }
+    }
+}
+</script>
+{% endblock %}

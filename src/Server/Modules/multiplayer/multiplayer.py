@@ -7,6 +7,7 @@ from ..global_objects import logger
 from ..utils.ui_manager import get_ui_manager
 from .mp_server import MP_Socket
 from .users.mp_users import MP_Users
+from .web_interface import WebInterface
 
 
 class MultiPlayer(MP_Socket, MP_Users):
@@ -20,11 +21,29 @@ class MultiPlayer(MP_Socket, MP_Users):
         MP_Users.__init__(self, config)
         self.ui = get_ui_manager()
         self.menu_session = PromptSession()
+
+        # Initialize web interface
+        self.web_interface = WebInterface(config)
+
         logger.info("MultiPlayer instance created with database connection")
 
     def start(self):
         super().start()
         logger.info("Multiplayer server started and listening for connections")
+
+        # Start web interface if enabled
+        try:
+            if self.web_interface.start():
+                self.ui.print_success("Web interface started successfully")
+            else:
+                self.ui.print_info(
+                    "Web interface not started (disabled or dependencies missing)"
+                )
+        except Exception as e:
+            logger.error(f"Failed to start web interface: {e}")
+            self.ui.print_warning(
+                "Web interface failed to start - continuing without it"
+            )
 
     def currentUsers(self) -> str:
         """
@@ -140,3 +159,16 @@ class MultiPlayer(MP_Socket, MP_Users):
             except EOFError:
                 self.ui.print_info("Exiting user menu...")
                 break
+
+    def get_web_status(self) -> dict:
+        """
+        Get the current status of the web interface.
+
+        Returns:
+            dict: Web interface status information
+        """
+        return self.web_interface.get_status()
+
+    def stop_web_interface(self):
+        """Stop the web interface."""
+        self.web_interface.stop()

@@ -112,6 +112,7 @@ def _get_active_connections(filter_type):
                     "next_beacon": getattr(beacon, "next_beacon", None),
                     "timer": getattr(beacon, "timer", None),
                     "jitter": getattr(beacon, "jitter", None),
+                    "loaded_modules": getattr(beacon, "loaded_modules", []),
                 }
             )
         result["beacons"] = beacons
@@ -159,6 +160,7 @@ def _get_connection_by_uuid(uuid):
                 "next_beacon": getattr(beacon, "next_beacon", None),
                 "timer": getattr(beacon, "timer", None),
                 "jitter": getattr(beacon, "jitter", None),
+                "loaded_modules": getattr(beacon, "loaded_modules", []),
             }
 
     # Check sessions

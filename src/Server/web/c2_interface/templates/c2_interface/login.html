@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en" class="h-full">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login - PrometheanProxy C2</title>
+
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- Alpine.js -->
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+        ></script>
+
+        <!-- Font Awesome -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+
+        <style>
+            .gradient-bg {
+                background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            }
+
+            @keyframes float {
+                0%,
+                100% {
+                    transform: translateY(0px);
+                }
+                50% {
+                    transform: translateY(-20px);
+                }
+            }
+
+            .float-animation {
+                animation: float 6s ease-in-out infinite;
+            }
+
+            .glow {
+                box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);
+            }
+        </style>
+    </head>
+    <body class="h-full gradient-bg" x-data="loginForm()">
+        <div class="min-h-screen flex items-center justify-center p-4">
+            <!-- Floating background elements -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                <div
+                    class="absolute top-20 left-10 w-72 h-72 bg-red-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 float-animation"
+                ></div>
+                <div
+                    class="absolute top-40 right-10 w-72 h-72 bg-orange-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 float-animation"
+                    style="animation-delay: 2s"
+                ></div>
+                <div
+                    class="absolute bottom-20 left-1/3 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 float-animation"
+                    style="animation-delay: 4s"
+                ></div>
+            </div>
+
+            <div class="relative w-full max-w-md">
+                <!-- Logo and Title -->
+                <div class="text-center mb-8">
+                    <div
+                        class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl mb-4 glow"
+                    >
+                        <i class="fas fa-fire text-white text-3xl"></i>
+                    </div>
+                    <h1 class="text-4xl font-bold text-white mb-2">
+                        PrometheanProxy
+                    </h1>
+                    <p class="text-gray-400">Command & Control Framework</p>
+                </div>
+
+                <!-- Login Card -->
+                <div
+                    class="bg-gray-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-700 p-8"
+                >
+                    <!-- Error Message -->
+                    <div
+                        x-show="errorMessage"
+                        x-transition
+                        class="mb-6 p-4 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg"
+                    >
+                        <div class="flex items-center space-x-2">
+                            <i
+                                class="fas fa-exclamation-circle text-red-500"
+                            ></i>
+                            <p
+                                class="text-red-400 text-sm"
+                                x-text="errorMessage"
+                            ></p>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div
+                        x-show="successMessage"
+                        x-transition
+                        class="mb-6 p-4 bg-green-500 bg-opacity-20 border border-green-500 rounded-lg"
+                    >
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                            <p
+                                class="text-green-400 text-sm"
+                                x-text="successMessage"
+                            ></p>
+                        </div>
+                    </div>
+
+                    <form @submit.prevent="handleLogin">
+                        <!-- Username Field -->
+                        <div class="mb-6">
+                            <label
+                                for="username"
+                                class="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                <i class="fas fa-user mr-2"></i>Username
+                            </label>
+                            <input
+                                type="text"
+                                id="username"
+                                x-model="username"
+                                required
+                                autofocus
+                                class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-all"
+                                placeholder="Enter your username"
+                                :disabled="isLoading"
+                            />
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="mb-6">
+                            <label
+                                for="password"
+                                class="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                <i class="fas fa-lock mr-2"></i>Password
+                            </label>
+                            <div class="relative">
+                                <input
+                                    :type="showPassword ? 'text' : 'password'"
+                                    id="password"
+                                    x-model="password"
+                                    required
+                                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-all pr-12"
+                                    placeholder="Enter your password"
+                                    :disabled="isLoading"
+                                />
+                                <button
+                                    type="button"
+                                    @click="showPassword = !showPassword"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                    :disabled="isLoading"
+                                >
+                                    <i
+                                        class="fas"
+                                        :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
+                                    ></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Remember Me -->
+                        <div class="mb-6 flex items-center justify-between">
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer"
+                            >
+                                <input
+                                    type="checkbox"
+                                    x-model="rememberMe"
+                                    class="w-4 h-4 bg-gray-900 border-gray-700 rounded text-red-500 focus:ring-red-500 focus:ring-2 focus:ring-opacity-50"
+                                    :disabled="isLoading"
+                                />
+                                <span class="text-sm text-gray-400"
+                                    >Remember me</span
+                                >
+                            </label>
+                        </div>
+
+                        <!-- Login Button -->
+                        <button
+                            type="submit"
+                            class="w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            :disabled="isLoading"
+                        >
+                            <span
+                                x-show="!isLoading"
+                                class="flex items-center justify-center"
+                            >
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Sign In
+                            </span>
+                            <span
+                                x-show="isLoading"
+                                class="flex items-center justify-center"
+                            >
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Authenticating...
+                            </span>
+                        </button>
+                    </form>
+
+                    <!-- Additional Info -->
+                    <div class="mt-8 pt-6 border-t border-gray-700">
+                        <div
+                            class="flex items-center justify-center space-x-4 text-sm text-gray-400"
+                        >
+                            <div class="flex items-center space-x-1">
+                                <span
+                                    class="inline-block w-2 h-2 rounded-full"
+                                    :class="backendStatus === 'online' ? 'bg-green-500' : 'bg-red-500'"
+                                ></span>
+                                <span
+                                    x-text="backendStatus === 'online' ? 'Backend Online' : 'Backend Offline'"
+                                ></span>
+                            </div>
+                            <span>•</span>
+                            <span>v1.0.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-6">
+                    <p class="text-gray-500 text-sm">
+                        <i class="fas fa-shiel</span>d-alt mr-1"></i>
+                        For authorized use only
+                    </p>
+                    <p class="text-gray-600 text-xs mt-2">
+                        © 2024 PrometheanProxy. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function loginForm() {
+                return {
+                    username: "",
+                    password: "",
+                    rememberMe: false,
+                    showPassword: false,
+                    isLoading: false,
+                    errorMessage: "",
+                    successMessage: "",
+                    backendStatus: "checking",
+
+                    async init() {
+                        // Check if user is already logged in with valid token
+                        const token = localStorage.getItem("auth_token");
+                        if (token) {
+                            // Verify token is still valid
+                            try {
+                                const response = await fetch(
+                                    "/api/auth/status/",
+                                    {
+                                        headers: {
+                                            Authorization: `Token ${token}`,
+                                        },
+                                    },
+                                );
+                                if (response.ok) {
+                                    // Token is valid, redirect to dashboard
+                                    window.location.href = "/";
+                                    return;
+                                } else {
+                                    // Token is invalid, clear it
+                                    localStorage.removeItem("auth_token");
+                                    localStorage.removeItem("username");
+                                }
+                            } catch (error) {
+                                // Error checking token, clear it to be safe
+                                localStorage.removeItem("auth_token");
+                                localStorage.removeItem("username");
+                            }
+                        }
+
+                        // Check backend status
+                        this.checkBackendStatus();
+
+                        // Load remembered username if exists
+                        const savedUsername = localStorage.getItem(
+                            "remembered_username",
+                        );
+                        if (savedUsername) {
+                            this.username = savedUsername;
+                            this.rememberMe = true;
+                        }
+                    },
+
+                    async checkBackendStatus() {
+                        try {
+                            const response = await fetch(
+                                "/api/health/backend/",
+                            );
+                            const data = await response.json();
+                            this.backendStatus = data.pong
+                                ? "online"
+                                : "offline";
+                        } catch (error) {
+                            this.backendStatus = "offline";
+                            console.error(
+                                "Backend health check failed:",
+                                error,
+                            );
+                        }
+                    },
+
+                    async handleLogin() {
+                        this.errorMessage = "";
+                        this.successMessage = "";
+
+                        if (!this.username || !this.password) {
+                            this.errorMessage =
+                                "Please enter both username and password";
+                            return;
+                        }
+
+                        this.isLoading = true;
+
+                        try {
+                            const response = await fetch("/api/auth/login/", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    username: this.username,
+                                    password: this.password,
+                                }),
+                            });
+
+                            const data = await response.json();
+
+                            if (response.ok && data.token) {
+                                // Store token
+                                localStorage.setItem("auth_token", data.token);
+                                localStorage.setItem("username", this.username);
+
+                                // Handle remember me
+                                if (this.rememberMe) {
+                                    localStorage.setItem(
+                                        "remembered_username",
+                                        this.username,
+                                    );
+                                } else {
+                                    localStorage.removeItem(
+                                        "remembered_username",
+                                    );
+                                }
+
+                                // Show success message
+                                this.successMessage =
+                                    "Login successful! Redirecting...";
+
+                                // Redirect to dashboard after short delay
+                                setTimeout(() => {
+                                    window.location.href = "/";
+                                }, 1000);
+                            } else {
+                                // Handle error
+                                this.errorMessage =
+                                    data.error ||
+                                    data.detail ||
+                                    "Authentication failed";
+
+                                // If backend is unreachable
+                                if (response.status === 503) {
+                                    this.errorMessage =
+                                        "Unable to connect to backend server";
+                                    this.backendStatus = "offline";
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Login error:", error);
+                            this.errorMessage =
+                                "Network error: Unable to connect to server";
+                            this.backendStatus = "offline";
+                        } finally {
+                            this.isLoading = false;
+                        }
+                    },
+
+                    clearError() {
+                        this.errorMessage = "";
+                    },
+                };
+            }
+        </script>
+    </body>
+</html>

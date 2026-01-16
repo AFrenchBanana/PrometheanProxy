@@ -20,3 +20,13 @@ PrometheanProxy.spec
 *.dll
 src/Server/Plugins/*/debug/*
 src/Server/Plugins/*/release/*
+
+# Web Interface
+web/.env
+web/db.sqlite3
+web/logs/
+web/staticfiles/
+web/media/
+web/*.pid
+web/node_modules/
+web/.DS_Store

@@ -15,6 +15,10 @@ module_location = "~/.PrometheanProxy/plugins"
 multiplayerEnabled = true
 multiplayerListenAddress = "0.0.0.0"
 multiplayerPort = 2001
+# Web interface settings
+webInterface = true
+webHost = "0.0.0.0"
+webPort = 8080
 
 
 [authentication]
@@ -32,6 +36,13 @@ debugPrint = true
 [beacon]
 interval = 5
 jitter = 2
+
+[web_server]
+# Django web interface settings
+enabled = true
+host = "0.0.0.0"
+port = 8001
+use_ssl = false
 
 [logging]
 log_file = "server.log"

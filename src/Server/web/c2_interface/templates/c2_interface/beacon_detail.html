@@ -1,0 +1,870 @@
+{% extends "c2_interface/base.html" %} {% block content %}
+<div class="space-y-6" x-data="beaconDetailData()">
+    <!-- Beacon Info Card -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-white">Beacon Information</h3>
+            <div class="flex items-center space-x-2">
+                <span
+                    class="w-3 h-3 rounded-full"
+                    :class="{
+                        'status-online': beaconStatus === 'active',
+                        'status-pending': beaconStatus === 'idle',
+                        'status-offline': beaconStatus === 'lost'
+                    }"
+                ></span>
+                <span
+                    class="text-sm font-medium"
+                    :class="{
+                        'text-green-400': beaconStatus === 'active',
+                        'text-yellow-400': beaconStatus === 'idle',
+                        'text-red-400': beaconStatus === 'lost'
+                    }"
+                    x-text="beaconStatus.toUpperCase()"
+                ></span>
+            </div>
+        </div>
+
+        <template x-if="loading">
+            <div class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+                <p class="text-gray-400 mt-4">Loading beacon information...</p>
+            </div>
+        </template>
+
+        <template x-if="!loading && beacon">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-gray-400 text-sm">UUID</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <code
+                                class="text-blue-400 font-mono text-sm"
+                                x-text="beacon.uuid"
+                            ></code>
+                            <button
+                                @click="copyToClipboard(beacon.uuid)"
+                                class="text-gray-400 hover:text-white"
+                            >
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-400 text-sm">Hostname</label>
+                        <p
+                            class="text-white font-medium mt-1"
+                            x-text="beacon.hostname || 'Unknown'"
+                        ></p>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-400 text-sm">IP Address</label>
+                        <code
+                            class="text-white font-mono text-sm block mt-1"
+                            x-text="beacon.address"
+                        ></code>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-400 text-sm"
+                            >Operating System</label
+                        >
+                        <div class="flex items-center mt-1">
+                            <i
+                                class="mr-2"
+                                :class="{
+                                    'fab fa-windows text-blue-400': beacon.operating_system?.includes('Windows'),
+                                    'fab fa-linux text-yellow-400': beacon.operating_system?.includes('Linux'),
+                                    'fab fa-apple text-gray-400': beacon.operating_system?.includes('Mac'),
+                                    'fab fa-android text-green-400': beacon.operating_system?.includes('Android'),
+                                    'fas fa-question text-gray-500': !beacon.operating_system
+                                }"
+                            ></i>
+                            <span
+                                class="text-white"
+                                x-text="beacon.operating_system || 'Unknown'"
+                            ></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-gray-400 text-sm">Last Seen</label>
+                        <div class="mt-1">
+                            <p
+                                class="text-white"
+                                x-text="formatTime(beacon.last_beacon)"
+                            ></p>
+                            <p
+                                class="text-gray-400 text-sm"
+                                x-text="formatRelativeTime(beacon.last_beacon)"
+                            ></p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-400 text-sm"
+                            >Check-in Timer</label
+                        >
+                        <p
+                            class="text-white mt-1"
+                            x-text="`${beacon.timer}s (${beacon.jitter}% jitter)`"
+                        ></p>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-400 text-sm"
+                            >Next Expected Check-in</label
+                        >
+                        <p
+                            class="text-white mt-1"
+                            x-text="formatTime(beacon.next_beacon)"
+                        ></p>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-400 text-sm"
+                            >Loaded Modules</label
+                        >
+                        <div class="flex flex-wrap gap-2 mt-1">
+                            <template
+                                x-if="beacon.loaded_modules && beacon.loaded_modules.length > 0"
+                            >
+                                <template
+                                    x-for="module in beacon.loaded_modules"
+                                    :key="module"
+                                >
+                                    <span
+                                        class="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded"
+                                        x-text="module"
+                                    ></span>
+                                </template>
+                            </template>
+                            <template
+                                x-if="!beacon.loaded_modules || beacon.loaded_modules.length === 0"
+                            >
+                                <span class="text-gray-400 text-sm">None</span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template x-if="!loading && !beacon">
+            <div class="text-center py-8">
+                <i
+                    class="fas fa-exclamation-triangle text-5xl text-red-500"
+                ></i>
+                <p class="text-gray-400 mt-4 text-lg">Beacon not found</p>
+            </div>
+        </template>
+    </div>
+
+    <!-- Command Execution Interface -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-bold text-white">Execute Command</h4>
+            <button
+                @click="clearCommandOutput"
+                class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+                <i class="fas fa-eraser mr-1"></i>
+                Clear History
+            </button>
+        </div>
+
+        <!-- Command Selection -->
+        <div class="mb-4">
+            <label class="text-gray-400 text-sm mb-2 block"
+                >Select Command</label
+            >
+            <div class="flex space-x-2">
+                <select
+                    x-model="selectedCommand"
+                    @change="onCommandSelect"
+                    class="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                >
+                    <option value="">-- Select a command --</option>
+                    <template x-if="loadingCommands">
+                        <option disabled>Loading commands...</option>
+                    </template>
+                    <template x-for="cmd in availableCommands" :key="cmd">
+                        <option :value="cmd" x-text="cmd"></option>
+                    </template>
+                </select>
+                <button
+                    @click="loadAvailableCommands"
+                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"
+                    title="Refresh commands"
+                >
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Parameters Form -->
+        <div
+            x-show="selectedCommand && commandParams.length > 0"
+            class="mb-4 space-y-3"
+        >
+            <label class="text-gray-400 text-sm block"
+                >Command Parameters</label
+            >
+            <template x-for="(param, index) in commandParams" :key="index">
+                <div>
+                    <label
+                        class="text-gray-300 text-xs mb-1 block"
+                        x-text="param.name + (param.required ? ' *' : ' (optional)')"
+                    ></label>
+                    <template x-if="param.type === 'textarea'">
+                        <textarea
+                            x-model="param.value"
+                            :placeholder="param.placeholder || ''"
+                            rows="3"
+                            class="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm font-mono"
+                        ></textarea>
+                    </template>
+                    <template x-if="param.type === 'select'">
+                        <select
+                            x-model="param.value"
+                            class="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm"
+                        >
+                            <option value="">-- Select --</option>
+                            <template
+                                x-for="option in param.options"
+                                :key="option"
+                            >
+                                <option
+                                    :value="option"
+                                    x-text="option"
+                                ></option>
+                            </template>
+                        </select>
+                    </template>
+                    <template
+                        x-if="param.type !== 'textarea' && param.type !== 'select'"
+                    >
+                        <input
+                            :type="param.type || 'text'"
+                            x-model="param.value"
+                            :placeholder="param.placeholder || ''"
+                            class="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm font-mono"
+                        />
+                    </template>
+                    <template x-if="param.description">
+                        <p
+                            class="text-gray-500 text-xs mt-1"
+                            x-text="param.description"
+                        ></p>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- Execute Button -->
+        <div class="mb-4">
+            <button
+                @click="executeCommand"
+                :disabled="!selectedCommand || executing"
+                class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium text-lg"
+            >
+                <i
+                    class="fas"
+                    :class="executing ? 'fa-spinner fa-spin' : 'fa-paper-plane'"
+                ></i>
+                <span
+                    class="ml-2"
+                    x-text="executing ? 'Executing...' : 'Execute Command'"
+                ></span>
+            </button>
+        </div>
+
+        <!-- Command History & Output -->
+        <div>
+            <label class="text-gray-400 text-sm mb-2 block"
+                >Command History & Output</label
+            >
+            <div
+                class="bg-gray-900 rounded-lg border border-gray-700 p-4 font-mono text-sm max-h-96 overflow-y-auto"
+            >
+                <template x-if="commandHistory.length === 0">
+                    <p class="text-gray-500">
+                        No commands executed yet. Select a command and click
+                        Execute.
+                    </p>
+                </template>
+
+                <template x-for="(item, index) in commandHistory" :key="index">
+                    <div
+                        class="mb-4 pb-4"
+                        :class="{ 'border-b border-gray-700': index < commandHistory.length - 1 }"
+                    >
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-blue-400">$</span>
+                                <span
+                                    class="text-white"
+                                    x-text="item.command"
+                                ></span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span
+                                    class="px-2 py-0.5 rounded text-xs"
+                                    :class="{
+                                        'bg-green-500/20 text-green-400': item.status === 'success',
+                                        'bg-yellow-500/20 text-yellow-400': item.status === 'pending',
+                                        'bg-red-500/20 text-red-400': item.status === 'error'
+                                    }"
+                                    x-text="item.status"
+                                ></span>
+                                <span
+                                    class="text-gray-500 text-xs"
+                                    x-text="item.timestamp"
+                                ></span>
+                            </div>
+                        </div>
+                        <template
+                            x-if="item.params && Object.keys(item.params).length > 0"
+                        >
+                            <div class="text-gray-400 text-xs mb-2">
+                                <div
+                                    x-text="'Parameters: ' + JSON.stringify(item.params, null, 2)"
+                                ></div>
+                            </div>
+                        </template>
+                        <div
+                            class="text-gray-300 whitespace-pre-wrap"
+                            x-text="item.output || 'Command queued, awaiting response...'"
+                        ></div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+        <h4 class="text-lg font-bold text-white mb-4">Quick Actions</h4>
+        <div class="flex flex-wrap gap-3">
+            <button
+                @click="quickCommand('sysinfo')"
+                class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            >
+                <i class="fas fa-info-circle mr-2"></i>
+                System Info
+            </button>
+            <button
+                @click="quickCommand('session')"
+                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            >
+                <i class="fas fa-exchange-alt mr-2"></i>
+                Switch to Session
+            </button>
+            <button
+                @click="quickCommand('close')"
+                class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+            >
+                <i class="fas fa-times-circle mr-2"></i>
+                Close Connection
+            </button>
+            <button
+                @click="quickCommand('shutdown')"
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+            >
+                <i class="fas fa-power-off mr-2"></i>
+                Shutdown
+            </button>
+        </div>
+    </div>
+
+    <!-- Queued Commands -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-bold text-white">Queued Commands</h4>
+            <button
+                @click="loadQueuedCommands"
+                class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+                <i class="fas fa-sync-alt mr-1"></i>
+                Refresh
+            </button>
+        </div>
+
+        <template x-if="loadingQueue">
+            <div class="text-center py-4">
+                <i class="fas fa-spinner fa-spin text-gray-400"></i>
+            </div>
+        </template>
+
+        <template x-if="!loadingQueue && queuedCommands.length === 0">
+            <p class="text-gray-500 text-center py-4">No queued commands</p>
+        </template>
+
+        <template x-if="!loadingQueue && queuedCommands.length > 0">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="border-b border-gray-700">
+                        <tr>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-400"
+                            >
+                                Command
+                            </th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-400"
+                            >
+                                UUID
+                            </th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-400"
+                            >
+                                Status
+                            </th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-400"
+                            >
+                                Output
+                            </th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-400"
+                            >
+                                Executed
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        <template
+                            x-for="cmd in queuedCommands"
+                            :key="cmd.command_uuid"
+                        >
+                            <tr>
+                                <td class="px-4 py-2 text-sm">
+                                    <code
+                                        class="text-blue-400"
+                                        x-text="cmd.command"
+                                    ></code>
+                                </td>
+                                <td class="px-4 py-2 text-sm">
+                                    <code
+                                        class="text-gray-400 text-xs"
+                                        x-text="cmd.command_uuid.substring(0, 8) + '...'"
+                                    ></code>
+                                </td>
+                                <td class="px-4 py-2 text-sm">
+                                    <span
+                                        class="px-2 py-1 rounded text-xs"
+                                        :class="cmd.executed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'"
+                                        x-text="cmd.executed ? 'Completed' : 'Pending'"
+                                    ></span>
+                                </td>
+                                <td class="px-4 py-2 text-sm text-gray-300">
+                                    <div
+                                        class="max-w-md truncate"
+                                        x-text="cmd.command_output || 'Awaiting response'"
+                                    ></div>
+                                </td>
+                                <td
+                                    class="px-4 py-2 text-sm text-gray-400"
+                                    x-text="cmd.executed ? 'Yes' : 'No'"
+                                ></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+    </div>
+</div>
+
+<script>
+    function beaconDetailData() {
+        return {
+            beacon: null,
+            beaconUuid: "{{ beacon_uuid }}",
+            loading: true,
+            loadingCommands: false,
+            loadingQueue: false,
+            executing: false,
+            availableCommands: [],
+            selectedCommand: "",
+            commandParams: [],
+            commandHistory: [],
+            queuedCommands: [],
+            refreshInterval: null,
+
+            // Command parameter definitions
+            commandDefinitions: {
+                shell: [
+                    {
+                        name: "command",
+                        type: "textarea",
+                        required: true,
+                        placeholder: "Enter shell command...",
+                        description: "Shell command to execute",
+                    },
+                ],
+                download: [
+                    {
+                        name: "remote_path",
+                        type: "text",
+                        required: true,
+                        placeholder: "/path/to/remote/file",
+                        description: "Path to file on target system",
+                    },
+                    {
+                        name: "local_path",
+                        type: "text",
+                        required: false,
+                        placeholder: "/path/to/save/locally",
+                        description: "Local save path (optional)",
+                    },
+                ],
+                upload: [
+                    {
+                        name: "local_path",
+                        type: "text",
+                        required: true,
+                        placeholder: "/path/to/local/file",
+                        description: "Path to local file",
+                    },
+                    {
+                        name: "remote_path",
+                        type: "text",
+                        required: true,
+                        placeholder: "/path/to/remote/destination",
+                        description: "Destination path on target",
+                    },
+                ],
+                execute: [
+                    {
+                        name: "command",
+                        type: "textarea",
+                        required: true,
+                        placeholder: "Command to execute",
+                        description: "Command or script to run",
+                    },
+                    {
+                        name: "args",
+                        type: "text",
+                        required: false,
+                        placeholder: "argument1 argument2",
+                        description: "Command arguments",
+                    },
+                ],
+                load_module: [
+                    {
+                        name: "module",
+                        type: "text",
+                        required: true,
+                        placeholder: "module_name",
+                        description: "Name of module to load",
+                    },
+                ],
+                sleep: [
+                    {
+                        name: "seconds",
+                        type: "number",
+                        required: true,
+                        placeholder: "60",
+                        description: "Sleep duration in seconds",
+                    },
+                    {
+                        name: "jitter",
+                        type: "number",
+                        required: false,
+                        placeholder: "10",
+                        description: "Jitter percentage (0-100)",
+                    },
+                ],
+                cd: [
+                    {
+                        name: "path",
+                        type: "text",
+                        required: true,
+                        placeholder: "/path/to/directory",
+                        description: "Directory to change to",
+                    },
+                ],
+                pwd: [],
+                ls: [
+                    {
+                        name: "path",
+                        type: "text",
+                        required: false,
+                        placeholder: ".",
+                        description: "Directory to list (default: current)",
+                    },
+                ],
+                cat: [
+                    {
+                        name: "file",
+                        type: "text",
+                        required: true,
+                        placeholder: "/path/to/file",
+                        description: "File to display",
+                    },
+                ],
+                ps: [],
+                kill: [
+                    {
+                        name: "pid",
+                        type: "number",
+                        required: true,
+                        placeholder: "1234",
+                        description: "Process ID to kill",
+                    },
+                ],
+                sysinfo: [],
+                screenshot: [],
+                keylog_start: [],
+                keylog_stop: [],
+                keylog_dump: [],
+                session: [],
+                close: [],
+                shutdown: [],
+            },
+
+            init() {
+                this.loadBeacon();
+                this.loadAvailableCommands();
+                this.loadQueuedCommands();
+                // Auto-refresh every 10 seconds
+                this.refreshInterval = setInterval(() => {
+                    this.loadBeacon();
+                    this.loadQueuedCommands();
+                }, 10000);
+            },
+
+            async loadBeacon() {
+                try {
+                    const response = await apiRequest(
+                        `/api/connections/details/?uuid=${this.beaconUuid}`,
+                        "GET",
+                    );
+                    this.beacon = response.connection;
+                    this.loading = false;
+                } catch (error) {
+                    console.error("Failed to load beacon:", error);
+                    showToast("Failed to load beacon information", "error");
+                    this.loading = false;
+                }
+            },
+
+            async loadAvailableCommands() {
+                this.loadingCommands = true;
+                try {
+                    const response = await apiRequest(
+                        `/api/commands/?uuid=${this.beaconUuid}`,
+                        "GET",
+                    );
+                    this.availableCommands = response.response || [];
+                } catch (error) {
+                    console.error("Failed to load commands:", error);
+                    showToast("Failed to load available commands", "error");
+                }
+                this.loadingCommands = false;
+            },
+
+            async loadQueuedCommands() {
+                this.loadingQueue = true;
+                try {
+                    const response = await apiRequest(
+                        `/api/connections/details/?uuid=${this.beaconUuid}&commands`,
+                        "GET",
+                    );
+                    this.queuedCommands = response.commands || [];
+                } catch (error) {
+                    console.error("Failed to load queued commands:", error);
+                }
+                this.loadingQueue = false;
+            },
+
+            onCommandSelect() {
+                // Load parameters for selected command
+                this.commandParams = [];
+
+                if (
+                    this.selectedCommand &&
+                    this.commandDefinitions[this.selectedCommand]
+                ) {
+                    this.commandParams = this.commandDefinitions[
+                        this.selectedCommand
+                    ].map((param) => ({
+                        ...param,
+                        value: "",
+                    }));
+                }
+            },
+
+            async executeCommand() {
+                if (!this.selectedCommand || this.executing) return;
+
+                // Validate required parameters
+                const missingParams = this.commandParams.filter(
+                    (p) => p.required && !p.value,
+                );
+                if (missingParams.length > 0) {
+                    showToast(
+                        `Missing required parameters: ${missingParams.map((p) => p.name).join(", ")}`,
+                        "error",
+                    );
+                    return;
+                }
+
+                this.executing = true;
+
+                // Build command data from parameters
+                let commandData = null;
+                if (this.commandParams.length > 0) {
+                    // Special handling for load_module command
+                    if (this.selectedCommand === "load_module") {
+                        // load_module expects {name: module_name}
+                        const moduleParam = this.commandParams.find(
+                            (p) => p.name === "module",
+                        );
+                        if (moduleParam && moduleParam.value) {
+                            commandData = { name: moduleParam.value };
+                        }
+                    } else if (this.commandParams.length === 1) {
+                        // For other single parameter commands, send as string
+                        commandData = this.commandParams[0].value || null;
+                    } else {
+                        // Multiple parameters, send as object
+                        commandData = {};
+                        this.commandParams.forEach((param) => {
+                            if (param.value) {
+                                commandData[param.name] = param.value;
+                            }
+                        });
+                    }
+                }
+
+                try {
+                    const response = await apiRequest(
+                        "/api/commands/execute/",
+                        "POST",
+                        {
+                            uuid: this.beaconUuid,
+                            command: this.selectedCommand,
+                            data: commandData,
+                        },
+                    );
+
+                    // Build params display object
+                    const paramsDisplay = {};
+                    this.commandParams.forEach((param) => {
+                        if (param.value) {
+                            paramsDisplay[param.name] = param.value;
+                        }
+                    });
+
+                    // Add to command history
+                    this.commandHistory.unshift({
+                        command: this.selectedCommand,
+                        params: paramsDisplay,
+                        output: "Command queued successfully",
+                        status: "pending",
+                        timestamp: new Date().toLocaleTimeString(),
+                    });
+
+                    showToast(
+                        `Command '${this.selectedCommand}' queued successfully`,
+                        "success",
+                    );
+
+                    // Refresh queued commands
+                    await this.loadQueuedCommands();
+
+                    // Reset form
+                    this.selectedCommand = "";
+                    this.commandParams = [];
+                } catch (error) {
+                    console.error("Failed to execute command:", error);
+                    this.commandHistory.unshift({
+                        command: this.selectedCommand,
+                        params: {},
+                        output: `Error: ${error.message || "Failed to execute command"}`,
+                        status: "error",
+                        timestamp: new Date().toLocaleTimeString(),
+                    });
+                    showToast("Failed to execute command", "error");
+                }
+
+                this.executing = false;
+            },
+
+            async quickCommand(command) {
+                this.selectedCommand = command;
+                this.onCommandSelect();
+
+                // If command has no required parameters, execute immediately
+                const hasRequiredParams = this.commandParams.some(
+                    (p) => p.required,
+                );
+                if (!hasRequiredParams) {
+                    await this.executeCommand();
+                }
+            },
+
+            clearCommandOutput() {
+                this.commandHistory = [];
+            },
+
+            copyToClipboard(text) {
+                navigator.clipboard
+                    .writeText(text)
+                    .then(() => {
+                        showToast("Copied to clipboard", "success");
+                    })
+                    .catch(() => {
+                        showToast("Failed to copy", "error");
+                    });
+            },
+
+            formatTime(timeStr) {
+                if (!timeStr) return "Unknown";
+                try {
+                    const date = new Date(timeStr);
+                    return date.toLocaleString();
+                } catch {
+                    return timeStr;
+                }
+            },
+
+            formatRelativeTime(timeStr) {
+                if (!timeStr) return "";
+                try {
+                    const date = new Date(timeStr);
+                    const now = new Date();
+                    const diffMs = now - date;
+                    const diffMins = Math.floor(diffMs / 1000 / 60);
+                    const diffHours = Math.floor(diffMins / 60);
+                    const diffDays = Math.floor(diffHours / 24);
+
+                    if (diffMins < 1) return "Just now";
+                    if (diffMins < 60) return `${diffMins}m ago`;
+                    if (diffHours < 24) return `${diffHours}h ago`;
+                    return `${diffDays}d ago`;
+                } catch {
+                    return "";
+                }
+            },
+
+            get beaconStatus() {
+                if (!this.beacon) return "unknown";
+                const lastSeen = new Date(this.beacon.last_beacon);
+                const now = new Date();
+                const diffMinutes = (now - lastSeen) / 1000 / 60;
+
+                if (diffMinutes < 5) return "active";
+                if (diffMinutes < 60) return "idle";
+                return "lost";
+            },
+        };
+    }
+</script>
+{% endblock %}

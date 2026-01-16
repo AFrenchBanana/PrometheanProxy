@@ -147,8 +147,12 @@ def add_beacon_command_list(
         data: Optional data payload for the command
         command_data: Additional data payload for the command (optional)
     """
+    # Ensure command_data is always a dictionary
     if command_data is None:
         command_data = {}
+    elif not isinstance(command_data, dict):
+        # Convert non-dict data to dict format
+        command_data = {"data": command_data}
 
     logger.debug(f"Adding command for beacon UUID: {beacon_uuid}")
     logger.debug(f"Command UUID: {cmd_uuid}")
@@ -158,6 +162,7 @@ def add_beacon_command_list(
     if (
         isinstance(command_data, dict)
         and "data" in command_data
+        and isinstance(command_data["data"], (str, bytes))
         and len(command_data["data"]) > 100
     ):
         logger.debug(

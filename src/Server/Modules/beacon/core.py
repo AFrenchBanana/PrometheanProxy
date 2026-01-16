@@ -134,15 +134,33 @@ class Beacon(HistoryMixin, ModulesMixin):
         # ----------------------------------------------------------------
         if isinstance(modules, str):
             try:
-                self.loaded_modules = ast.literal_eval(modules)
+                parsed = ast.literal_eval(modules)
+                # Ensure the parsed result is a list
+                if isinstance(parsed, list):
+                    self.loaded_modules = parsed
+                else:
+                    logger.warning(
+                        f"Parsed modules is not a list (got {type(parsed).__name__}): {modules}. "
+                        "Defaulting to empty list."
+                    )
+                    self.loaded_modules = []
             except (ValueError, SyntaxError):
                 logger.warning(
                     f"Failed to parse modules string: {modules}. "
                     "Defaulting to empty list."
                 )
                 self.loaded_modules = []
+        elif isinstance(modules, list):
+            self.loaded_modules = modules
+        elif modules is None:
+            self.loaded_modules = []
         else:
-            self.loaded_modules = modules if modules is not None else []
+            # Handle any other type (bool, int, etc.) by converting to empty list
+            logger.warning(
+                f"Invalid modules type {type(modules).__name__}: {modules}. "
+                "Defaulting to empty list."
+            )
+            self.loaded_modules = []
 
         # ----------------------------------------------------------------
         # Save to Database (if not loading from database)

@@ -76,16 +76,36 @@ class LoaderMixin:
                         timer_val = float(timer) if timer else 0.0
                         jitter_val = float(jitter) if jitter else 0.0
 
-                        # Parse modules list
+                        # Parse modules list with robust type checking
                         if isinstance(modules_data, str):
                             try:
-                                modules = ast.literal_eval(modules_data)
+                                parsed = ast.literal_eval(modules_data)
+                                # Ensure parsed result is a list
+                                if isinstance(parsed, list):
+                                    modules = parsed
+                                else:
+                                    logger.warning(
+                                        f"Parsed modules is not a list for beacon {uuid_val} "
+                                        f"(got {type(parsed).__name__}): {modules_data}. "
+                                        "Defaulting to empty list."
+                                    )
+                                    modules = []
                             except (ValueError, SyntaxError):
+                                logger.warning(
+                                    f"Failed to parse modules string for beacon {uuid_val}: "
+                                    f"{modules_data}. Defaulting to empty list."
+                                )
                                 modules = []
+                        elif isinstance(modules_data, list):
+                            modules = modules_data
                         else:
-                            modules = (
-                                modules_data if isinstance(modules_data, list) else []
+                            # Handle any other type (bool, None, int, etc.)
+                            logger.warning(
+                                f"Invalid modules type for beacon {uuid_val} "
+                                f"({type(modules_data).__name__}): {modules_data}. "
+                                "Defaulting to empty list."
                             )
+                            modules = []
 
                         # Add beacon to active list
                         add_beacon_list(

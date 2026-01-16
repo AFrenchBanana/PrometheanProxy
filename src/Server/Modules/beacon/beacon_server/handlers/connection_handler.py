@@ -70,7 +70,7 @@ def handle_connection_request(
             config["beacon"]["jitter"],
             config,
             None,
-            False,
+            None,  # modules - use default list
         )
 
         # Log to live events panel and terminal
