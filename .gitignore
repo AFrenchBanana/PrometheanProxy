@@ -30,3 +30,5 @@ web/media/
 web/*.pid
 web/node_modules/
 web/.DS_Store
+
+*.log*
