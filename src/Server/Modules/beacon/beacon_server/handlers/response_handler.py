@@ -88,18 +88,55 @@ def handle_command_response(handler: BaseHTTPRequestHandler, match: dict):
         command.command_output = output
 
         # Log to live events panel and terminal
-        truncated_output = output[:50] + "..." if len(output) > 50 else output
+        # Deobfuscate module name in output for module loads
+        display_output = output
+        if command.command == "load_module":
+            try:
+                cmd_data = getattr(command, "command_data", None)
+                if cmd_data and isinstance(cmd_data, dict):
+                    obf_module_name = cmd_data.get("name") or cmd_data.get(
+                        "module_name"
+                    )
+                    if obf_module_name:
+                        real_name = _deobfuscate_module_name(obf_module_name)
+                        display_output = display_output.replace(
+                            obf_module_name, real_name
+                        )
+            except Exception as e:
+                logger.debug(f"Failed to deobfuscate module name in output: {e}")
+
+        truncated_output = (
+            display_output[:50] + "..." if len(display_output) > 50 else display_output
+        )
+        # For load_module, include the module name in the command label for visibility
+        display_command_label = command.command
+        try:
+            if command.command == "load_module":
+                cmd_data = getattr(command, "command_data", None)
+                if cmd_data and isinstance(cmd_data, dict):
+                    obf_module_name = cmd_data.get("name") or cmd_data.get(
+                        "module_name"
+                    )
+                    if obf_module_name:
+                        real_name = _deobfuscate_module_name(obf_module_name)
+                        display_command_label = f"load_module {real_name}"
+        except Exception:
+            pass
         log_connection_event(
             "command_output",
-            f"{command.command}: {truncated_output}",
-            {"command_uuid": cid, "command": command.command, "output": output},
+            f"{display_command_label}: {truncated_output}",
+            {
+                "command_uuid": cid,
+                "command": display_command_label,
+                "output": display_output,
+            },
         )
         RichPrint.r_print(
-            f"[bright_green]✓[/] Command [bright_cyan]{command.command}[/] completed"
+            f"[bright_green]✓[/] Command [bright_cyan]{display_command_label}[/] completed"
         )
 
-        if command.command == "module":
-            command.data = ""
+        if command.command == "load_module":
+            # Removed assignment to unknown attribute 'data' on beacon_command
 
             # Mark module as loaded now that beacon has confirmed it
             # Extract module name from command data and update beacon's loaded_modules

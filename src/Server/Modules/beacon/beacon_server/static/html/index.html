@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta</head> charset="UTF-8" />
+  <title>Promethean Beacon Control</title>
+  <meta name="viewport" content</title>="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel</style>: #171a21;
+      --text: #e6edf3;
+      --muted: #9aa4b2;
+      --accent: #5cc8ff;
+      --accent-2: #9d9dff;
+      --ok: #6ad47b;
+      --warn: #ffc652;
+      --err: #ff6b6b;
+      --border: #2a3140;
+      --shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(180deg, #0b0d12 0%, #12151b 60%, #0f1115 100%);
+      color: var(--text);
+    }
+    header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(16, 19, 26, 0.8);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tag {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #12151b;
+    }
+    .ws-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      box-shadow: var(--shadow);
+    }
+    .status-ok { background: var(--ok); }
+    .status-warn { background: var(--warn); }
+    .status-err { background: var(--err); }
+    main { padding: 20px; }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      gap: 4px;
+    }
+    .tab {
+      padding: 10px 12px;
+      cursor: pointer;
+      color: var(--muted);
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      transition: all 120ms ease;
+      font-size: 14px;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      color: var(--text);
+      border-color: var(--border);
+      background: var(--panel);
+    }
+    .tab-content {
+      display: none;
+      border: 1px solid var(--border);
+      border-top: none;
+      background: var(--panel);
+      border-radius: 0 8px 8px 8px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .tab-content.active { display: block; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #12151b;
+      padding: 12px;
+    }
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+      flex-wrap: wrap;
+    }
+    input, select, button, textarea {
+      border: 1px solid var(--border);
+      background: #0f1217;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(92,200,255,0.15);
+    }
+    button {
+      background: linear-gradient(90deg, #3b82f6 0%, #22d3ee 100%);
+      color: #0b0d12;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #1b2330;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    ul.log {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 300px;
+      overflow: auto;
+      border-radius: 6px;
+      background: #0c0f14;
+      border: 1px solid var(--border);
+    }
+    ul.log li {
+      padding: 8px 10px;
+      border-bottom: 1px solid #1f2633;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      color: #cdd8e5;
+      word-break: break-word;
+    }
+    ul.log li:last-child { border-bottom: none; }
+    .log .muted { color: var(--muted); }
+    .kv {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .kv .k { color: var(--muted); }
+    .kv .v { font-weight: 600; color: var(--text); }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      border-radius: 6px;
+      padding: 3px 6px;
+      border: 1px solid var(--border);
+      background: #0c0f14;
+      color: var(--muted);
+      margin-left: 8px;
+    }
+    .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+    footer {
+      padding: 16px 22px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #12151b;
+    }
+    .pill .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .dot.events { background: var(--accent); }
+    .dot.commands { background: var(--accent-2); }
+    .dot.beacon { background: var(--ok); }
+    .small { font-size: 12px; color: var(--muted); }
+    .spacer { flex: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1></body></header></h1>
+      Promethean Beacon Control
+      <span class="tag">Static UI</span>
+    </h1>
+    <div class="ws-status">
+      <div id="wsEventsDot" class="status-dot status-err" title="Events WS"></div>
+      <div id="wsCommandsDot" class="status-dot status-err" title="Commands WS"></div>
+      <div id="wsBeaconDot" class="status-dot status-warn" title="Beacon WS"></div>
+      <span id="statusText" class="small">Initializing websockets…</span>
+    </div>
+  </header>
+
+  <main>
+    <nav class="tabs" role="tablist" aria-label="</main>Beacon UI Tabs">
+      <button class="tab active" data-tab="events" aria-selected="true">Live Events</button>
+      <button class="tab" data-tab="commands" aria-selected="false">Commands</button>
+      <button class="tab" data-tab="beacon" aria-selected="false">Beacon Info</button>
+    </nav>
+
+    <!-- Live Events -->
+    <section id="tab-events" class="tab-content active" role="tabpanel" aria-labelledby="Live Events">
+      <div class="grid">
+        <div class="card">
+          <h3>Connection Stats</h3>
+          <div class="kv">
+            <div class="</h3>k">Sessions</div>
+            <div id="sessionsCount" class="v">-</div>
+            <div class="k">Beacons</div>
+            <div id="beaconsCount" class="v">-</div>
+          </div>
+          <div class="row">
+            <span class="badge">WebSocket: <span id="eventsWsLabel">Disconnected</span></span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Recent Events</h3>
+          <ul id="eventsLog" class="log" aria-live="polite"></ul>
+          <div class="row"></h3>
+            <button id="clearEvents" class="secondary">Clear</button>
+            <span class="spacer"></span>
+            <span class="small">Subscribed to ws://host:port/ws/events</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Commands -->
+    <section id="tab-commands" class="tab-content" role="tabpanel" aria-labelledby="Commands">
+      <div class="grid">
+        <div class="card">
+          <h3>Task Command</h3></h3>
+          <div class="row">
+            <input id="cmdTargetUUID" class="mono" type="text" placeholder="Target UUID (beacon/session)" style="flex: 1" />
+          </div>
+          <div class="row">
+            <input id="cmdName" type="text" placeholder="Command name (e.g., Shell, Module, ls)" style="flex: 1" />
+          </div>
+          <div class="row">
+            <textarea id="cmdData" placeholder='Command data (JSON or text)' rows="4" style="width: 100%"></textarea>
+          </div>
+          <div class="row">
+            <button id="issueCommand">Issue Command</button>
+            <button id="resetCommand" class="secondary">Reset</button>
+            <span class="spacer"></span>
+            <span class="badge">WS: <span id="commandsWsLabel">Disconnected</span></span>
+          </div>
+          <p class="small">This will attempt to POST to /api/commands with {uuid, command, data}. If the endpoint is not available, the UI will show an error.</p>
+        </div>
+        <div class="card">
+          <h3>Command Updates</h3</h3>>
+          <ul id="commandsLog" class="log" aria-live="polite"></ul>
+          <div class="row">
+            <button id="clearCommands" class="secondary">Clear</button>
+            <span class="spacer"></span>
+            <span class="small">Subscribed to ws://host:port/ws/commands</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beacon Info -->
+    <section id="tab-beacon" class="tab-content" role="tabpanel" aria-labelledby="Beacon Info">
+      <div class="grid">
+        <div class="card">
+          <h3>Select Beacon Channel</h3>
+          <div class="row">
+            <input id="beaconUUID" class="mono" type="text" placeholder="Beacon UUID" style="flex: 1" />
+            <button id="connectBeaconWs">Connect</button>
+            <button id="disconnectBeaconWs" class="secondary">Disconnect</button>
+          </div>
+          <div class="row">
+            <span class="badge">WS: <span id="beaconWsLabel">Disconnected</span></span>
+          </div>
+          <div class="kv" style="margin-top: 10px;">
+            <div class="k">Hostname</div>
+            <div id="beaconHostname" class="v">-</div>
+            <div class="k">Next Beacon</div>
+            <div id="beaconNext" class="v">-</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3></h3>Beacon Updates</h3>
+          <ul id="beaconLog" class="log" aria-live="polite"></ul>
+          <div class="row">
+            <button id="clearBeacon" class="secondary">Clear</button>
+            <span class="spacer"></span>
+            <span class="small">Subscribed to ws://host:port/ws/beacons/&lt;uuid&gt;</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="row">
+      <span class="pill"><span class="</footer>dot events"></span> Events</span>
+      <span class="pill"><span class="dot commands"></span> Commands</span>
+      <span class="pill"><span class="dot beacon"></span> Beacon</span>
+      <span class="spacer"></span>
+      <span class="small">WebSocket endpoints: /ws/events, /ws/commands, /ws/beacons/&lt;uuid&gt;</span>
+    </div>
+  </footer>
+
+  <script></script>
+    // Utility: basic DOM helpers
+    const $ = (sel) => document.querySelector(sel);
+    const appendLog = (ul, text, cls='') => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      if (cls) li.classList.add(cls);
+      ul.prepend(li);
+      // limit to 200 entries
+      while (ul.children.length > 200) ul.removeChild(ul.lastChild);
+    };
+    const fmt = (obj) => {
+      try { return JSON.stringify(obj, null, 2); } catch { return String(obj); }
+    };
+    const setStatusDot = (el, state) => {
+      el.classList.remove('status-ok', 'status-warn', 'status-err');
+      el.classList.add(state);
+    };
+    const hostname = window.location.hostname || 'localhost';
+    const defaultPort = window.location.port || ''; // if empty, browser will fill default
+    const wsBase = (path) => {
+      const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const portPart = defaultPort ? `:${defaultPort}` : '';
+      return `${proto}://${hostname}${portPart}${path}`;
+    };
+
+    // Tabs behavior
+    Array.from(document.querySelectorAll('.tab')).forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        Array.from(document.querySelectorAll('.tab')).forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        Array.from(document.querySelectorAll('.tab-content')).forEach(c => c.classList.remove('active'));
+        const tgt = document.getElementById(`tab-${target}`);
+        if (tgt) tgt.classList.add('active');
+      });
+    });
+
+    // WebSocket connections
+    let wsEvents = null;
+    let wsCommands = null;
+    let wsBeacon = null;
+    let currentBeaconUUID = null;
+
+    // Connect Events WS
+    function connectEvents() {
+      try {
+        wsEvents = new WebSocket(wsBase('/ws/events'));
+        $('#eventsWsLabel').textContent = 'Connecting…';
+        setStatusDot($('#wsEventsDot'), 'status-warn');
+        wsEvents.onopen = () => {
+          $('#eventsWsLabel').textContent = 'Connected';
+          $('#statusText').textContent = 'Events connected';
+          setStatusDot($('#wsEventsDot'), 'status-ok');
+          appendLog($('#eventsLog'), '[events] connected', 'muted');
+        };
+        wsEvents.onmessage = (evt) => {
+          try {
+            const data = JSON.parse(evt.data);
+            if (data.type === 'connection_stats') {
+              $('#sessionsCount').textContent = String(data.sessions ?? '-');
+              $('#beaconsCount').textContent = String(data.beacons ?? '-');
+            }
+            appendLog($('#eventsLog'), `[events] ${fmt(data)}`);
+          } catch (e) {
+            appendLog($('#eventsLog'), `[events] ${evt.data}`);
+          }
+        };
+        wsEvents.onclose = () => {
+          $('#eventsWsLabel').textContent = 'Disconnected';
+          setStatusDot($('#wsEventsDot'), 'status-err');
+          appendLog($('#eventsLog'), '[events] disconnected', 'muted');
+          // auto-reconnect after a delay
+          setTimeout(connectEvents, 2000);
+        };
+        wsEvents.onerror = () => {
+          $('#eventsWsLabel').textContent = 'Error';
+          setStatusDot($('#wsEventsDot'), 'status-err');
+          appendLog($('#eventsLog'), '[events] error', 'muted');
+        };
+      } catch (e) {
+        appendLog($('#eventsLog'), `[events] failed: ${e}`, 'muted');
+        setStatusDot($('#wsEventsDot'), 'status-err');
+      }
+    }
+
+    // Connect Commands WS
+    function connectCommands() {
+      try {
+        wsCommands = new WebSocket(wsBase('/ws/commands'));
+        $('#commandsWsLabel').textContent = 'Connecting…';
+        setStatusDot($('#wsCommandsDot'), 'status-warn');
+        wsCommands.onopen = () => {
+          $('#commandsWsLabel').textContent = 'Connected';
+          $('#statusText').textContent = 'Commands connected';
+          setStatusDot($('#wsCommandsDot'), 'status-ok');
+          appendLog($('#commandsLog'), '[commands] connected', 'muted');
+        };
+        wsCommands.onmessage = (evt) => {
+          try {
+            const data = JSON.parse(evt.data);
+            // expectation: {type:"command", uuid, state, command, target, output?}
+            appendLog($('#commandsLog'), `[commands] ${fmt(data)}`);
+          } catch (e) {
+            appendLog($('#commandsLog'), `[commands] ${evt.data}`);
+          }
+        };
+        wsCommands.onclose = () => {
+          $('#commandsWsLabel').textContent = 'Disconnected';
+          setStatusDot($('#wsCommandsDot'), 'status-err');
+          appendLog($('#commandsLog'), '[commands] disconnected', 'muted');
+          setTimeout(connectCommands, 2500);
+        };
+        wsCommands.onerror = () => {
+          $('#commandsWsLabel').textContent = 'Error';
+          setStatusDot($('#wsCommandsDot'), 'status-err');
+          appendLog($('#commandsLog'), '[commands] error', 'muted');
+        };
+      } catch (e) {
+        appendLog($('#commandsLog'), `[commands] failed: ${e}`, 'muted');
+        setStatusDot($('#wsCommandsDot'), 'status-err');
+      }
+    }
+
+    // Connect Beacon WS (with UUID)
+    function connectBeacon(uuid) {
+      if (!uuid) {
+        appendLog($('#beaconLog'), '[beacon] UUID required', 'muted');
+        return;
+      }
+      currentBeaconUUID = uuid.trim();
+      if (wsBeacon && wsBeacon.readyState === WebSocket.OPEN) {
+        try { wsBeacon.close(); } catch {}
+      }
+      try {
+        wsBeacon = new WebSocket(wsBase(`/ws/beacons/${encodeURIComponent(currentBeaconUUID)}`));
+        $('#beaconWsLabel').textContent = 'Connecting…';
+        setStatusDot($('#wsBeaconDot'), 'status-warn');
+        wsBeacon.onopen = () => {
+          $('#beaconWsLabel').textContent = `Connected (${currentBeaconUUID})`;
+          $('#statusText').textContent = `Beacon ${currentBeaconUUID} connected`;
+          setStatusDot($('#wsBeaconDot'), 'status-ok');
+          appendLog($('#beaconLog'), `[beacon:${currentBeaconUUID}] connected`, 'muted');
+        };
+        wsBeacon.onmessage = (evt) => {
+          try {
+            const data = JSON.parse(evt.data);
+            if (data.type === 'beacon_checkin') {
+              if (data.hostname) $('#beaconHostname').textContent = data.hostname;
+              if (data.next_beacon || data.next_beacon_ts) {
+                const nb = data.next_beacon || data.next_beacon_ts;
+                $('#beaconNext').textContent = String(nb);
+              }
+            }
+            appendLog($('#beaconLog'), `[beacon:${currentBeaconUUID}] ${fmt(data)}`);
+          } catch (e) {
+            appendLog($('#beaconLog'), `[beacon:${currentBeaconUUID}] ${evt.data}`);
+          }
+        };
+        wsBeacon.onclose = () => {
+          $('#beaconWsLabel').textContent = 'Disconnected';
+          setStatusDot($('#wsBeaconDot'), 'status-err');
+          appendLog($('#beaconLog'), `[beacon:${currentBeaconUUID}] disconnected`, 'muted');
+        };
+        wsBeacon.onerror = () => {
+          $('#beaconWsLabel').textContent = 'Error';
+          setStatusDot($('#wsBeaconDot'), 'status-err');
+          appendLog($('#beaconLog'), `[beacon:${currentBeaconUUID}] error`, 'muted');
+        };
+      } catch (e) {
+        appendLog($('#beaconLog'), `[beacon] failed: ${e}`, 'muted');
+        setStatusDot($('#wsBeaconDot'), 'status-err');
+      }
+    }
+
+    function disconnectBeacon() {
+      if (wsBeacon) {
+        try { wsBeacon.close(); } catch {}
+      }
+      $('#beaconWsLabel').textContent = 'Disconnected';
+      setStatusDot($('#wsBeaconDot'), 'status-err');
+      appendLog($('#beaconLog'), `[beacon:${currentBeaconUUID ?? '-'}] disconnected`, 'muted');
+    }
+
+    // Commands: Issue
+    async function issueCommand() {
+      const uuid = $('#cmdTargetUUID').value.trim();
+      const cmd = $('#cmdName').value.trim();
+      const dataRaw = $('#cmdData').value;
+      if (!uuid || !cmd) {
+        appendLog($('#commandsLog'), 'Missing uuid or command', 'muted');
+        return;
+      }
+      let parsedData = null;
+      try {
+        if (dataRaw) {
+          parsedData = JSON.parse(dataRaw);
+        }
+      } catch {
+        parsedData = dataRaw;
+      }
+
+      const payload = { uuid, command: cmd, data: parsedData };
+      appendLog($('#commandsLog'), `[issue] ${fmt(payload)}`);
+
+      // Try POST /api/commands (if available)
+      try {
+        const resp = await fetch('/api/commands', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const body = await resp.text();
+        let json;
+        try { json = JSON.parse(body); } catch { json = { raw: body }; }
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        appendLog($('#commandsLog'), `[issue:ok] ${fmt(json)}`);
+      } catch (e) {
+        appendLog($('#commandsLog'), `[issue:err] ${e}`, 'muted');
+      }
+    }
+
+    // Wire up UI controls
+    $('#clearEvents').addEventListener('click', () => { $('#eventsLog').innerHTML = ''; });
+    $('#clearCommands').addEventListener('click', () => { $('#commandsLog').innerHTML = ''; });
+    $('#clearBeacon').addEventListener('click', () => { $('#beaconLog').innerHTML = ''; });
+    $('#issueCommand').addEventListener('click', issueCommand);
+    $('#resetCommand').addEventListener('click', () => {
+      $('#cmdTargetUUID').value = '';
+      $('#cmdName').value = '';
+      $('#cmdData').value = '';
+    });
+    $('#connectBeaconWs').addEventListener('click', () => connectBeacon($('#beaconUUID').value));
+    $('#disconnectBeaconWs').addEventListener('click', disconnectBeacon);
+
+    // Initialize connections
+    connectEvents();
+    connectCommands();
+    // Beacon WS connects on demand
+
+    // Improve status text based on sockets
+    const statusUpdater = () => {
+      const es = wsEvents && wsEvents.readyState === WebSocket.OPEN;
+      const cs = wsCommands && wsCommands.readyState === WebSocket.OPEN;
+      const bs = wsBeacon && wsBeacon.readyState === WebSocket.OPEN;
+      const status = [
+        es ? 'events:ok' : 'events:down',
+        cs ? 'commands:ok' : 'commands:down',
+        bs ? 'beacon:ok' : 'beacon:idle',
+      ].join(' | ');
+      $('#statusText').textContent = status;
+    };
+    setInterval(statusUpdater, 1000);
+  </script>
+</body>
+</html>

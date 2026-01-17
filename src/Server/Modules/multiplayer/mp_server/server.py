@@ -7,7 +7,7 @@ import os
 import threading
 
 from flask import Flask
-from Modules.global_objects import logger
+from Modules.global_objects import get_database, logger
 
 from .router import register_routes
 from .utils import TokenManager, get_token_ttl_from_config
@@ -64,6 +64,16 @@ class MP_Socket:
 
         # Register routes
         register_routes(self._app, self)
+
+        # Initialize command database (creates tables on first use)
+        try:
+            get_database("command_database")
+            logger.info(
+                "Command database initialized at multiplayer server construction"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize command database in MP_Socket: {e}")
+            raise
 
         logger.info("Initialised HTTP multiplayer server (per-user token model)")
 

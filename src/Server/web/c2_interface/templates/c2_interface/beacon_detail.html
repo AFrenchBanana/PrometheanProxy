@@ -464,7 +464,7 @@
                                 <td class="px-4 py-2 text-sm text-gray-300">
                                     <div
                                         class="max-w-md truncate"
-                                        x-text="cmd.command_output || 'Awaiting response'"
+                                        x-text="cmd.command_output || 'Awaiting response (listening for updates...)'"
                                     ></div>
                                 </td>
                                 <td
@@ -632,7 +632,187 @@
                 this.loadBeacon();
                 this.loadAvailableCommands();
                 this.loadQueuedCommands();
-                // Auto-refresh every 10 seconds
+
+                // Subscribe to per-beacon WebSocket for live updates
+                const beaconWsUrl = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws/beacons/${this.beaconUuid}/`;
+                try {
+                    this.beaconSocket = new WebSocket(beaconWsUrl);
+                    this.beaconSocket.onopen = () => {
+                        // Optional: send a ping to confirm
+                        this.beaconSocket.send(
+                            JSON.stringify({ type: "ping" }),
+                        );
+                    };
+                    this.beaconSocket.onmessage = (evt) => {
+                        const msg = JSON.parse(evt.data || "{}");
+                        const type = msg.type;
+                        const data = msg.data || {};
+
+                        // Normalize command result payloads to update queued list and history
+                        if (type === "beacon_command_result") {
+                            const status = data.status || "pending";
+                            const result = data.result;
+                            const uuid = data.uuid;
+
+                            // Update command history live
+                            this.commandHistory.unshift({
+                                command: data.command,
+                                params: data.params || {},
+                                output:
+                                    result?.response ||
+                                    result?.output ||
+                                    data.output ||
+                                    (status === "failed"
+                                        ? data.error || "Command failed"
+                                        : status === "executing"
+                                          ? "Executing..."
+                                          : "Queued"),
+                                status: status,
+                                timestamp:
+                                    data.timestamp || new Date().toISOString(),
+                            });
+
+                            // Update queuedCommands table row if present
+                            if (uuid && Array.isArray(this.queuedCommands)) {
+                                const idx = this.queuedCommands.findIndex(
+                                    (c) => c.command_uuid === uuid,
+                                );
+                                if (idx >= 0) {
+                                    const updated = {
+                                        ...this.queuedCommands[idx],
+                                    };
+                                    updated.executed = status === "completed";
+                                    updated.command_output =
+                                        result?.response ||
+                                        result?.output ||
+                                        data.output ||
+                                        updated.command_output;
+                                    this.queuedCommands.splice(idx, 1, updated);
+                                }
+                            }
+                        } else if (type === "command_result") {
+                            // Some events may come as generic command_result
+                            const dataCmd = data || {};
+                            this.commandHistory.unshift({
+                                command: dataCmd.command,
+                                params: dataCmd.params || {},
+                                output: dataCmd.output || "Result received",
+                                status: dataCmd.status || "completed",
+                                timestamp:
+                                    dataCmd.timestamp ||
+                                    new Date().toISOString(),
+                            });
+                        } else if (type === "status_change") {
+                            // Update beacon status related fields if provided
+                            if (this.beacon && data.status) {
+                                this.beacon.status = data.status;
+                            }
+                        }
+                    };
+                    this.beaconSocket.onerror = () => {
+                        // Fail silently and rely on polling
+                    };
+                    this.beaconSocket.onclose = () => {
+                        // Attempt reconnection with a small delay
+                        setTimeout(() => {
+                            this.initBeaconSocket && this.initBeaconSocket();
+                        }, 5000);
+                    };
+                    this.initBeaconSocket = () => {
+                        this.init(); // re-run init to reconnect
+                    };
+                } catch (e) {
+                    // If socket creation fails, continue with polling
+                }
+
+                // Subscribe to global command monitor for queue/execution updates
+                const commandsWsUrl = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws/commands/`;
+                try {
+                    this.commandsSocket = new WebSocket(commandsWsUrl);
+                    this.commandsSocket.onopen = () => {
+                        this.commandsSocket.send(
+                            JSON.stringify({ type: "ping" }),
+                        );
+                    };
+                    this.commandsSocket.onmessage = (evt) => {
+                        const msg = JSON.parse(evt.data || "{}");
+                        const type = msg.type;
+                        const data = msg.data || {};
+
+                        if (
+                            type === "command_queued" ||
+                            type === "command_executing" ||
+                            type === "command_completed" ||
+                            type === "command_failed"
+                        ) {
+                            const uuid = data.uuid;
+                            const status = data.status;
+
+                            // Only process events related to the current beacon
+                            if (
+                                uuid !== this.beaconUuid &&
+                                !String(uuid).startsWith(
+                                    String(this.beaconUuid),
+                                )
+                            ) {
+                                return;
+                            }
+
+                            // Update queuedCommands
+                            if (Array.isArray(this.queuedCommands)) {
+                                const idx = this.queuedCommands.findIndex(
+                                    (c) => c.command_uuid === uuid,
+                                );
+                                if (idx >= 0) {
+                                    const updated = {
+                                        ...this.queuedCommands[idx],
+                                    };
+                                    updated.executed = status === "completed";
+                                    updated.command_output =
+                                        data.result?.response ||
+                                        data.result?.output ||
+                                        data.output ||
+                                        updated.command_output;
+                                    this.queuedCommands.splice(idx, 1, updated);
+                                } else {
+                                    // If it doesn't exist, append a lightweight entry
+                                    this.queuedCommands.unshift({
+                                        command_uuid:
+                                            uuid ||
+                                            Math.random().toString(36).slice(2),
+                                        command: data.command,
+                                        executed: status === "completed",
+                                        command_output: data.output || "",
+                                    });
+                                }
+                            }
+
+                            // Add to commandHistory for user feedback
+                            this.commandHistory.unshift({
+                                command: data.command,
+                                params: data.params || {},
+                                output:
+                                    (status === "queued" && "Queued") ||
+                                    (status === "executing" &&
+                                        "Executing...") ||
+                                    (status === "completed" &&
+                                        (data.result?.response ||
+                                            data.result?.output ||
+                                            "Completed")) ||
+                                    (status === "failed" &&
+                                        (data.error || "Failed")) ||
+                                    "Update",
+                                status: status,
+                                timestamp:
+                                    data.timestamp || new Date().toISOString(),
+                            });
+                        }
+                    };
+                    this.commandsSocket.onerror = () => {};
+                    this.commandsSocket.onclose = () => {};
+                } catch (e) {}
+
+                // Auto-refresh every 10 seconds as a fallback
                 this.refreshInterval = setInterval(() => {
                     this.loadBeacon();
                     this.loadQueuedCommands();
@@ -702,6 +882,119 @@
 
             async executeCommand() {
                 if (!this.selectedCommand || this.executing) return;
+                let commandData = null;
+
+                // If the command requires a module and it's not loaded, prompt to load it first
+                // Assumption: command name matches the required module name unless explicitly mapped
+                const moduleMap = {
+                    // Add explicit mappings here if a command depends on a differently named module
+                    // e.g., "whoami": "whoami",
+                    // "shell": "shell",
+                };
+                const requiredModule =
+                    moduleMap[this.selectedCommand] || this.selectedCommand;
+
+                // Skip check for the 'load_module' command itself
+                if (
+                    requiredModule &&
+                    this.selectedCommand !== "load_module" &&
+                    (!this.beacon ||
+                        !Array.isArray(this.beacon.loaded_modules) ||
+                        !this.beacon.loaded_modules.includes(requiredModule))
+                ) {
+                    const confirmed = window.confirm(
+                        `The module '${requiredModule}' is not loaded. Load it now?`,
+                    );
+                    if (!confirmed) {
+                        showToast(
+                            `Module '${requiredModule}' not loaded. Command cancelled.`,
+                            "warning",
+                        );
+                        return;
+                    }
+
+                    try {
+                        // Queue the load_module command first
+                        await apiRequest("/api/commands/execute/", "POST", {
+                            uuid: this.beaconUuid,
+                            command: "load_module",
+                            data: requiredModule,
+                        });
+
+                        // Reflect in UI immediately
+                        this.commandHistory.unshift({
+                            command: "load_module",
+                            params: { name: requiredModule },
+                            output: `Module '${requiredModule}' load queued; queuing command...`,
+                            status: "queued",
+                            timestamp: new Date().toISOString(),
+                        });
+
+                        showToast(
+                            `Module '${requiredModule}' load queued; queuing command next`,
+                            "success",
+                        );
+
+                        // Immediately queue the original command after confirming module load
+                        try {
+                            const queuedResponse = await apiRequest(
+                                "/api/commands/execute/",
+                                "POST",
+                                {
+                                    uuid: this.beaconUuid,
+                                    command: this.selectedCommand,
+                                    data: commandData,
+                                },
+                            );
+
+                            // Reflect the original command queuing in history
+                            const paramsDisplay = {};
+                            this.commandParams.forEach((param) => {
+                                if (param.value) {
+                                    paramsDisplay[param.name] = param.value;
+                                }
+                            });
+
+                            this.commandHistory.unshift({
+                                command: this.selectedCommand,
+                                params: paramsDisplay,
+                                output: "Queued (waiting for live updates...)",
+                                status: "queued",
+                                timestamp: new Date().toISOString(),
+                            });
+
+                            // Refresh queued commands list
+                            await this.loadQueuedCommands();
+                        } catch (queueErr) {
+                            console.error(
+                                "Failed to queue original command after module load:",
+                                queueErr,
+                            );
+                            this.commandHistory.unshift({
+                                command: this.selectedCommand,
+                                params: {},
+                                output: `Error: ${queueErr.message || "Failed to queue command"}`,
+                                status: "error",
+                                timestamp: new Date().toISOString(),
+                            });
+                            showToast(
+                                "Failed to queue command after module load",
+                                "error",
+                            );
+                        }
+
+                        // Prevent double-queuing later in the function
+                        this.executing = false;
+                        return;
+                    } catch (err) {
+                        console.error("Failed to queue load_module:", err);
+                        showToast(
+                            `Failed to load module '${requiredModule}'`,
+                            "error",
+                        );
+                        return;
+                    }
+                }
 
                 // Validate required parameters
                 const missingParams = this.commandParams.filter(
@@ -718,16 +1011,16 @@
                 this.executing = true;
 
                 // Build command data from parameters
-                let commandData = null;
                 if (this.commandParams.length > 0) {
                     // Special handling for load_module command
                     if (this.selectedCommand === "load_module") {
-                        // load_module expects {name: module_name}
+                        // load_module expects a plain string
                         const moduleParam = this.commandParams.find(
                             (p) => p.name === "module",
                         );
                         if (moduleParam && moduleParam.value) {
-                            commandData = { name: moduleParam.value };
+                            // Send string to API, but display as object in history for clarity
+                            commandData = moduleParam.value;
                         }
                     } else if (this.commandParams.length === 1) {
                         // For other single parameter commands, send as string
@@ -756,19 +1049,28 @@
 
                     // Build params display object
                     const paramsDisplay = {};
-                    this.commandParams.forEach((param) => {
-                        if (param.value) {
-                            paramsDisplay[param.name] = param.value;
+                    if (this.selectedCommand === "load_module") {
+                        const moduleParam = this.commandParams.find(
+                            (p) => p.name === "module",
+                        );
+                        if (moduleParam && moduleParam.value) {
+                            paramsDisplay.name = moduleParam.value;
                         }
-                    });
+                    } else {
+                        this.commandParams.forEach((param) => {
+                            if (param.value) {
+                                paramsDisplay[param.name] = param.value;
+                            }
+                        });
+                    }
 
-                    // Add to command history
+                    // Add to command history, UI will update live via WebSocket events
                     this.commandHistory.unshift({
                         command: this.selectedCommand,
                         params: paramsDisplay,
-                        output: "Command queued successfully",
-                        status: "pending",
-                        timestamp: new Date().toLocaleTimeString(),
+                        output: "Queued (waiting for live updates...)",
+                        status: "queued",
+                        timestamp: new Date().toISOString(),
                     });
 
                     showToast(

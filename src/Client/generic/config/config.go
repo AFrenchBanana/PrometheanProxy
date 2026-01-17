@@ -16,10 +16,15 @@ var (
 	Jitter             float64 = 5
 	Timer              float64 = 10
 	URLPort            string  = "8000"
-	SessionAddressPort string  = "2000"
-	URL                string  = "http://localhost:" + URLPort
-	SessionAddr        string  = "localhost:" + SessionAddressPort
-	OsIdentifier       string  = runtime.GOOS + " " + runtime.GOARCH + func() string {
+	SessionAddressPort string  = func() string {
+		if IsDebug() {
+			return "2002"
+		}
+		return "2000"
+	}()
+	URL          string = "http://localhost:" + URLPort
+	SessionAddr  string = "localhost:" + SessionAddressPort
+	OsIdentifier string = runtime.GOOS + " " + runtime.GOARCH + func() string {
 		if IsDebug() {
 			return " (DEBUG)"
 		} else {

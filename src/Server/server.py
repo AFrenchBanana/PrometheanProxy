@@ -134,7 +134,6 @@ from Modules.multi_handler.multi_handler import MultiHandler
 from Modules.utils.console import banner, cprint
 from Modules.utils.console import error as c_error
 from Modules.utils.ui_manager import get_ui_manager
-from Modules.web_server import start_django_server
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 logging.getLogger("socketio").setLevel(logging.ERROR)
@@ -154,14 +153,6 @@ if __name__ in {"__main__", "__mp_main__"}:
         threading.Thread(
             target=start_beacon_server, args=(config,), daemon=True
         ).start()
-
-        # --- Django Web Server Thread ---
-        logger.debug("Server: Starting Django web server thread")
-        django_thread = start_django_server(config)
-        if django_thread:
-            logger.info("Django web server thread started")
-        else:
-            logger.debug("Django web server not enabled")
 
         multi_handler.startsocket()
         logger.debug("Server: Background server threads started successfully")

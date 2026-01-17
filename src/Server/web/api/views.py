@@ -9,6 +9,7 @@ command execution through a clean RESTful interface.
 import logging
 from datetime import datetime
 
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
@@ -521,7 +522,66 @@ class ExecuteCommandView(APIView):
                 command = serializer.validated_data["command"]
                 data = serializer.validated_data.get("data")
 
+                # Broadcast "queued" status before executing
+                from asgiref.sync import async_to_sync
+                from channels.layers import get_channel_layer
+
+                channel_layer = get_channel_layer()
+                queued_payload = {
+                    "uuid": uuid,
+                    "command": command,
+                    "status": "queued",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        "command_monitor",
+                        {"type": "command_queued", "data": queued_payload},
+                    )
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"beacon_{uuid}",
+                        {"type": "beacon_command_result", "data": queued_payload},
+                    )
+
+                # Broadcast "executing" status
+                executing_payload = {
+                    "uuid": uuid,
+                    "command": command,
+                    "status": "executing",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        "command_monitor",
+                        {"type": "command_executing", "data": executing_payload},
+                    )
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"beacon_{uuid}",
+                        {"type": "beacon_command_result", "data": executing_payload},
+                    )
+
+                # Execute the command
                 result = client.execute_command(uuid, command, data)
+
+                # Broadcast "completed" status and result
+                completed_payload = {
+                    "uuid": uuid,
+                    "command": command,
+                    "status": "completed",
+                    "result": result,
+                }
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        "command_monitor",
+                        {"type": "command_completed", "data": completed_payload},
+                    )
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"beacon_{uuid}",
+                        {"type": "beacon_command_result", "data": completed_payload},
+                    )
 
                 logger.info(f"Command '{command}' executed on {uuid}")
                 return Response(result, status=status.HTTP_200_OK)
@@ -536,18 +596,101 @@ class ExecuteCommandView(APIView):
             )
         except ConnectionError as e:
             logger.error(f"Connection error executing command: {e}")
+            # Broadcast "failed" status due to backend connection error
+            try:
+                from asgiref.sync import async_to_sync
+                from channels.layers import get_channel_layer
+
+                channel_layer = get_channel_layer()
+                # Safely extract UUID if available
+                uuid = request.data.get("uuid")
+                failed_payload = {
+                    "uuid": uuid,
+                    "command": request.data.get("command"),
+                    "status": "failed",
+                    "error": "Backend connection failed",
+                    "detail": str(e),
+                }
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        "command_monitor",
+                        {"type": "command_failed", "data": failed_payload},
+                    )
+                if uuid and channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"beacon_{uuid}",
+                        {"type": "beacon_command_result", "data": failed_payload},
+                    )
+            except Exception:
+                # Ensure error path doesn't break due to broadcasting issues
+                pass
+
             return Response(
                 {"error": "Backend connection failed", "detail": str(e)},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         except PrometheanAPIException as e:
             logger.error(f"API error executing command: {e}")
+            # Broadcast "failed" status due to API error
+            try:
+                from asgiref.sync import async_to_sync
+                from channels.layers import get_channel_layer
+
+                channel_layer = get_channel_layer()
+                uuid = request.data.get("uuid")
+                failed_payload = {
+                    "uuid": uuid,
+                    "command": request.data.get("command"),
+                    "status": "failed",
+                    "error": "Command execution failed",
+                    "detail": str(e),
+                }
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        "command_monitor",
+                        {"type": "command_failed", "data": failed_payload},
+                    )
+                if uuid and channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"beacon_{uuid}",
+                        {"type": "beacon_command_result", "data": failed_payload},
+                    )
+            except Exception:
+                pass
+
             return Response(
                 {"error": "Command execution failed", "detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
             logger.error(f"Error executing command: {e}")
+            # Broadcast "failed" status for unexpected errors
+            try:
+                from asgiref.sync import async_to_sync
+                from channels.layers import get_channel_layer
+
+                channel_layer = get_channel_layer()
+                uuid = request.data.get("uuid")
+                failed_payload = {
+                    "uuid": uuid,
+                    "command": request.data.get("command"),
+                    "status": "failed",
+                    "error": "Failed to execute command",
+                    "detail": str(e),
+                }
+                if channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        "command_monitor",
+                        {"type": "command_failed", "data": failed_payload},
+                    )
+                if uuid and channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"beacon_{uuid}",
+                        {"type": "beacon_command_result", "data": failed_payload},
+                    )
+            except Exception:
+                pass
+
             return Response(
                 {"error": "Failed to execute command", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

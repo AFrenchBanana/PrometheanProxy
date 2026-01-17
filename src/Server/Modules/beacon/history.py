@@ -120,9 +120,10 @@ class HistoryMixin:
             fresh_cursor = self.database.dbconnection.cursor()
 
             # Query database for all commands for this beacon
+            placeholder = "%s" if self.database.db_type == "postgresql" else "?"
             query = (
                 "SELECT command, command_uuid, executed, command_output, command_data "
-                "FROM beacon_commands WHERE beacon_uuid = ?"
+                f"FROM beacon_commands WHERE beacon_uuid = {placeholder}"
             )
             fresh_cursor.execute(query, (userID,))
             commands = fresh_cursor.fetchall()

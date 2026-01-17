@@ -6,7 +6,7 @@ TLSCertificateDir = "~/.PrometheanProxy/Certificates/"
 TLSCertificate = "cert.pem"
 TLSkey = "key.pem"
 GUI = false
-quiet_mode = false
+quiet_mode = true
 implant_directory = "~/.PrometheanProxy/ImplantData/"
 # Default plugins folder (compiled artifacts expected under <name>/{release,debug})
 module_location = "~/.PrometheanProxy/plugins"
@@ -97,8 +97,21 @@ Execute local system commands:
 """
 
 [command_database]
-# where the database file will be created/ used
+# Database type: "sqlite" or "postgresql"
+# If DATABASE_URL environment variable is set, it will override these settings
+type = "sqlite"
+
+# SQLite configuration (used when type = "sqlite")
 file = "~/.PrometheanProxy/db/implants.db"
+
+# PostgreSQL configuration (used when type = "postgresql")
+# These can be overridden by environment variables: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
+dbname = "promethean"
+user = "promethean"
+password = "promethean_password"
+host = "db"
+port = "5432"
+
 # add data True will insert data to the database, false will not
 addData = true
 # persist beacons in database (if false, beacons won't be added to DB)
@@ -141,7 +154,7 @@ schema = "Filename text, Hash text"
 
 [[command_database.tables]]
 name = "Disk"
-schema = "uuid text, IP text, Disk Usage, Time text"
+schema = "uuid text, ip text, disk_usage text, time text"
 
 [[command_database.tables]]
 name = "connections"
@@ -157,12 +170,26 @@ schema = "command text, command_uuid text, session_address text, command_data te
 
 
 [user_database]
+# Database type: "sqlite" or "postgresql"
+# If DATABASE_URL environment variable is set, it will override these settings
+type = "sqlite"
+
+# SQLite configuration (used when type = "sqlite")
 file = "~/.PrometheanProxy/db/user.db"
+
+# PostgreSQL configuration (used when type = "postgresql")
+# These can be overridden by environment variables: DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
+dbname = "promethean"
+user = "promethean"
+password = "promethean_password"
+host = "db"
+port = "5432"
+
 addData = true
 
 [[user_database.tables]]
 name = "Users"
-schema = "userID text, user text, password text, passwordSalt text, admin bool"
+schema = "userID text, username text, password text, passwordSalt text, admin bool"
 
 [[user_database.tables]]
 name = "terminal_user"

@@ -180,7 +180,8 @@ class ControlCommands:
             address_str = str(r_address)
 
             # Query database for all commands for this session
-            query = "SELECT command, command_uuid, executed, command_output FROM session_commands WHERE session_address = ?"
+            placeholder = "%s" if self.database.db_type == "postgresql" else "?"
+            query = f"SELECT command, command_uuid, executed, command_output FROM session_commands WHERE session_address = {placeholder}"
             self.database.cursor.execute(query, (address_str,))
             commands = self.database.cursor.fetchall()
 

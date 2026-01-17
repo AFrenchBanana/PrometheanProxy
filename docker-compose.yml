@@ -1,0 +1,133 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./src/Server/web/Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./src/Server/web:/app:z
+    networks:
+      - promethean
+    environment:
+      - ALLOWED_HOSTS=localhost,127.0.0.1,web,0.0.0.0
+      - CSRF_TRUSTED_ORIGINS=http://localhost:8001,http://127.0.0.1:8001,http://web:8001
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8001,http://127.0.0.1:8001
+      - DEBUG=True
+      - PROMETHEAN_API_URL=https://server:2001
+      - PROMETHEAN_API_VERIFY_SSL=False
+      - DATABASE_URL=postgresql://promethean:promethean_password@db:5432/promethean
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=promethean
+      - DB_USER=promethean
+      - DB_PASSWORD=promethean_password
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: "none"
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=promethean
+      - POSTGRES_USER=promethean
+      - POSTGRES_PASSWORD=promethean_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - promethean
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U promethean"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "none"
+
+  server:
+    build:
+      context: .
+      dockerfile: ./src/Server/Dockerfile
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./src/Server:/app:z
+    environment:
+      - DATABASE_URL=postgresql://promethean:promethean_password@db:5432/promethean
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    networks:
+      - promethean
+    ports:
+      - "2000:2000"
+      - "2001:2001"
+      - "8000:8000"
+      - "8080:8080"
+      - "11001:11001"
+    logging:
+      driver: "none"
+
+  web-proxy:
+    build:
+      context: .
+      dockerfile: ./src/Server/proxy/web/Dockerfile
+    depends_on:
+      web:
+        condition: service_started
+    networks:
+      - promethean
+    ports:
+      - "80:80"
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+    logging:
+      driver: "none"
+
+  beacon-proxy:
+    build:
+      context: .
+      dockerfile: ./src/Server/proxy/beacon/Dockerfile
+    depends_on:
+      server:
+        condition: service_started
+    networks:
+      - promethean
+    ports:
+      - "8081:8081"
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+    logging:
+      driver: "none"
+
+  session-proxy:
+    build:
+      context: .
+      dockerfile: ./src/Server/proxy/session/Dockerfile
+    depends_on:
+      server:
+        condition: service_started
+    networks:
+      - promethean
+    ports:
+      - "2002:2001"
+    environment:
+      - NGINX_WORKER_PROCESSES=auto
+    logging:
+      driver: "none"
+
+networks:
+  promethean:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,6 +1,14 @@
 import os
 import sqlite3
 
+try:
+    import psycopg2
+    import psycopg2.extras
+
+    POSTGRES_AVAILABLE = True
+except ImportError:
+    POSTGRES_AVAILABLE = False
+
 from Modules.global_objects import logger
 
 
@@ -15,6 +23,10 @@ class DatabaseClass:
         if identifier in valid_list:
             return identifier
         raise ValueError(f"Invalid identifier: {identifier}")
+
+    def _placeholder(self):
+        """Return the correct placeholder for parameterized queries based on database type."""
+        return "%s" if self.db_type == "postgresql" else "?"
 
     """class that handles the database within the project"""
 
@@ -37,21 +49,49 @@ class DatabaseClass:
         logger.debug("DatabaseClass: Initializing database connection")
         self.config = config
         self.database = database
+
+        # Determine database type from config or environment
+        self.db_type = self._get_db_type()
+
         self.create_db_connection()
         self.initalise_database()
 
         # Mark as initialized
         DatabaseClass._initialized[database] = True
 
+    def _get_db_type(self) -> str:
+        """Determine database type (sqlite or postgresql)."""
+        # Check if PostgreSQL config exists
+        db_config = self.config.get(self.database, {})
+
+        # Check for PostgreSQL environment variables or config
+        if os.getenv("DATABASE_URL") or db_config.get("type") == "postgresql":
+            if not POSTGRES_AVAILABLE:
+                logger.warning(
+                    "PostgreSQL requested but psycopg2 not installed, falling back to SQLite"
+                )
+                return "sqlite"
+            return "postgresql"
+
+        return "sqlite"
+
     def create_db_connection(self) -> None:
         """
-        Creates a connection to the SQLite database specified in the config.
+        Creates a connection to the database (SQLite or PostgreSQL).
         Args:
             None
         Returns:
             None
         """
-        logger.debug("DatabaseClass: Creating database connection")
+        logger.debug(f"DatabaseClass: Creating {self.db_type} database connection")
+
+        if self.db_type == "postgresql":
+            self._create_postgres_connection()
+        else:
+            self._create_sqlite_connection()
+
+    def _create_sqlite_connection(self) -> None:
+        """Create SQLite database connection."""
         try:
             dbPath = os.path.expanduser(f"{self.config[self.database]['file']}")
             if not os.path.exists(dbPath):
@@ -61,13 +101,38 @@ class DatabaseClass:
                 os.makedirs(os.path.dirname(dbPath), exist_ok=True)
             self.dbconnection = sqlite3.connect(dbPath, check_same_thread=False)
             self.cursor = self.dbconnection.cursor()
-            logger.debug("DatabaseClass: Database connection established")
+            logger.debug("DatabaseClass: SQLite connection established")
         except sqlite3.Error as err:
-            logger.error("DatabaseClass: Database connection failed")
+            logger.error("DatabaseClass: SQLite connection failed")
             print("Database connection failed")
             print(err)
-            self.cursor = None  # Ensure cursor is None if connection fails
-        return
+            self.cursor = None
+
+    def _create_postgres_connection(self) -> None:
+        """Create PostgreSQL database connection."""
+        try:
+            # Try DATABASE_URL first
+            db_url = os.getenv("DATABASE_URL")
+            if db_url:
+                self.dbconnection = psycopg2.connect(db_url)
+            else:
+                # Fall back to individual config values
+                db_config = self.config.get(self.database, {})
+                self.dbconnection = psycopg2.connect(
+                    dbname=db_config.get("dbname", os.getenv("DB_NAME", "promethean")),
+                    user=db_config.get("user", os.getenv("DB_USER", "promethean")),
+                    password=db_config.get(
+                        "password", os.getenv("DB_PASSWORD", "promethean_password")
+                    ),
+                    host=db_config.get("host", os.getenv("DB_HOST", "db")),
+                    port=db_config.get("port", os.getenv("DB_PORT", "5432")),
+                )
+            self.cursor = self.dbconnection.cursor()
+            logger.debug("DatabaseClass: PostgreSQL connection established")
+        except Exception as err:
+            logger.error(f"DatabaseClass: PostgreSQL connection failed: {err}")
+            print(f"Database connection failed: {err}")
+            self.cursor = None
 
     def initalise_database(self) -> None:
         """
@@ -92,22 +157,36 @@ class DatabaseClass:
             "tables"
         ]:  # load tables from the specific database section
             try:
+                # Convert SQLite schema to PostgreSQL if needed
+                schema = self._convert_schema(table["schema"])
                 table_query = (
-                    "CREATE TABLE IF NOT EXISTS "
-                    + f"{table['name']}({table['schema']})"
+                    "CREATE TABLE IF NOT EXISTS " + f"{table['name']}({schema})"
                 )
                 self.cursor.execute(table_query)
                 self.dbconnection.commit()  # commits the table creation
                 logger.debug(
                     f"DatabaseClass: Table {table['name']} created successfully"
                 )
-            except sqlite3.Error as err:
+            except Exception as err:
                 print(f"Error creating table {table['name']}: {err}")
                 logger.error(
                     f"DatabaseClass: Error creating table {table['name']}: {err}"
                 )
                 continue
         return
+
+    def _convert_schema(self, schema: str) -> str:
+        """Convert SQLite schema to PostgreSQL schema if needed."""
+        if self.db_type == "sqlite":
+            return schema
+
+        # Convert common SQLite types to PostgreSQL
+        schema = schema.replace(" integer", " INTEGER")
+        schema = schema.replace(" text", " TEXT")
+        schema = schema.replace(" real", " REAL")
+        schema = schema.replace(" bool", " BOOLEAN")
+
+        return schema
 
     def insert_entry(self, table: str, values: tuple) -> None:
         """
@@ -137,12 +216,12 @@ class DatabaseClass:
                 logger.debug(
                     f"DatabaseClass: Inserting into table {safe_table} values {values}"
                 )
-                placeholders = ",".join(["?"] * len(values))
+                placeholders = ",".join([self._placeholder()] * len(values))
                 table_query = f"INSERT INTO {safe_table} VALUES ({placeholders})"
                 self.cursor.execute(table_query, values)
                 logger.debug(f"DatabaseClass: Query {table_query} with values {values}")
                 self.dbconnection.commit()  # commits the data
-            except sqlite3.Error as err:
+            except Exception as err:
                 if not self.config["server"]["quiet_mode"]:
                     logger.error(
                         f"DatabaseClass: Error inserting into table {safe_table}: {err}"
@@ -184,6 +263,11 @@ class DatabaseClass:
 
         if self.config[self.database]["addData"]:
             try:
+                # Replace placeholders if using PostgreSQL
+                if self.db_type == "postgresql":
+                    set_clause = set_clause.replace("?", "%s")
+                    where_clause = where_clause.replace("?", "%s")
+
                 query = f"UPDATE {safe_table} SET {set_clause} WHERE {where_clause}"
                 combined_values = set_values + where_values
                 logger.debug(
@@ -191,7 +275,7 @@ class DatabaseClass:
                 )
                 self.cursor.execute(query, combined_values)
                 self.dbconnection.commit()
-            except sqlite3.Error as err:
+            except Exception as err:
                 if not self.config["server"]["quiet_mode"]:
                     logger.error(
                         f"DatabaseClass: Error updating table {safe_table}: {err}"
@@ -246,11 +330,11 @@ class DatabaseClass:
             return None
 
         try:
-            query = f"SELECT {selectval} FROM {safe_table} WHERE {safe_column} = ?"
+            query = f"SELECT {selectval} FROM {safe_table} WHERE {safe_column} = {self._placeholder()}"
             logger.debug(f"DatabaseClass: Executing query: {query} with value {value}")
             self.cursor.execute(query, (value,))
             return self.cursor.fetchone()  # return the first matched result
-        except sqlite3.Error as err:
+        except Exception as err:
             print(f"Error executing search query: {err}")
             logger.error(f"DatabaseClass: Error executing search query: {err}")
             return None
@@ -282,7 +366,7 @@ class DatabaseClass:
             logger.debug(f"DatabaseClass: Executing query: {query}")
             self.cursor.execute(query)
             return self.cursor.fetchall()
-        except sqlite3.Error as err:
+        except Exception as err:
             logger.error(f"DatabaseClass: Error fetching all from {safe_table}: {err}")
             print(f"Error fetching all from {safe_table}: {err}")
             return []
@@ -315,7 +399,7 @@ class DatabaseClass:
             self.dbconnection.commit()
             logger.info(f"DatabaseClass: Cleared table {safe_table}")
             return True
-        except sqlite3.Error as err:
+        except Exception as err:
             logger.error(f"DatabaseClass: Error clearing table {safe_table}: {err}")
             print(f"Error clearing table {safe_table}: {err}")
             return False
@@ -348,7 +432,7 @@ class DatabaseClass:
             self.dbconnection.commit()
             logger.info(f"DatabaseClass: Dropped table {safe_table}")
             return True
-        except sqlite3.Error as err:
+        except Exception as err:
             logger.error(f"DatabaseClass: Error dropping table {safe_table}: {err}")
             print(f"Error dropping table {safe_table}: {err}")
             return False
