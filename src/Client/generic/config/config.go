@@ -69,11 +69,11 @@ func init() {
 
 	data, err := os.ReadFile(cfgPath)
 	if err != nil {
-		return
+		panic("Failed to read obfuscation config file: " + err.Error())
 	}
 	var tmp ObfuscationConfig
 	if err := json.Unmarshal(data, &tmp); err != nil {
-		return
+		panic("Failed to unmarshal obfuscation config JSON: " + err.Error())
 	}
 	ConfigMutex.Lock()
 	Obfuscation = tmp

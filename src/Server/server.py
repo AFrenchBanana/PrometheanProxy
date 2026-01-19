@@ -35,7 +35,7 @@ def _extract_embedded_assets():
     if base:
         # Paths inside bundle as added by Makefile --add-data
         embedded_root = os.path.join(base, "embedded")
-        config_src = os.path.join(embedded_root, "config.toml")
+        config_src = os.path.join(embedded_root, "res", "config.toml")
         # Compiled plugin artifacts staged by Makefile under embedded/plugins/<name>/{release,debug}
         plugins_root = os.path.join(embedded_root, "plugins")
         # Python plugin sources staged by Makefile under embedded/pyplugins
@@ -91,7 +91,7 @@ def _extract_embedded_assets():
             pass
     else:
         # Running from source: copy default config from repo if missing
-        repo_config = os.path.join(os.path.dirname(__file__), "config.toml")
+        repo_config = os.path.join(os.path.dirname(__file__), "res", "config.toml")
         try:
             if os.path.isfile(repo_config) and not os.path.exists(config_dst):
                 shutil.copy2(repo_config, config_dst)

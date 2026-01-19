@@ -9390,3 +9390,7 @@ INFO 2026-01-17 10:45:37,091 server HTTP/2 support not enabled (install the http
 INFO 2026-01-17 10:45:37,092 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
 INFO 2026-01-17 10:45:37,095 server Listening on TCP address 0.0.0.0:8001
 INFO 2026-01-17 10:45:38,945 runserver HTTP GET /login/ 200 [0.02, 172.20.0.1:34452]
+INFO 2026-01-19 19:12:06,547 autoreload Watching for file changes with StatReloader
+INFO 2026-01-19 19:12:06,801 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 19:12:06,801 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
+INFO 2026-01-19 19:12:06,802 server Listening on TCP address 0.0.0.0:8001

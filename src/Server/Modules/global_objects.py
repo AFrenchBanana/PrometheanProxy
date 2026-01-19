@@ -41,7 +41,7 @@ else:
     # Running from source: use repository's Server/Plugins and Server/config.toml
     server_root = os.path.dirname(os.path.dirname(__file__))  # .../src/Server
     plugin_dir = os.path.join(server_root, "Plugins")
-    # Use local config at src/Server/config.toml when running as a script
+    # Use local config at src/Server/res/config.toml when running as a script
     config_dir = server_root
 
 # Ensure directory exists (no-op for most executable directories if not writable)
@@ -53,7 +53,7 @@ except PermissionError:
         config_dir = os.path.expanduser("~/.PrometheanProxy/")
         os.makedirs(config_dir, exist_ok=True)
 
-config_file_path = os.path.join(config_dir, "config.toml")
+config_file_path = os.path.join(config_dir, "res", "config.toml")
 
 try:
     with TomlFiles(config_file_path) as f:
@@ -72,11 +72,11 @@ try:
     if getattr(sys, "frozen", False):
         # PyInstaller bundles --add-data into a temp dir available via sys._MEIPASS
         base_path = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
-        obf_path = os.path.join(base_path, "embedded", "obfuscate.json")
+        obf_path = os.path.join(base_path, "embedded", "res", "obfuscate.json")
     else:
         # Running from source tree
         server_root = os.path.dirname(os.path.dirname(__file__))
-        obf_path = os.path.join(server_root, "obfuscate.json")
+        obf_path = os.path.join(server_root, "res", "obfuscate.json")
 
     with open(obf_path, "r", encoding="utf-8") as f:
         obfuscation_map = json.load(f)

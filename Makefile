@@ -7,7 +7,7 @@ SERVER_SOURCE_DIR = src/Server
 OUTPUT_DIR = bin
 
 # Default obfuscate config path (adjust if your workspace differs)
-OBFUSCATE_CONFIG ?= $(CURDIR)/src/Server/obfuscate.json
+OBFUSCATE_CONFIG ?= $(CURDIR)/src/Server/res/obfuscate.json
 
 # Define Go build flags
 GO_BUILD_FLAGS = -ldflags="-s -w -X src/Client/generic/config.HMACKey=$(HMAC_KEY) -X 'src/Client/generic/config.ObfuscateConfigPath=$(OBFUSCATE_CONFIG)'"
@@ -49,7 +49,7 @@ lint: venv
 	. venv/bin/activate && flake8 $(SERVER_SOURCE_DIR) && flake8 tests/
 
 test: venv
-	. venv/bin/activate && PYTHONPATH=$(SERVER_SOURCE_DIR) python3 -m unittest tests/*.py
+	. venv/bin/activate && PYTHONPATH=src python3 -m unittest discover -s tests
 
 clean:
 	rm -rf bin build dist *.egg-info PrometheanProxy.spec \
@@ -74,8 +74,8 @@ server: venv plugins py-plugins
 	--paths src \
 	--collect-submodules Server.Plugins \
 	--hidden-import=Server.Plugins \
-	--add-data $(CURDIR)/src/Server/config.toml:embedded/ \
-	--add-data $(CURDIR)/src/Server/obfuscate.json:embedded/ \
+	--add-data $(CURDIR)/src/Server/res/config.toml:embedded/res/ \
+	--add-data $(CURDIR)/src/Server/res/obfuscate.json:embedded/res/ \
 	--add-data $(CURDIR)/$(PY_PLUGIN_STAGING_DIR):embedded/pyplugins \
 	$(foreach p,$(PLUGIN_DIRS),--add-data $(CURDIR)/$(PLUGINS_SRC_DIR)/$(p)/release:embedded/plugins/$(p)/release) \
 	$(foreach p,$(PLUGIN_DIRS),--add-data $(CURDIR)/$(PLUGINS_SRC_DIR)/$(p)/debug:embedded/plugins/$(p)/debug) \
@@ -88,17 +88,17 @@ server-elf: server
 $(OUTPUT_LINUX_RELEASE):
 	@echo "--> Building Go client for Linux (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@  main.go 
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@  main.go
 
 $(OUTPUT_LINUX_DEBUG):
 	@echo "--> Building Go client for Linux (Debug)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go 
-	
+	cd $(CLIENT_SOURCE_DIR) && GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
+
 $(OUTPUT_WINDOWS_RELEASE):
 	@echo "--> Building Go client for Windows (Release)..."
 	@mkdir -p $(OUTPUT_DIR)
-	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go 
+	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o ../../$@ main.go
 
 $(OUTPUT_WINDOWS_DEBUG):
 	@echo "--> Building Go client for Windows (Debug)..."
@@ -106,7 +106,7 @@ $(OUTPUT_WINDOWS_DEBUG):
 	cd $(CLIENT_SOURCE_DIR) && GOOS=windows GOARCH=amd64 go build $(GO_BUILD_FLAGS_DEBUG) -o ../../$@ main.go
 
 # Include plugins in overall build
-plugins: plugins-linux plugins-windows 
+plugins: plugins-linux plugins-windows
 
 plugins-linux: $(PLUGINS_RELEASE_LINUX) $(PLUGINS_DEBUG_LINUX)
 plugins-windows: $(PLUGINS_RELEASE_WINDOWS) $(PLUGINS_DEBUG_WINDOWS)
@@ -224,5 +224,4 @@ hmac-key:
 
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)" -obfuscate="$(OBFUSCATE_CONFIG)"
-
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)" -obfuscate="$(OBFUSCATE_CONFIG)"

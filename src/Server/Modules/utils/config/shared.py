@@ -11,7 +11,7 @@ from prompt_toolkit.completion import WordCompleter
 _prompt_session = PromptSession()
 
 # Configuration file path
-CONFIG_FILE_PATH = "config.toml"
+CONFIG_FILE_PATH = "res/config.toml"
 
 
 def get_prompt_session() -> PromptSession:
