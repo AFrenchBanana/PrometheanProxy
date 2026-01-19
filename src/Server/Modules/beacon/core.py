@@ -96,6 +96,7 @@ class Beacon(HistoryMixin, ModulesMixin):
         self.address = address
         self.hostname = hostname
         self.operating_system = operating_system
+        self.is_late = False
 
         # ----------------------------------------------------------------
         # Parse and Format Beacon Timing

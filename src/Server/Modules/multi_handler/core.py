@@ -9,12 +9,14 @@
 # Standard Library Imports
 # Third-Party Imports
 import threading
+import time
 import traceback
 
 # Third-Party Imports
 import colorama
 
 # Local Imports
+from Modules.beacon.beacon_server.websocket_server import publish_event
 from Modules.multiplayer.multiplayer import MultiPlayer
 from Modules.utils.config_configuration import beacon_config_menu, config_menu
 from Modules.utils.console import colorize, success, warn
@@ -122,6 +124,36 @@ class MultiHandler(SecurityMixin, SocketServerMixin, LoaderMixin):
             traceback.print_exc()
             warn(str(e))
             logger.info("Server: Continuing in singleplayer mode")
+
+        # Start late beacon checker
+        threading.Thread(target=self.check_late_beacons, daemon=True).start()
+
+    def check_late_beacons(self):
+        """Periodically checks for and reports late beacons."""
+        while True:
+            time.sleep(60)  # Check every 60 seconds
+            current_time = time.time()
+            for beacon in beacon_list.values():
+                try:
+                    next_beacon_time = time.mktime(
+                        time.strptime(beacon.next_beacon, "%a %b %d %H:%M:%S %Y")
+                    )
+                    if current_time > next_beacon_time and not beacon.is_late:
+                        beacon.is_late = True
+                        event_data = {
+                            "type": "live_event",
+                            "event": "late_checkin",
+                            "hostname": beacon.hostname,
+                            "uuid": beacon.uuid,
+                            "last_seen": beacon.last_beacon,
+                            "next_beacon": beacon.next_beacon,
+                        }
+                        publish_event(event_data)
+                        logger.warning(
+                            f"Beacon {beacon.hostname} ({beacon.uuid}) is late. Last seen: {beacon.last_beacon}"
+                        )
+                except Exception as e:
+                    logger.error(f"Error checking late beacon {beacon.uuid}: {e}")
 
     # ========================================================================
     # Command Interface Methods

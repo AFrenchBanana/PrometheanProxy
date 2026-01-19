@@ -133,122 +133,68 @@
             </div>
         </div>
 
-        <!-- Recent Activity -->
+        <!-- Live Events -->
         <div class="bg-gray-800 rounded-lg border border-gray-700">
             <div class="p-6 border-b border-gray-700 flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-white flex items-center">
-                    <i class="fas fa-history mr-2 text-blue-500"></i>
-                    Recent Activity
+                    <i class="fas fa-wave-square mr-2 text-blue-500"></i>
+                    Live Events
                 </h3>
                 <a href="{% url 'c2_interface:logs' %}" class="text-blue-500 hover:text-blue-400 text-sm">
                     View Logs <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
-            <div class="divide-y divide-gray-700 max-h-96 overflow-y-auto">
-                <template x-if="recentActivity.length === 0">
+            <div class="max-h-96 overflow-y-auto">
+                <template x-if="liveEvents.length === 0">
                     <div class="p-8 text-center text-gray-400">
                         <i class="fas fa-clock text-4xl mb-2"></i>
-                        <p>No recent activity</p>
+                        <p>No recent events</p>
                     </div>
                 </template>
-                <template x-for="activity in recentActivity" :key="activity.id">
-                    <div class="p-4 hover:bg-gray-700 transition-colors">
-                        <div class="flex items-start space-x-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                 :class="{
-                                     'bg-green-500 bg-opacity-20': activity.type === 'beacon',
-                                     'bg-blue-500 bg-opacity-20': activity.type === 'command',
-                                     'bg-orange-500 bg-opacity-20': activity.type === 'system'
-                                 }">
-                                <i class="fas text-sm"
-                                   :class="{
-                                       'fa-satellite-dish text-green-500': activity.type === 'beacon',
-                                       'fa-code text-blue-500': activity.type === 'command',
-                                       'fa-info-circle text-orange-500': activity.type === 'system'
-                                   }"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm text-white" x-text="activity.message"></p>
-                                <p class="text-xs text-gray-400 mt-1" x-text="formatTime(activity.timestamp)"></p>
-                            </div>
-                        </div>
-                    </div>
+                <template x-if="liveEvents.length > 0">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Event</th>
+                                <th scope="col" class="px-6 py-3">Details</th>
+                                <th scope="col" class="px-6 py-3">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="event in liveEvents" :key="event.id">
+                                <tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-600">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                                 :class="{
+                                                     'bg-green-500 bg-opacity-20': event.event === 'beacon_checkin',
+                                                     'bg-red-500 bg-opacity-20': event.event === 'late_checkin',
+                                                     'bg-blue-500 bg-opacity-20': event.event === 'command_sent',
+                                                     'bg-orange-500 bg-opacity-20': event.event === 'system'
+                                                 }">
+                                                <i class="fas text-sm"
+                                                   :class="{
+                                                       'fa-satellite-dish text-green-500': event.event === 'beacon_checkin',
+                                                       'fa-exclamation-triangle text-red-500': event.event === 'late_checkin',
+                                                       'fa-code text-blue-500': event.event === 'command_sent',
+                                                       'fa-info-circle text-orange-500': event.event === 'system'
+                                                   }"></i>
+                                            </div>
+                                            <span class="capitalize" x-text="event.event.replace('_', ' ')"></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-white" x-text="getEventMessage(event)"></td>
+                                    <td class="px-6 py-4" x-text="formatTime(event.timestamp)"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </template>
             </div>
         </div>
     </div>
 
-    <!-- System Overview -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Beacon Map (Placeholder) -->
-        <div class="lg:col-span-2 bg-gray-800 rounded-lg border border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
-                <i class="fas fa-globe mr-2 text-blue-500"></i>
-                Geographic Distribution
-            </h3>
-            <div class="bg-gray-900 rounded-lg p-8 text-center border border-gray-700">
-                <i class="fas fa-map text-6xl text-gray-600 mb-4"></i>
-                <p class="text-gray-400">Interactive map coming soon</p>
-                <p class="text-sm text-gray-500 mt-2">Beacons will be displayed by geographic location</p>
-            </div>
-        </div>
 
-        <!-- Quick Actions -->
-        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
-                <i class="fas fa-bolt mr-2 text-yellow-500"></i>
-                Quick Actions
-            </h3>
-            <div class="space-y-3">
-                <a href="{% url 'c2_interface:beacons_list' %}" class="block w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center justify-between">
-                    <span><i class="fas fa-satellite-dish mr-2"></i>View Beacons</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="{% url 'c2_interface:sessions_list' %}" class="block w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center justify-between">
-                    <span><i class="fas fa-terminal mr-2"></i>View Sessions</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="{% url 'c2_interface:commands' %}" class="block w-full px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors flex items-center justify-between">
-                    <span><i class="fas fa-code mr-2"></i>Command History</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <button @click="refreshData()" class="block w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center justify-between">
-                    <span><i class="fas fa-sync-alt mr-2"></i>Refresh Data</span>
-                    <i class="fas fa-redo"></i>
-                </button>
-            </div>
-
-            <div class="mt-6 pt-6 border-t border-gray-700">
-                <h4 class="text-sm font-semibold text-white mb-3">System Health</h4>
-                <div class="space-y-3">
-                    <div>
-                        <div class="flex items-center justify-between text-sm mb-1">
-                            <span class="text-gray-400">Backend API</span>
-                            <span class="text-green-500 flex items-center">
-                                <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
-                                Online
-                            </span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center justify-between text-sm mb-1">
-                            <span class="text-gray-400">WebSocket</span>
-                            <span class="text-green-500 flex items-center">
-                                <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
-                                Connected
-                            </span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
@@ -265,11 +211,9 @@
 
                 // Listen for WebSocket updates
                 if (window.wsConnection) {
-                    const originalHandler = window.handleBeaconEvent;
-                    window.handleBeaconEvent = (data) => {
-                        if (originalHandler) originalHandler(data);
+                    window.handleLiveEvent = (data) => {
+                        this.addLiveEvent(data);
                         this.loadData();
-                        this.addActivity('beacon', `New beacon event: ${data.event}`);
                     };
                 }
             },
@@ -282,9 +226,18 @@
                 commandsSuccess: 100
             },
             recentBeacons: [],
-            recentActivity: [],
+            liveEvents: [],
 
-
+            getEventMessage(event) {
+                switch (event.event) {
+                    case 'beacon_checkin':
+                        return `Beacon ${event.hostname || event.uuid.substring(0,8)} checked in.`;
+                    case 'late_checkin':
+                        return `Beacon ${event.hostname || event.uuid.substring(0,8)} missed a check-in.`;
+                    default:
+                        return event.message || 'Unknown event';
+                }
+            },
 
             async loadData() {
                 try {
@@ -313,17 +266,16 @@
                 showToast('Dashboard refreshed', 'success');
             },
 
-            addActivity(type, message) {
-                this.recentActivity.unshift({
+            addLiveEvent(event) {
+                this.liveEvents.unshift({
                     id: Date.now(),
-                    type: type,
-                    message: message,
+                    ...event,
                     timestamp: new Date().toISOString()
                 });
 
                 // Keep only last 20 activities
-                if (this.recentActivity.length > 20) {
-                    this.recentActivity = this.recentActivity.slice(0, 20);
+                if (this.liveEvents.length > 20) {
+                    this.liveEvents = this.liveEvents.slice(0, 20);
                 }
             },
 

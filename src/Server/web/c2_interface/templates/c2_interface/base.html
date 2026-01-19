@@ -465,6 +465,9 @@
                     case "connected":
                         console.log("WebSocket connection confirmed");
                         break;
+                    case "live_event":
+                        handleLiveEvent(message.data);
+                        break;
                     case "beacon_event":
                         handleBeaconEvent(message.data);
                         break;
@@ -477,6 +480,10 @@
                     default:
                         console.log("Unknown message type:", message.type);
                 }
+            }
+
+            function handleLiveEvent(data) {
+                // This function will be overridden in dashboard.html
             }
 
             function handleBeaconEvent(data) {

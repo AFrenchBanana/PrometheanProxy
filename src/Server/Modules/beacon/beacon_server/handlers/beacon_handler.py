@@ -52,16 +52,19 @@ def handle_beacon_call_in(handler: BaseHTTPRequestHandler, match: dict):
     current_time = time.time()
     beacon.last_beacon = time.asctime()
     beacon.next_beacon = time.asctime(time.localtime(current_time + beacon.timer))
+    beacon.is_late = False  # Reset late flag on successful check-in
     logger.info(f"Beacon {beacon_id} updated. Next check-in: {beacon.next_beacon}")
-    # Broadcast per-beacon update over WebSocket
-    publish_beacon_update(
-        beacon_id,
+
+    # Broadcast live event for beacon check-in
+    publish_event(
         {
-            "type": "beacon_checkin",
+            "type": "live_event",
+            "event": "beacon_checkin",
             "uuid": beacon_id,
             "hostname": getattr(beacon, "hostname", None),
+            "last_seen": beacon.last_beacon,
             "next_beacon": beacon.next_beacon,
-        },
+        }
     )
 
     # Update database with last_seen timestamp

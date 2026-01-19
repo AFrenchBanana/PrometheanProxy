@@ -9434,3 +9434,681 @@ INFO 2026-01-19 20:10:37,854 autoreload Watching for file changes with StatReloa
 INFO 2026-01-19 20:10:38,066 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
 INFO 2026-01-19 20:10:38,067 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
 INFO 2026-01-19 20:10:38,068 server Listening on TCP address 0.0.0.0:8001
+INFO 2026-01-19 20:22:02,242 autoreload Watching for file changes with StatReloader
+INFO 2026-01-19 20:22:02,496 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 20:22:02,496 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
+INFO 2026-01-19 20:22:02,497 server Listening on TCP address 0.0.0.0:8001
+INFO 2026-01-19 20:22:06,628 runserver HTTP GET / 200 [0.03, 172.20.0.1:39612]
+INFO 2026-01-19 20:22:06,945 runserver HTTP GET /static/django-browser-reload/reload-listener.js 304 [0.01, 172.20.0.1:39612]
+WARNING 2026-01-19 20:22:07,530 log Unauthorized: /api/connections/
+WARNING 2026-01-19 20:22:07,531 log Unauthorized: /api/connections/
+WARNING 2026-01-19 20:22:07,532 runserver HTTP GET /api/connections/ 401 [0.02, 172.20.0.1:39612]
+WARNING 2026-01-19 20:22:07,534 runserver HTTP GET /api/connections/ 401 [0.03, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:07,828 runserver HTTP GET /login/ 200 [0.02, 172.20.0.1:39612]
+INFO 2026-01-19 20:22:07,843 runserver HTTP GET /static/django-browser-reload/reload-worker.js 304 [0.01, 172.20.0.1:39612]
+INFO 2026-01-19 20:22:08,445 runserver HTTP GET /api/health/backend/ 200 [0.11, 172.20.0.1:39612]
+INFO 2026-01-19 20:22:11,236 services Successfully authenticated as admin
+INFO 2026-01-19 20:22:11,237 views User admin authenticated successfully
+INFO 2026-01-19 20:22:11,242 runserver HTTP POST /api/auth/login/ 200 [0.91, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:12,292 runserver HTTP GET / 200 [0.02, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:13,154 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:39634]
+INFO 2026-01-19 20:22:13,158 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:39634]
+INFO 2026-01-19 20:22:13,159 consumers WebSocket connected: specific..inmemory!mVEzvmJtXyIg
+INFO 2026-01-19 20:22:13,379 runserver HTTP GET /api/connections/ 200 [0.20, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:13,387 runserver HTTP GET /api/connections/ 200 [0.21, 172.20.0.1:39650]
+INFO 2026-01-19 20:22:13,534 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:23,027 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:23,106 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:33,029 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:33,119 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:37,161 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:39634]
+INFO 2026-01-19 20:22:37,162 consumers WebSocket disconnected: specific..inmemory!mVEzvmJtXyIg (code: 1001)
+ERROR 2026-01-19 20:22:37,239 log Internal Server Error: /logs/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 555, in thread_handler
+    raise exc_info[1]
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 555, in thread_handler
+    raise exc_info[1]
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/base.py", line 285, in _get_response_async
+    response = await sync_to_async(
+               ^^^^^^^^^^^^^^^^^^^^
+        response.render, thread_sensitive=True
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )()
+    ^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/current_thread_executor.py", line 40, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/django/template/response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/template/response.py", line 90, in rendered_content
+    template = self.resolve_template(self.template_name)
+  File "/usr/local/lib/python3.14/site-packages/django/template/response.py", line 72, in resolve_template
+    return select_template(template, using=self.using)
+  File "/usr/local/lib/python3.14/site-packages/django/template/loader.py", line 47, in select_template
+    raise TemplateDoesNotExist(", ".join(template_name_list), chain=chain)
+django.template.exceptions.TemplateDoesNotExist: c2_interface/logs.html
+ERROR 2026-01-19 20:22:37,252 runserver HTTP GET /logs/ 500 [0.07, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:39,090 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:35766]
+INFO 2026-01-19 20:22:39,093 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:35766]
+INFO 2026-01-19 20:22:39,094 consumers WebSocket connected: specific..inmemory!TybfhnfedTDs
+INFO 2026-01-19 20:22:49,070 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:49,187 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:59,052 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:22:59,163 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:01,451 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:35766]
+INFO 2026-01-19 20:23:01,453 consumers WebSocket disconnected: specific..inmemory!TybfhnfedTDs (code: 1001)
+INFO 2026-01-19 20:23:01,535 runserver HTTP GET /beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ 200 [0.02, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:02,493 runserver WebSocket HANDSHAKING /ws/beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ [172.20.0.1:45966]
+INFO 2026-01-19 20:23:02,502 runserver WebSocket CONNECT /ws/beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ [172.20.0.1:45966]
+INFO 2026-01-19 20:23:02,503 consumers WebSocket connected: specific..inmemory!xXfKdCddWURM
+INFO 2026-01-19 20:23:02,530 runserver WebSocket HANDSHAKING /ws/commands/ [172.20.0.1:45988]
+INFO 2026-01-19 20:23:02,534 runserver WebSocket CONNECT /ws/commands/ [172.20.0.1:45988]
+INFO 2026-01-19 20:23:02,534 consumers WebSocket connected: specific..inmemory!CcZfEHxalUwe
+INFO 2026-01-19 20:23:02,590 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:45990]
+INFO 2026-01-19 20:23:02,594 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:45990]
+INFO 2026-01-19 20:23:02,595 consumers WebSocket connected: specific..inmemory!mbBjnQkzSLiP
+INFO 2026-01-19 20:23:02,784 runserver HTTP GET /api/connections/details/?uuid=d4d56383-19c8-4e91-b7d4-72984779a7bf&commands 200 [0.28, 172.20.0.1:45980]
+INFO 2026-01-19 20:23:02,821 runserver HTTP GET /api/connections/details/?uuid=d4d56383-19c8-4e91-b7d4-72984779a7bf 200 [0.32, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:02,833 runserver HTTP GET /api/commands/?uuid=d4d56383-19c8-4e91-b7d4-72984779a7bf 200 [0.33, 172.20.0.1:39650]
+INFO 2026-01-19 20:23:02,939 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:45980]
+INFO 2026-01-19 20:23:07,857 runserver WebSocket DISCONNECT /ws/beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ [172.20.0.1:45966]
+INFO 2026-01-19 20:23:07,858 runserver WebSocket DISCONNECT /ws/commands/ [172.20.0.1:45988]
+INFO 2026-01-19 20:23:07,858 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:45990]
+INFO 2026-01-19 20:23:07,860 consumers WebSocket disconnected: specific..inmemory!xXfKdCddWURM (code: 1001)
+INFO 2026-01-19 20:23:07,860 consumers WebSocket disconnected: specific..inmemory!CcZfEHxalUwe (code: 1001)
+INFO 2026-01-19 20:23:07,860 consumers WebSocket disconnected: specific..inmemory!mbBjnQkzSLiP (code: 1001)
+INFO 2026-01-19 20:23:07,915 runserver HTTP GET / 200 [0.02, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:08,524 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:08,610 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:54638]
+INFO 2026-01-19 20:23:08,615 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:54638]
+INFO 2026-01-19 20:23:08,615 consumers WebSocket connected: specific..inmemory!KftEDksFmWqZ
+INFO 2026-01-19 20:23:08,620 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:08,781 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:18,527 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:18,626 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:28,647 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:28,766 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:38,646 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:38,852 runserver HTTP GET /api/connections/ 200 [0.19, 172.20.0.1:45980]
+INFO 2026-01-19 20:23:38,867 runserver HTTP GET /api/connections/ 200 [0.20, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:48,630 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:48,730 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:58,618 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:23:58,705 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:08,692 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:08,775 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:08,888 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:18,814 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:18,931 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:28,858 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:28,985 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:38,747 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:38,863 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:38,972 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:42,907 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:54638]
+INFO 2026-01-19 20:24:42,908 consumers WebSocket disconnected: specific..inmemory!KftEDksFmWqZ (code: 1001)
+INFO 2026-01-19 20:24:42,976 runserver HTTP GET /beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ 200 [0.02, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:43,797 runserver WebSocket HANDSHAKING /ws/beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ [172.20.0.1:40660]
+INFO 2026-01-19 20:24:43,800 runserver WebSocket CONNECT /ws/beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ [172.20.0.1:40660]
+INFO 2026-01-19 20:24:43,801 consumers WebSocket connected: specific..inmemory!wISzDEIkumXB
+INFO 2026-01-19 20:24:43,819 runserver WebSocket HANDSHAKING /ws/commands/ [172.20.0.1:40682]
+INFO 2026-01-19 20:24:43,825 runserver WebSocket CONNECT /ws/commands/ [172.20.0.1:40682]
+INFO 2026-01-19 20:24:43,827 consumers WebSocket connected: specific..inmemory!OpIPguCZNFpu
+INFO 2026-01-19 20:24:43,876 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:40688]
+INFO 2026-01-19 20:24:43,880 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:40688]
+INFO 2026-01-19 20:24:43,880 consumers WebSocket connected: specific..inmemory!VXmutnHelBuu
+INFO 2026-01-19 20:24:44,187 runserver HTTP GET /api/connections/details/?uuid=d4d56383-19c8-4e91-b7d4-72984779a7bf 200 [0.38, 172.20.0.1:39622]
+INFO 2026-01-19 20:24:44,191 runserver HTTP GET /api/commands/?uuid=d4d56383-19c8-4e91-b7d4-72984779a7bf 200 [0.38, 172.20.0.1:40666]
+INFO 2026-01-19 20:24:44,195 runserver HTTP GET /api/connections/details/?uuid=d4d56383-19c8-4e91-b7d4-72984779a7bf&commands 200 [0.38, 172.20.0.1:40664]
+INFO 2026-01-19 20:24:44,198 runserver HTTP GET /api/connections/ 200 [0.25, 172.20.0.1:40696]
+INFO 2026-01-19 20:24:48,015 runserver WebSocket DISCONNECT /ws/beacons/d4d56383-19c8-4e91-b7d4-72984779a7bf/ [172.20.0.1:40660]
+INFO 2026-01-19 20:24:48,016 runserver WebSocket DISCONNECT /ws/commands/ [172.20.0.1:40682]
+INFO 2026-01-19 20:24:48,017 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:40688]
+INFO 2026-01-19 20:24:48,019 consumers WebSocket disconnected: specific..inmemory!wISzDEIkumXB (code: 1001)
+INFO 2026-01-19 20:24:48,019 consumers WebSocket disconnected: specific..inmemory!OpIPguCZNFpu (code: 1001)
+INFO 2026-01-19 20:24:48,020 consumers WebSocket disconnected: specific..inmemory!VXmutnHelBuu (code: 1001)
+INFO 2026-01-19 20:24:48,988 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:44646]
+INFO 2026-01-19 20:24:48,991 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:44646]
+INFO 2026-01-19 20:24:48,992 consumers WebSocket connected: specific..inmemory!NdujXcsmWgfL
+INFO 2026-01-19 20:24:58,781 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:40696]
+INFO 2026-01-19 20:24:58,883 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:09,256 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:09,353 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:19,313 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:19,412 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:19,511 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:29,373 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:29,475 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:39,436 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:39,538 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:49,505 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:49,602 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:49,699 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:52,312 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:44646]
+INFO 2026-01-19 20:25:52,314 consumers WebSocket disconnected: specific..inmemory!NdujXcsmWgfL (code: 1001)
+INFO 2026-01-19 20:25:52,378 runserver HTTP GET / 200 [0.02, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:53,081 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:53,161 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:36574]
+INFO 2026-01-19 20:25:53,165 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:36574]
+INFO 2026-01-19 20:25:53,166 consumers WebSocket connected: specific..inmemory!ZoiuVFsCUUgn
+INFO 2026-01-19 20:25:53,209 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:40696]
+INFO 2026-01-19 20:25:53,350 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:03,051 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:03,155 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:13,699 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:13,799 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:23,759 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:23,833 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:23,929 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:33,759 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:33,844 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:43,745 runserver HTTP GET /api/connections/ 200 [0.06, 172.20.0.1:40696]
+INFO 2026-01-19 20:26:43,821 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:40696]
+INFO 2026-01-19 20:27:16,195 autoreload Watching for file changes with StatReloader
+INFO 2026-01-19 20:27:16,460 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 20:27:16,461 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
+INFO 2026-01-19 20:27:16,462 server Listening on TCP address 0.0.0.0:8001
+INFO 2026-01-19 20:27:18,113 runserver HTTP GET / 200 [0.03, 172.20.0.1:42664]
+WARNING 2026-01-19 20:27:18,729 log Unauthorized: /api/connections/
+WARNING 2026-01-19 20:27:18,731 runserver HTTP GET /api/connections/ 401 [0.10, 172.20.0.1:42664]
+INFO 2026-01-19 20:27:18,765 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:42668]
+INFO 2026-01-19 20:27:18,776 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:42668]
+INFO 2026-01-19 20:27:18,777 consumers WebSocket connected: specific..inmemory!WGffxDntruqP
+ERROR 2026-01-19 20:27:18,782 base_events CancelledError exception in shielded future
+future: <Future finished exception=CancelledError()>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 309, in __call__
+    response = response or self.get_response(request)
+                           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/whitenoise/middleware.py", line 123, in __call__
+    return self.get_response(request)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 325, in __call__
+    return call_result.result()
+           ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 443, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 365, in main_wrap
+    result = await awaitable
+             ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/corsheaders/middleware.py", line 64, in __acall__
+    response = await result
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 321, in __acall__
+    response = await sync_to_async(
+               ^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )(request)
+    ^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 521, in __call__
+    ret = await exec_coro
+          ^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+INFO 2026-01-19 20:27:18,830 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:42668]
+INFO 2026-01-19 20:27:18,838 consumers WebSocket disconnected: specific..inmemory!WGffxDntruqP (code: 1006)
+INFO 2026-01-19 20:27:18,863 runserver HTTP GET /login/ 200 [0.03, 172.20.0.1:42676]
+INFO 2026-01-19 20:27:19,570 runserver HTTP GET /api/health/backend/ 200 [0.09, 172.20.0.1:42676]
+INFO 2026-01-19 20:27:22,787 services Successfully authenticated as admin
+INFO 2026-01-19 20:27:22,788 views User admin authenticated successfully
+INFO 2026-01-19 20:27:22,796 runserver HTTP POST /api/auth/login/ 200 [0.84, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:23,859 runserver HTTP GET / 200 [0.02, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:24,760 runserver HTTP GET /api/connections/ 200 [0.17, 172.20.0.1:42698]
+INFO 2026-01-19 20:27:24,773 runserver HTTP GET /api/connections/ 200 [0.18, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:24,811 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:58684]
+INFO 2026-01-19 20:27:24,815 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:58684]
+INFO 2026-01-19 20:27:24,816 consumers WebSocket connected: specific..inmemory!asLTirDMltha
+INFO 2026-01-19 20:27:24,956 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:35,168 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:35,251 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:43,241 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:58684]
+INFO 2026-01-19 20:27:43,242 consumers WebSocket disconnected: specific..inmemory!asLTirDMltha (code: 1001)
+INFO 2026-01-19 20:27:43,335 runserver HTTP GET / 200 [0.01, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:44,183 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:44,218 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:39464]
+INFO 2026-01-19 20:27:44,224 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:39464]
+INFO 2026-01-19 20:27:44,225 consumers WebSocket connected: specific..inmemory!CYaSYCpnsCVG
+INFO 2026-01-19 20:27:44,336 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:44,521 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:54,105 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:27:54,196 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:04,794 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:05,014 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:14,328 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:14,416 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:14,526 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:24,483 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:24,576 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:34,477 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:34,596 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:44,416 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:44,519 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:44,629 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:54,618 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:28:54,728 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:04,619 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:04,722 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:14,607 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:14,722 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:14,841 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:24,825 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:24,935 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:34,826 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:34,940 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:44,599 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:44,818 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:44,919 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:54,030 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:39464]
+INFO 2026-01-19 20:29:54,031 consumers WebSocket disconnected: specific..inmemory!CYaSYCpnsCVG (code: 1001)
+INFO 2026-01-19 20:29:54,137 runserver HTTP GET / 200 [0.02, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:54,997 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:55,063 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:57758]
+INFO 2026-01-19 20:29:55,067 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:57758]
+INFO 2026-01-19 20:29:55,068 consumers WebSocket connected: specific..inmemory!kWALFsoudBWE
+INFO 2026-01-19 20:29:55,104 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:29:55,240 runserver HTTP GET /api/connections/ 200 [0.11, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:04,957 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:05,047 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:14,952 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:15,046 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:25,001 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:25,095 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:25,221 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:35,001 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:35,085 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:45,019 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:45,128 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:55,016 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:55,111 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:42688]
+INFO 2026-01-19 20:30:55,241 runserver HTTP GET /api/connections/ 200 [0.12, 172.20.0.1:42688]
+INFO 2026-01-19 20:31:32,278 autoreload Watching for file changes with StatReloader
+INFO 2026-01-19 20:31:32,670 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 20:31:32,671 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
+INFO 2026-01-19 20:31:32,673 server Listening on TCP address 0.0.0.0:8001
+ERROR 2026-01-19 20:31:35,129 base_events CancelledError exception in shielded future
+future: <Future finished exception=CancelledError()>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 309, in __call__
+    response = response or self.get_response(request)
+                           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/whitenoise/middleware.py", line 123, in __call__
+    return self.get_response(request)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 325, in __call__
+    return call_result.result()
+           ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 443, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 365, in main_wrap
+    result = await awaitable
+             ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/corsheaders/middleware.py", line 64, in __acall__
+    response = await result
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/debug_toolbar/middleware.py", line 152, in __acall__
+    response = await self.get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django_browser_reload/middleware.py", line 54, in __acall__
+    response = await result
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/base.py", line 254, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+        request, *callback_args, **callback_kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 521, in __call__
+    ret = await exec_coro
+          ^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+INFO 2026-01-19 20:31:35,196 runserver HTTP GET / 200 [0.03, 172.20.0.1:59162]
+WARNING 2026-01-19 20:31:35,978 log Unauthorized: /api/connections/
+WARNING 2026-01-19 20:31:35,979 runserver HTTP GET /api/connections/ 401 [0.09, 172.20.0.1:59162]
+INFO 2026-01-19 20:31:36,053 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:59178]
+INFO 2026-01-19 20:31:36,064 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:59178]
+INFO 2026-01-19 20:31:36,065 consumers WebSocket connected: specific..inmemory!idvMHOfYwmyp
+ERROR 2026-01-19 20:31:36,111 base_events CancelledError exception in shielded future
+future: <Future finished exception=CancelledError()>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 309, in __call__
+    response = response or self.get_response(request)
+                           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/whitenoise/middleware.py", line 123, in __call__
+    return self.get_response(request)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 325, in __call__
+    return call_result.result()
+           ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 443, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 365, in main_wrap
+    result = await awaitable
+             ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/corsheaders/middleware.py", line 64, in __acall__
+    response = await result
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/debug_toolbar/middleware.py", line 152, in __acall__
+    response = await self.get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django_browser_reload/middleware.py", line 54, in __acall__
+    response = await result
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/base.py", line 254, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+        request, *callback_args, **callback_kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 521, in __call__
+    ret = await exec_coro
+          ^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+ERROR 2026-01-19 20:31:36,216 base_events CancelledError exception in shielded future
+future: <Future finished exception=CancelledError()>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 504, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 559, in thread_handler
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 309, in __call__
+    response = response or self.get_response(request)
+                           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python3.14/site-packages/whitenoise/middleware.py", line 123, in __call__
+    return self.get_response(request)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 325, in __call__
+    return call_result.result()
+           ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 443, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 365, in main_wrap
+    result = await awaitable
+             ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/corsheaders/middleware.py", line 64, in __acall__
+    response = await result
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/utils/deprecation.py", line 325, in __acall__
+    response = response or await self.get_response(request)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/debug_toolbar/middleware.py", line 152, in __acall__
+    response = await self.get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django_browser_reload/middleware.py", line 54, in __acall__
+    response = await result
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/django/core/handlers/base.py", line 254, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+        request, *callback_args, **callback_kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/asgiref/sync.py", line 521, in __call__
+    ret = await exec_coro
+          ^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+INFO 2026-01-19 20:31:36,231 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:59178]
+INFO 2026-01-19 20:31:36,235 consumers WebSocket disconnected: specific..inmemory!idvMHOfYwmyp (code: 1006)
+INFO 2026-01-19 20:31:36,273 runserver HTTP GET /login/ 200 [0.03, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:37,060 runserver HTTP GET /api/health/backend/ 200 [0.10, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:37,447 runserver HTTP GET /login/ 200 [0.02, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:38,269 runserver HTTP GET /api/health/backend/ 200 [0.10, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:41,268 services Successfully authenticated as admin
+INFO 2026-01-19 20:31:41,269 views User admin authenticated successfully
+INFO 2026-01-19 20:31:41,274 runserver HTTP POST /api/auth/login/ 200 [0.84, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:42,423 runserver HTTP GET / 200 [0.02, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:43,373 runserver WebSocket HANDSHAKING /ws/events/ [172.20.0.1:59226]
+INFO 2026-01-19 20:31:43,376 runserver WebSocket CONNECT /ws/events/ [172.20.0.1:59226]
+INFO 2026-01-19 20:31:43,376 consumers WebSocket connected: specific..inmemory!DdSfUFgIcyMb
+INFO 2026-01-19 20:31:43,618 runserver HTTP GET /api/connections/ 200 [0.18, 172.20.0.1:59234]
+INFO 2026-01-19 20:31:43,631 runserver HTTP GET /api/connections/ 200 [0.20, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:43,817 runserver HTTP GET /api/connections/ 200 [0.10, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:53,235 runserver HTTP GET /api/connections/ 200 [0.07, 172.20.0.1:59210]
+INFO 2026-01-19 20:31:53,323 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:59210]
+INFO 2026-01-19 20:32:03,319 runserver HTTP GET /api/connections/ 200 [0.08, 172.20.0.1:59210]
+INFO 2026-01-19 20:32:03,421 runserver HTTP GET /api/connections/ 200 [0.09, 172.20.0.1:59210]
+INFO 2026-01-19 20:32:07,564 runserver WebSocket DISCONNECT /ws/events/ [172.20.0.1:59226]
+INFO 2026-01-19 20:32:07,566 consumers WebSocket disconnected: specific..inmemory!DdSfUFgIcyMb (code: 1001)
