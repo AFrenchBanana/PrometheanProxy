@@ -72,7 +72,8 @@ class MultiPlayer(MP_Socket, MP_Users):
             ("4", "List Users"),
             ("5", "Switch User"),
             ("6", "Who Am I"),
-            ("7", "Exit Menu"),
+            ("7", "Generate Let's Encrypt Certificate"),
+            ("8", "Exit Menu"),
         ]
 
         for opt, action in menu_items:
@@ -91,7 +92,8 @@ class MultiPlayer(MP_Socket, MP_Users):
             "4": ("list", self.list_users),
             "5": ("switch", self.switch_user_input),
             "6": ("whoami", self.whoami),
-            "7": ("exit", None),
+            "7": ("letsencrypt", self.generate_lets_encrypt_cert_input),
+            "8": ("exit", None),
         }
 
         # Create command completer for menu
@@ -104,12 +106,14 @@ class MultiPlayer(MP_Socket, MP_Users):
                 "5",
                 "6",
                 "7",
+                "8",
                 "add",
                 "remove",
                 "password",
                 "list",
                 "switch",
                 "whoami",
+                "letsencrypt",
                 "exit",
             ],
             ignore_case=True,
@@ -134,7 +138,7 @@ class MultiPlayer(MP_Socket, MP_Users):
                 )
 
                 # Handle exit
-                if choice in ("7", "exit", "q", "quit"):
+                if choice in ("8", "exit", "q", "quit"):
                     self.ui.print_info("Exiting user menu...")
                     break
 
@@ -159,6 +163,14 @@ class MultiPlayer(MP_Socket, MP_Users):
             except EOFError:
                 self.ui.print_info("Exiting user menu...")
                 break
+
+    def generate_lets_encrypt_cert_input(self):
+        """
+        Get input for generating a Let's Encrypt certificate.
+        """
+        email = self.menu_session.prompt("Enter your email address: ")
+        domains = self.menu_session.prompt("Enter the domains (comma-separated): ")
+        self.web_interface.generate_lets_encrypt_cert(email, domains.split(","))
 
     def get_web_status(self) -> dict:
         """

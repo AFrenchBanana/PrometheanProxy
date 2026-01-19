@@ -89,7 +89,7 @@ except json.JSONDecodeError:
 
 logger = Logger(
     name="Server",
-    log_file=os.path.join(config_dir, config["logging"]["log_file"]),
+    log_file=os.path.abspath(os.path.join(config_dir, config["logging"]["log_file"])),
     level=config["logging"]["level"],
     fmt=config["logging"]["fmt"],
     datefmt=config["logging"]["datefmt"],

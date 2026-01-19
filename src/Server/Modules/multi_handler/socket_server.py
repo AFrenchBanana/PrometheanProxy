@@ -57,8 +57,21 @@ class SocketServerMixin:
 
             # Load TLS certificates
             cert_dir = os.path.expanduser(config["server"]["TLSCertificateDir"])
-            tls_key = config["server"]["TLSkey"]
-            tls_cert = config["server"]["TLSCertificate"]
+
+            le_cert_path = os.path.join(cert_dir, "fullchain.pem")
+            le_key_path = os.path.join(cert_dir, "privkey.pem")
+
+            if os.path.exists(le_cert_path) and os.path.exists(le_key_path):
+                logger.info("Found Let's Encrypt certificates, using them.")
+                tls_cert = "fullchain.pem"
+                tls_key = "privkey.pem"
+            else:
+                logger.info(
+                    "Let's Encrypt certificates not found, using self-signed certificates."
+                )
+                tls_key = config["server"]["TLSkey"]
+                tls_cert = config["server"]["TLSCertificate"]
+
             logger.debug(
                 f"Certificate directory: {cert_dir}, Key: {tls_key}, Cert: {tls_cert}"
             )

@@ -122,6 +122,8 @@ services:
       - "2002:2001"
     environment:
       - NGINX_WORKER_PROCESSES=auto
+    volumes:
+      - ./src/Server/res/certs:/etc/nginx/certs:ro
     logging:
       driver: "none"
 

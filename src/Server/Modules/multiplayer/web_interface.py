@@ -12,6 +12,8 @@ import sys
 import threading
 from pathlib import Path
 
+from .lets_encrypt import LetsEncrypt
+
 logger = logging.getLogger(__name__)
 
 
@@ -305,7 +307,7 @@ class WebInterface:
         logger.info("Stopping web interface...")
         self.is_running = False
 
-        # Note: The thread is daemon, so it will be killed when the main process exits
+        # Note: The thread is a daemon, so it will be killed when the main process exits
         # For a graceful shutdown, we'd need to implement a proper shutdown mechanism
 
         logger.info("Web interface stopped")
@@ -327,3 +329,13 @@ class WebInterface:
             else None,
             "thread_alive": self.web_thread.is_alive() if self.web_thread else False,
         }
+
+    def generate_lets_encrypt_cert(self, email, domains):
+        """
+        Generate a Let's Encrypt certificate.
+        """
+        logger.info("Generating Let's Encrypt certificate")
+        cert_dir = self.config["server"]["TLSCertificateDir"]
+        le = LetsEncrypt(email, domains, cert_dir)
+        le.get_certificate()
+        logger.info("Let's Encrypt certificate generated")

@@ -1,5 +1,5 @@
 # Read HMAC key if present; keep empty (no error) if file is missing
-HMAC_KEY ?= $(shell test -f $(HOME)/.PrometheanProxy/Certificates/hmac.key && cat $(HOME)/.PrometheanProxy/Certificates/hmac.key || echo)
+HMAC_KEY ?= $(shell test -f src/Server/res/certs/hmac.key && cat src/Server/res/certs/hmac.key || echo)
 
 # Source and Output Directories
 CLIENT_SOURCE_DIR = src/Client
@@ -179,14 +179,12 @@ install-plugins: plugins
 
 
 
-
-
 define GO_PLUGIN_RULES
 $(PLUGINS_SRC_DIR)/$(1)/release/$(1).so:
 	@echo "--> Building Go plugin for $(1) (Linux, Release)..."
 	@mkdir -p $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release
 	cd $(PLUGINS_SRC_DIR)/$(1)/ && \
-		GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).so .
+		GOOS=linux GOARCH=amd64 go build -buildmode=plugin $(GO_BUILD_FLAGS) -o $(CURDIR)/$(PLUGINS_SRC_DIR)/$(1)/release/$(1).so .
 
 $(PLUGINS_SRC_DIR)/$(1)/release/$(1).dll:
 	@echo "--> Building Go plugin for $(1) (Windows, Release)..."
@@ -224,4 +222,4 @@ hmac-key:
 
 run-client: check-hmac-key
 	@echo "--> Running Go client in debug mode..."
-	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=beacon -hmac-key="$(HMAC_KEY)" -obfuscate="$(OBFUSCATE_CONFIG)"
+	cd $(CLIENT_SOURCE_DIR) && go run -tags=debug main.go -conn=session -hmac-key="$(HMAC_KEY)" -obfuscate="$(OBFUSCATE_CONFIG)"

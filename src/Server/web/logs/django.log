@@ -9394,3 +9394,43 @@ INFO 2026-01-19 19:12:06,547 autoreload Watching for file changes with StatReloa
 INFO 2026-01-19 19:12:06,801 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
 INFO 2026-01-19 19:12:06,801 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
 INFO 2026-01-19 19:12:06,802 server Listening on TCP address 0.0.0.0:8001
+INFO 2026-01-19 19:55:47,402 web_interface Running database migrations...
+INFO 2026-01-19 19:55:47,638 web_interface Database migrations completed
+INFO 2026-01-19 19:55:47,638 web_interface Using Daphne ASGI server (WebSocket support enabled)
+INFO 2026-01-19 19:55:47,639 web_interface ============================================================
+INFO 2026-01-19 19:55:47,641 web_interface Web interface started on http://0.0.0.0:8080
+INFO 2026-01-19 19:55:47,642 web_interface Starting Daphne server on 0.0.0.0:8080
+INFO 2026-01-19 19:55:47,643 web_interface Access the web interface at: http://localhost:8080
+INFO 2026-01-19 19:55:47,646 web_interface Login with your multiplayer server credentials
+INFO 2026-01-19 19:55:47,648 web_interface ============================================================
+INFO 2026-01-19 19:55:47,660 cli Starting server at tcp:port=8080:interface=0.0.0.0
+INFO 2026-01-19 19:55:47,661 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 19:55:47,662 server Configuring endpoint tcp:port=8080:interface=0.0.0.0
+INFO 2026-01-19 19:55:47,664 server Listening on TCP address 0.0.0.0:8080
+DEBUG 2026-01-19 19:55:54,487 core Received command: exit
+INFO 2026-01-19 19:55:54,490 server Server: Exiting...
+INFO 2026-01-19 19:56:00,761 web_interface Running database migrations...
+INFO 2026-01-19 19:56:00,951 web_interface Database migrations completed
+INFO 2026-01-19 19:56:00,952 web_interface Using Daphne ASGI server (WebSocket support enabled)
+INFO 2026-01-19 19:56:00,952 web_interface ============================================================
+INFO 2026-01-19 19:56:00,953 web_interface Web interface started on http://0.0.0.0:8080
+INFO 2026-01-19 19:56:00,953 web_interface Access the web interface at: http://localhost:8080
+INFO 2026-01-19 19:56:00,953 web_interface Login with your multiplayer server credentials
+INFO 2026-01-19 19:56:00,953 web_interface ============================================================
+INFO 2026-01-19 19:56:00,958 web_interface Starting Daphne server on 0.0.0.0:8080
+INFO 2026-01-19 19:56:00,978 cli Starting server at tcp:port=8080:interface=0.0.0.0
+INFO 2026-01-19 19:56:00,978 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 19:56:00,979 server Configuring endpoint tcp:port=8080:interface=0.0.0.0
+INFO 2026-01-19 19:56:00,980 server Listening on TCP address 0.0.0.0:8080
+INFO 2026-01-19 19:57:01,427 autoreload Watching for file changes with StatReloader
+INFO 2026-01-19 19:57:01,637 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 19:57:01,638 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
+INFO 2026-01-19 19:57:01,639 server Listening on TCP address 0.0.0.0:8001
+INFO 2026-01-19 20:07:54,905 autoreload Watching for file changes with StatReloader
+INFO 2026-01-19 20:07:55,214 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 20:07:55,215 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
+INFO 2026-01-19 20:07:55,217 server Listening on TCP address 0.0.0.0:8001
+INFO 2026-01-19 20:10:37,854 autoreload Watching for file changes with StatReloader
+INFO 2026-01-19 20:10:38,066 server HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2026-01-19 20:10:38,067 server Configuring endpoint tcp:port=8001:interface=0.0.0.0
+INFO 2026-01-19 20:10:38,068 server Listening on TCP address 0.0.0.0:8001

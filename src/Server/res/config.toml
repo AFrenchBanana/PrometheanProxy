@@ -2,7 +2,7 @@
 listenaddress = "0.0.0.0"
 webPort = 8000
 port = 2000
-TLSCertificateDir = "~/.PrometheanProxy/Certificates/"
+TLSCertificateDir = "res/certs/"
 TLSCertificate = "cert.pem"
 TLSkey = "key.pem"
 GUI = false
@@ -29,8 +29,8 @@ keylength = 111
 active = false
 listenaddress = "0.0.0.0"
 port = 11001
-TLSCertificate = "~/.PrometheanProxy/Certificates/cert.pem"
-TLSkey = "~/.PrometheanProxy/Certificates/key.pem"
+TLSCertificate = "res/certs/cert.pem"
+TLSkey = "res/certs/key.pem"
 debugPrint = true
 
 [beacon]
